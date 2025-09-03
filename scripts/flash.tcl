@@ -5,8 +5,7 @@ open_hw_target
 current_hw_device [get_hw_devices xc7a35t_0]
 
 # Configure program
-set_property PROGRAM.FILE {frus/newest/cpu.bit} [get_hw_devices xc7a35t_0]
-# set_property PROBES.FILE {frus/newest/ila.ltx} [get_hw_devices xc7a35t_0]
+set_property PROGRAM.FILE {build/top.bit} [get_hw_devices xc7a35t_0]
 
 # Program hardware
 program_hw_devices [get_hw_devices xc7a35t_0]
