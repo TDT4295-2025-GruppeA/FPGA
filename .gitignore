@@ -1,1 +1,8 @@
+# Vivado generated folders
 build/
+report/
+.Xil/
+
+# Vivado log files
+*.log
+*.jou
