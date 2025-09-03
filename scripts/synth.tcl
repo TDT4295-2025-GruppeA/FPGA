@@ -1,0 +1,37 @@
+package require fileutil
+
+set_param general.maxThreads 8
+
+# Load configuration and code
+read_verilog [ fileutil::findByPattern src *.*v ]
+
+# Synthesize
+
+# Basys 3
+#read_xdc verilog/vivado/constraints/basys3_cpu.xdc
+# synth_design -top Top -part xc7a35tcpg236-1
+
+# Nexys A7
+# read_xdc verilog/vivado/constraints/nexysa7_cpu.xdc
+# synth_design -top Top -part xc7a100tcsg324-1
+
+read_xdc constraints/arty7.xdc
+synth_design -top Top -part xc7a35ticsg324-1L
+
+write_checkpoint -force report/post_synth_checkpoint
+
+# Implement
+opt_design
+place_design
+route_design
+
+write_checkpoint -force report/post_route_checkpoint
+
+# Generate post-routing reports
+report_power -file report/post_route_power.rpt
+report_utilization -file report/post_route_utilization.rpt
+report_timing -delay_type min_max -max_paths 1 -file report/post_route_timing.rpt
+
+
+# Write bitstream result
+write_bitstream -force build/top.bit
