@@ -1,14 +1,17 @@
+set part_short $::env(FPGA_PART_SHORT)
+set target $::env(FPGA_TARGET)
+
 # Open and configure hardware
 open_hw_manager
 connect_hw_server 
 open_hw_target
-current_hw_device [get_hw_devices xc7a35t_0]
+current_hw_device [get_hw_devices $part_short]
 
 # Configure program
-set_property PROGRAM.FILE {build/top.bit} [get_hw_devices xc7a35t_0]
+set_property PROGRAM.FILE "build/top_${target}.bit" [get_hw_devices $part_short]
 
 # Program hardware
-program_hw_devices [get_hw_devices xc7a35t_0]
+program_hw_devices [get_hw_devices $part_short]
 
 # Configure ila
-refresh_hw_device [get_hw_devices xc7a35t_0]
+refresh_hw_device [get_hw_devices $part_short]
