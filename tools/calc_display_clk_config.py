@@ -2,6 +2,7 @@ import argparse
 import math
 from dataclasses import dataclass
 
+
 @dataclass
 class Arguments:
     clk_in: float
@@ -14,6 +15,7 @@ class ClockConfig:
     master_multiplier: float
     master_divisor: int
     clock_divisor: float
+
 
 def main(clk_in: float, clk_out: float) -> ClockConfig:
     """calculate MMCM config for output clock 0.
@@ -35,8 +37,12 @@ def main(clk_in: float, clk_out: float) -> ClockConfig:
     best_error = float("inf")
 
     for div in range(DIV_MIN, DIV_MAX):
-        multiplier_min = max(MUL_MIN, math.ceil(VCO_MIN * div / MUL_STEP / clk_in) * MUL_STEP)
-        multiplier_max = min(MUL_MAX, math.floor(VCO_MAX * div / MUL_STEP / clk_in) * MUL_STEP)
+        multiplier_min = max(
+            MUL_MIN, math.ceil(VCO_MIN * div / MUL_STEP / clk_in) * MUL_STEP
+        )
+        multiplier_max = min(
+            MUL_MAX, math.floor(VCO_MAX * div / MUL_STEP / clk_in) * MUL_STEP
+        )
 
         mul = multiplier_min
         while mul <= multiplier_max + 1e-6:
@@ -50,20 +56,27 @@ def main(clk_in: float, clk_out: float) -> ClockConfig:
                     best_error = error
                     best = (freq_actual / 1e6, mul, div, clk_div)
             mul += MUL_STEP
-    
+
     if best is None:
-        raise RuntimeError(f"Cold not find any solution configuration for clk input {clk_in}MHz and output {clk_out}MHz")
+        raise RuntimeError(
+            f"Cold not find any solution configuration for clk input {clk_in}MHz and output {clk_out}MHz"
+        )
 
     return ClockConfig(*best)
 
 
 def parse_args() -> Arguments:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=float, help="Input frequency measured in MHz", dest="clk_in")
-    parser.add_argument("--output", type=float, help="Output frequency measured in MHz", dest="clk_out")
+    parser.add_argument(
+        "--input", type=float, help="Input frequency measured in MHz", dest="clk_in"
+    )
+    parser.add_argument(
+        "--output", type=float, help="Output frequency measured in MHz", dest="clk_out"
+    )
     args = parser.parse_args()
 
     return Arguments(**vars(args))
+
 
 if __name__ == "__main__":
     args = parse_args()
@@ -84,5 +97,3 @@ if __name__ == "__main__":
     print(f"Clock divisor: {clock.clock_divisor}")
     print()
     print(f"{clock.master_multiplier}, {clock.master_divisor}, {clock.clock_divisor}")
-
-
