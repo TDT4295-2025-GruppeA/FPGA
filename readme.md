@@ -5,7 +5,7 @@ This repository contains the code for the fpga in our TDT4295 project.
 ## Table of contents
 * [Quickstart](#quickstart)
 * [Tools](#tools)
-    * [Recommended setup](#recommended-setup)
+    * [Recommended setup](#recommended-setup-linux)
     * [Calculate clock config](#calc_display_clk_configpy)
     * [Convert image to .mem](#convert_img_to_mempy)
 
