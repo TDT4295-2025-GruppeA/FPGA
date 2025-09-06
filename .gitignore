@@ -6,3 +6,8 @@ report/
 # Vivado log files
 *.log
 *.jou
+
+# env
+.venv/
+venv/
+.envrc
