@@ -62,7 +62,7 @@ module Display #(
 
 
     // Iterate through pixels in image
-    always_ff @(posedge pixel_clk) begin
+    always_ff @(posedge pixel_clk or negedge pixel_clk_rstn) begin
         if (x == LINEWIDTH) begin
             x <= 0;
             y <= (y == LINEHEIGHT) ? 0 : y + 1;
@@ -78,30 +78,72 @@ module Display #(
     end
 
 
-    // ###################################
-    // ##### Drawing stuff on screen #####
-    // ###################################
+    // TODO: move this to drawing module or something. Not here.
+    // ##############################
+    // ##### Drawing from image #####
+    // ##############################
 
 
-    logic [3:0] paint_r, paint_g, paint_b;
-    always_comb begin
-        paint_r =   x; // (square) ? 4'hF : 4'h0;
-        paint_g =   y; // (square) ? 4'hF : 4'h0;
-        paint_b = 4'hF; // (square) ? 4'hF : 4'h0;
+    logic[31:0] pixel_addr;
+    logic[11:0] fb_data;
+    Buffer #(
+        .FILE_SOURCE("static/forelesere_640x480p12.mem")
+    ) buffer_inst (
+        .clk(pixel_clk),
+        .rstn(pixel_clk_rstn),
+        .addr(pixel_addr),
+        .data(fb_data)
+    );
+
+    always_ff @(posedge pixel_clk) begin
+        // TODO: fix +1 thing
+        // TODO: currently letting it overflow. do something about that?
+        pixel_addr <= y * (H_RESOLUTION + 1) + x;
     end
 
-    // display colour: paint colour but black in blanking interval
+    // Draw from image buffer
+    logic [3:0] paint_r, paint_g, paint_b;
     logic [3:0] display_r, display_g, display_b;
     always_comb begin
+        paint_r = fb_data[3:0];
+        paint_g = fb_data[7:4];
+        paint_b = fb_data[11:8];
+
         display_r = (data_enable) ? paint_r : 4'h0;
         display_g = (data_enable) ? paint_g : 4'h0;
         display_b = (data_enable) ? paint_b : 4'h0;
     end
 
-    // VGA Pmod output
+
+    // ####################################
+    // ##### Drawing stuff with maths #####
+    // ####################################
+
+
+    // logic [3:0] paint_r, paint_g, paint_b;
+    // always_comb begin
+    //     paint_r =   x; // (square) ? 4'hF : 4'h0;
+    //     paint_g =   y; // (square) ? 4'hF : 4'h0;
+    //     paint_b = 4'hF; // (square) ? 4'hF : 4'h0;
+    // end
+
+    // // display colour: paint colour but black in blanking interval
+    // logic [3:0] display_r, display_g, display_b;
+    // always_comb begin
+    //     display_r = (data_enable) ? paint_r : 4'h0;
+    //     display_g = (data_enable) ? paint_g : 4'h0;
+    //     display_b = (data_enable) ? paint_b : 4'h0;
+    // end
+
+    
+    // Flip-flopts for output
+    logic hsync_delay;
+    logic vsync_delay;
     always_ff @(posedge pixel_clk) begin
-        vga_hsync <= hsync;
-        vga_vsync <= vsync;
+        hsync_delay <= hsync;
+        vsync_delay <= vsync;
+        vga_hsync <= hsync_delay;
+        vga_vsync <= vsync_delay;
         vga_red <= display_r;
         vga_green <= display_g;
         vga_blue <= display_b;

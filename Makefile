@@ -24,6 +24,8 @@ synth:
 	rm build/lastlog.*
 	ln -s logs/synth_$(BUILD_TIME).jou build/lastlog.jou
 	ln -s logs/synth_$(BUILD_TIME).log build/lastlog.log
+	[ -f "clockInfo.txt" ] && mv clockInfo.txt build/reports
+	[ -f "tight_setup_hold_pins.txt" ] && mv tight_setup_hold_pins.txt build/reports
 
 flash:
 	@echo "Flashing FPGA target $(TARGET)"
@@ -35,3 +37,7 @@ clean:
 
 rmlogs:
 	rm -r build/logs
+
+shell:
+	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
+	
