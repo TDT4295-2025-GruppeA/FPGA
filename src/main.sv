@@ -1,4 +1,5 @@
-import video_mode_pkg::*;
+import video_modes_pkg::*;
+import clock_modes_pkg::*;
 
 module Top (
     input btn,
@@ -15,23 +16,41 @@ module Top (
     output logic[3:0] vga_blue
 );
     logic rstn;
+    localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
 
     assign led = btn;
     assign rstn = ~reset;
 
-    // Enter clock into fpga fabric
-    logic clk_100m;
-    BUFG clock_buf(
-        .I(clk_ext),
-        .O(clk_100m)
+    ////////////////////////////////////////////////
+    ////////////// CLOCK GENERATION ////////////////
+    ////////////////////////////////////////////////
+
+    logic clk;
+    logic rstn;
+    logic clk_display;
+    logic rstn_display;
+
+    // VGA clock
+    Clock #(
+        .CLOCK_CONFIG(VIDEO_MODE.clock_config)
+    ) clock_vga_inst (
+        .clk_in(clk_ext),
+        .rstn_in(rstn),
+
+        .clk_out(clk_display),
+        .rstn_out(rstn_display)
     );
 
 
+    ///////////////////////////////////////
+    ////////////// DISPLAY ////////////////
+    ///////////////////////////////////////
+
     Display #(
-        .VIDEO_MODE(VMODE_640x480p60)
+        .VIDEO_MODE(VIDEO_MODE)
     ) display (
-        .clk_100m(clk_100m),
-        .rstn(rstn),
+        .clk_pixel(clk_display),
+        .rstn_pixel(rstn_display),
 
         .vga_hsync(vga_hsync),
         .vga_vsync(vga_vsync),

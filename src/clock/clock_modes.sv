@@ -6,6 +6,8 @@ package clock_modes_pkg;
         int clk_div_f; // Divisor (clock 0) (float 1.000 - 128.000)
     } clock_config_t;
 
-    localparam clock_config_t CLK_100_25_2_MHZ = {10.0, 31.5, 5, 25};
     localparam clock_config_t CLK_100_100_MHZ = {10.0, 6, 1, 6};
+    localparam clock_config_t CLK_100_50_MHZ = {10.0, 6, 1, 12};
+    localparam clock_config_t CLK_100_40_MHZ = {10.0, 6, 1, 15};
+    localparam clock_config_t CLK_100_25_175_MHZ = {10.0, 9, 1, 35.75};
 endpackage

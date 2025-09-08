@@ -1,4 +1,6 @@
-module DisplayClock #(
+import clock_modes_pkg::*;
+
+module Clock #(
     parameter clock_config_t CLOCK_CONFIG
 ) (
     input logic clk_in,
@@ -8,7 +10,7 @@ module DisplayClock #(
     output logic rstn_out
 );
     // clock period in nanoseconds
-    localparam read CLK_PERIOD = CLOCK_CONFIG.clk_period;
+    localparam real CLK_PERIOD = CLOCK_CONFIG.clk_input_period;
     localparam real MASTER_MULTIPLY = CLOCK_CONFIG.master_mul;
     localparam int MASTER_DIVIDE = CLOCK_CONFIG.master_div;
     localparam int CLK_DIVIDE_F = CLOCK_CONFIG.clk_div_f;
@@ -24,7 +26,7 @@ module DisplayClock #(
         .CLKOUT0_DIVIDE_F(CLK_DIVIDE_F)
     ) clock_inst (
         .CLKIN1(clk_in),
-        .RST(~rstn),
+        .RST(~rstn_in),
         .CLKFBIN(feedback),
 
         .CLKOUT0(clk_out_unbuf),
@@ -40,8 +42,8 @@ module DisplayClock #(
 
     // Generate clock reset signal
     logic[1:0] sync;
-    always_ff @(posedge clk_out or negedge rstn) begin
-        if (!rstn) begin
+    always_ff @(posedge clk_out or negedge rstn_in) begin
+        if (!rstn_in) begin
             sync <= 2'b00;
         end else if (!locked) begin
             sync <= 2'b00;

@@ -1,4 +1,4 @@
-package video_mode_pkg;
+package video_modes_pkg;
     localparam neg = 0;
     localparam pos = 1;
 
@@ -18,9 +18,7 @@ package video_mode_pkg;
         bit v_sync_pol;
 
         // Clock config
-        real master_mul; // (2.000 - 64.000, step 0.125)
-        int master_div; // (1 - 106)
-        real clk_div_f; // (1.000 - 128.000)
+        clock_modes_pkg::clock_config_t clock_config;
     } video_mode_t;
 
     // Values are fetched from https://projectf.io/posts/video-timings-vga-720p-1080p/
@@ -28,6 +26,6 @@ package video_mode_pkg;
 
     // TESTED
     // UNTESTED
-    localparam video_mode_t VMODE_640x480p60 = {640, 16, 96, 48, neg, 480, 10, 2, 33, neg, 9.0, 1, 35.75};
-    localparam video_mode_t VMODE_800x600p60 = {800, 40, 128, 88, pos, 600, 1, 4, 23, pos, 6.0, 1, 15.0};
+    localparam video_mode_t VMODE_640x480p60 = {640, 16, 96, 48, neg, 480, 10, 2, 33, neg, clock_modes_pkg::CLK_100_25_175_MHZ};
+    localparam video_mode_t VMODE_800x600p60 = {800, 40, 128, 88, pos, 600, 1, 4, 23, pos, clock_modes_pkg::CLK_100_40_MHZ};
 endpackage
