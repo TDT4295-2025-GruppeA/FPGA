@@ -16,3 +16,4 @@ xsim.dir/
 .venv/
 venv/
 .envrc
+.vscode
