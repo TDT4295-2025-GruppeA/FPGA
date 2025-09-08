@@ -1,7 +1,7 @@
 // upscale.sv
 
 package upscale_img_pkg;
-    import video_mode_pkg::*;
+    import video_modes_pkg::*;
 
     // Function to calculate the upscaled buffer address
     function automatic int get_upscaled_address(
