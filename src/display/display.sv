@@ -98,12 +98,6 @@ module Display #(
         .data(fb_data)
     );
 
-
-
-    localparam int UP_SCALE_FACTOR = (BUFFER_WIDTH * 4 == VIDEO_MODE.h_resolution && BUFFER_HEIGHT * 4 == VIDEO_MODE.v_resolution) ? 4 :
-                                 (BUFFER_WIDTH * 2 == VIDEO_MODE.h_resolution && BUFFER_HEIGHT * 2 == VIDEO_MODE.v_resolution) ? 2 :
-                                 1;
-
     always_ff @(posedge pixel_clk) begin
         pixel_addr <= get_upscaled_address(x, y, BUFFER_WIDTH, BUFFER_HEIGHT, VIDEO_MODE);
     end
