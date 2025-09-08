@@ -11,3 +11,4 @@ report/
 .venv/
 venv/
 .envrc
+.vscode
