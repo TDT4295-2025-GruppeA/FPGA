@@ -6,7 +6,7 @@ from dataclasses import dataclass
 @dataclass
 class Arguments:
     clk_in: float
-    clk_out: float
+    clk_out: list[float]
 
 
 @dataclass
@@ -17,7 +17,7 @@ class ClockConfig:
     clock_divisor: float
 
 
-def main(clk_in: float, clk_out: float) -> ClockConfig:
+def main(clk_in: float, outputs: list[float]) -> ClockConfig:
     """calculate MMCM config for output clock 0.
     Assumes float clock divider is available
     (only usable for output 0).
@@ -32,6 +32,11 @@ def main(clk_in: float, clk_out: float) -> ClockConfig:
     CLKDIV_MIN = 1
     CLKDIV_MAX = 128
     CLKDIV_STEP = 0.125
+
+    if len(outputs) > 6 or len(outputs) == 0:
+        raise ValueError(f"Number of output clocks must be between 1 and 6, not {len(outputs)}")
+
+    clk_out = outputs[0]
 
     best: tuple | None = None
     best_error = float("inf")
@@ -68,10 +73,10 @@ def main(clk_in: float, clk_out: float) -> ClockConfig:
 def parse_args() -> Arguments:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--input", type=float, help="Input frequency measured in MHz", dest="clk_in"
+        "--input", type=float, help="Input frequency measured in MHz", dest="clk_in", required=True
     )
     parser.add_argument(
-        "--output", type=float, help="Output frequency measured in MHz", dest="clk_out"
+        "--output", type=float, help="Output frequency measured in MHz", dest="clk_out", required=True, action="append"
     )
     args = parser.parse_args()
 
@@ -81,13 +86,17 @@ def parse_args() -> Arguments:
 if __name__ == "__main__":
     args = parse_args()
 
-    clock = main(args.clk_in * 1e6, args.clk_out * 1e6)
+    clk_outputs = [clk * 1e6 for clk in args.clk_out]
+
+    clock = main(args.clk_in * 1e6, clk_outputs)
+
+    clk_out = args.clk_out[0]
 
     # Only display clock diff of up to 3 decimals, because we are not that precise.
     print(f"Input clock: {args.clk_in} MHz")
     print(f"Target output clock: {args.clk_out} MHz")
     print(f"Actual output clock: {round(clock.actual_freq, 3)} MHz")
-    clock_diff = round(abs(args.clk_out - clock.actual_freq), 3)
+    clock_diff = round(abs(clk_out - clock.actual_freq), 3)
     print(f"Clock diff: {clock_diff} MHz")
     print()
 
