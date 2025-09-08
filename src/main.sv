@@ -26,11 +26,18 @@ module Top (
     logic clk_display;
     logic rstn_display;
 
+    logic clk_system;
+    logic rstn_system;
+
     ClockManager #(
-        .CLK_DISPLAY(VIDEO_MODE.clock_config)
+        .CLK_DISPLAY(VIDEO_MODE.clock_config),
+        .CLK_SYSTEM(CLK_100_50_MHZ)
     )(
         .clk_ext(clk_ext),
         .reset(reset),
+
+        .clk_system(clk_system),
+        .rstn_system(rstn_system),
 
         .clk_display(clk_display),
         .rstn_display(rstn_display)
