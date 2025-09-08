@@ -9,8 +9,8 @@ module Display #(
     parameter int BUFFER_WIDTH = 320,
     parameter int BUFFER_HEIGHT = 240
 ) (
-    input logic clk_100m,
-    input logic rstn,
+    input logic clk_pixel,
+    input logic rstn_pixel,
 
     output logic vga_hsync,
     output logic vga_vsync,
@@ -18,21 +18,6 @@ module Display #(
     output logic[3:0] vga_green,
     output logic[3:0] vga_blue
 );
-
-    // Generate pixel clock
-    logic pixel_clk;
-    logic pixel_clk_rstn;
-    DisplayClock  #(
-        .MASTER_MULTIPLY(VIDEO_MODE.master_mul),
-        .MASTER_DIVIDE(VIDEO_MODE.master_div),
-        .CLK_DIVIDE_F(VIDEO_MODE.clk_div_f)
-    ) display_clock (
-        .clk_100m(clk_100m),
-        .rstn(rstn),
-        .pixel_clk(pixel_clk),
-        .pixel_clk_rstn(pixel_clk_rstn)
-    );
-
     // Generate pixel coords and hsync/vsync
     // TODO: this can probably be simplified.
     localparam H_RESOLUTION = VIDEO_MODE.h_resolution - 1;
@@ -64,7 +49,7 @@ module Display #(
 
 
     // Iterate through pixels in image
-    always_ff @(posedge pixel_clk or negedge pixel_clk_rstn) begin
+    always_ff @(posedge clk_pixel or negedge rstn_pixel) begin
         if (x == LINEWIDTH) begin
             x <= 0;
             y <= (y == LINEHEIGHT) ? 0 : y + 1;
@@ -73,7 +58,7 @@ module Display #(
         end
 
         // Reset values
-        if (!pixel_clk_rstn) begin
+        if (!rstn_pixel) begin
             x <= 0;
             y <= 0;
         end
@@ -92,13 +77,13 @@ module Display #(
         .FILE_SOURCE("static/red_320x240p12.mem"),
         .FILE_SIZE(BUFFER_WIDTH * BUFFER_HEIGHT)
     ) buffer_inst (
-        .clk(pixel_clk),
-        .rstn(pixel_clk_rstn),
+        .clk(clk_pixel),
+        .rstn(rstn_pixel),
         .addr(pixel_addr),
         .data(fb_data)
     );
 
-    always_ff @(posedge pixel_clk) begin
+    always_ff @(posedge clk_pixel) begin
         pixel_addr <= get_upscaled_address(x, y, BUFFER_WIDTH, BUFFER_HEIGHT, VIDEO_MODE);
     end
 
@@ -142,7 +127,7 @@ module Display #(
     logic vsync_delay;
     logic hsync_delay2;
     logic vsync_delay2;
-    always_ff @(posedge pixel_clk) begin
+    always_ff @(posedge clk_pixel) begin
         hsync_delay <= hsync;
         vsync_delay <= vsync;
         hsync_delay2 <= hsync_delay;
