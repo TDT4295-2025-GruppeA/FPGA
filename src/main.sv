@@ -15,30 +15,25 @@ module Top (
     output logic[3:0] vga_green,
     output logic[3:0] vga_blue
 );
-    logic rstn;
     localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
 
     assign led = btn;
-    assign rstn = ~reset;
 
     ////////////////////////////////////////////////
     ////////////// CLOCK GENERATION ////////////////
     ////////////////////////////////////////////////
 
-    logic clk;
-    logic rstn;
     logic clk_display;
     logic rstn_display;
 
-    // VGA clock
-    Clock #(
-        .CLOCK_CONFIG(VIDEO_MODE.clock_config)
-    ) clock_vga_inst (
-        .clk_in(clk_ext),
-        .rstn_in(rstn),
+    ClockManager #(
+        .CLK_DISPLAY(VIDEO_MODE.clock_config)
+    )(
+        .clk_ext(clk_ext),
+        .reset(reset),
 
-        .clk_out(clk_display),
-        .rstn_out(rstn_display)
+        .clk_display(clk_display),
+        .rstn_display(rstn_display)
     );
 
 
