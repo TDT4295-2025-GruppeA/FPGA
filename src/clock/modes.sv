@@ -1,0 +1,11 @@
+package clock_modes_pkg;
+    typedef struct {
+        real clk_input_period; // period of input clock
+        real master_mul; // Master multiplier (float 2.000 - 64.000) (step 0.125)
+        int master_div; // Master divisor (uint 1 - 106)
+        int clk_div_f; // Divisor (clock 0) (float 1.000 - 128.000)
+    } clock_config_t;
+
+    localparam clock_config_t CLK_100_25_2_MHZ = {10.0, 31.5, 5, 25};
+    localparam clock_config_t CLK_100_100_MHZ = {10.0, 6, 1, 6};
+endpackage
