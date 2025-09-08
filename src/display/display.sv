@@ -1,7 +1,7 @@
 // Inspired by projectf:
 // https://github.com/projf/projf-explore/blob/main/lib/clock/xc7/clock_480p.sv
 
-import video_mode_pkg::*;
+import video_modes_pkg::*;
 import upscale_img_pkg::*;
 
 module Display #(
