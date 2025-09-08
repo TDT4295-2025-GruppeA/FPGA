@@ -1,5 +1,6 @@
 module Buffer #(
-    parameter string FILE_SOURCE
+    parameter string FILE_SOURCE,
+    parameter int FILE_SIZE = 640*480
 )(
     input logic clk,
     input logic rstn,
@@ -7,7 +8,7 @@ module Buffer #(
     output logic[11:0] data
 );
 
-    logic[11:0] memory[640 * 480];
+    logic[11:0] memory[FILE_SIZE];
 
     initial begin
         $readmemh(FILE_SOURCE, memory);

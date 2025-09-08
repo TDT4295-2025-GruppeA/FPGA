@@ -1,4 +1,4 @@
-// Inspired by projectf
+// Inspired by projectf:
 // https://github.com/projf/projf-explore/blob/main/lib/clock/xc7/clock_480p.sv
 
 import video_mode_pkg::*;
@@ -26,7 +26,6 @@ module Display #(
     ) display_clock (
         .clk_100m(clk_100m),
         .rstn(rstn),
-        
         .pixel_clk(pixel_clk),
         .pixel_clk_rstn(pixel_clk_rstn)
     );
@@ -87,7 +86,8 @@ module Display #(
     logic[31:0] pixel_addr;
     logic[11:0] fb_data;
     Buffer #(
-        .FILE_SOURCE("static/forelesere_640x480p12.mem")
+        .FILE_SOURCE("static/foreleser_320x240p12.mem"),
+        .FILE_SIZE(320*240)
     ) buffer_inst (
         .clk(pixel_clk),
         .rstn(pixel_clk_rstn),
@@ -98,7 +98,7 @@ module Display #(
     always_ff @(posedge pixel_clk) begin
         // TODO: fix +1 thing
         // TODO: currently letting it overflow. do something about that?
-        pixel_addr <= y * (H_RESOLUTION + 1) + x;
+        pixel_addr <= (y >> 1) * ((H_RESOLUTION >> 1) + 1) + (x >> 1); // Remove rightshift for 640*480
     end
 
     // Draw from image buffer
@@ -135,15 +135,18 @@ module Display #(
     //     display_b = (data_enable) ? paint_b : 4'h0;
     // end
 
-    
     // Flip-flopts for output
     logic hsync_delay;
     logic vsync_delay;
+    logic hsync_delay2;
+    logic vsync_delay2;
     always_ff @(posedge pixel_clk) begin
         hsync_delay <= hsync;
         vsync_delay <= vsync;
-        vga_hsync <= hsync_delay;
-        vga_vsync <= vsync_delay;
+        hsync_delay2 <= hsync_delay;
+        vsync_delay2 <= vsync_delay;
+        vga_hsync <= hsync_delay2;
+        vga_vsync <= vsync_delay2;
         vga_red <= display_r;
         vga_green <= display_g;
         vga_blue <= display_b;
