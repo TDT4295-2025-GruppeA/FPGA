@@ -8,7 +8,7 @@ module Buffer #(
     output logic[11:0] data
 );
 
-    logic[11:0] memory[FILE_SIZE];
+    (* ram_style = "block" *) logic[11:0] memory[FILE_SIZE];
 
     initial begin
         $readmemh(FILE_SOURCE, memory);

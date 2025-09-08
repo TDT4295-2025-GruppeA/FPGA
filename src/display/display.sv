@@ -2,9 +2,12 @@
 // https://github.com/projf/projf-explore/blob/main/lib/clock/xc7/clock_480p.sv
 
 import video_mode_pkg::*;
+import upscale_img_pkg::*;
 
 module Display #(
-    parameter video_mode_t VIDEO_MODE = VMODE_640x480p60
+    parameter video_mode_t VIDEO_MODE = VMODE_640x480p60,
+    parameter int BUFFER_WIDTH = 320,
+    parameter int BUFFER_HEIGHT = 240
 ) (
     input logic clk_100m,
     input logic rstn,
@@ -86,8 +89,8 @@ module Display #(
     logic[31:0] pixel_addr;
     logic[11:0] fb_data;
     Buffer #(
-        .FILE_SOURCE("static/foreleser_320x240p12.mem"),
-        .FILE_SIZE(320*240)
+        .FILE_SOURCE("static/red_320x240p12.mem"),
+        .FILE_SIZE(BUFFER_WIDTH * BUFFER_HEIGHT)
     ) buffer_inst (
         .clk(pixel_clk),
         .rstn(pixel_clk_rstn),
@@ -95,11 +98,16 @@ module Display #(
         .data(fb_data)
     );
 
+
+
+    localparam int UP_SCALE_FACTOR = (BUFFER_WIDTH * 4 == VIDEO_MODE.h_resolution && BUFFER_HEIGHT * 4 == VIDEO_MODE.v_resolution) ? 4 :
+                                 (BUFFER_WIDTH * 2 == VIDEO_MODE.h_resolution && BUFFER_HEIGHT * 2 == VIDEO_MODE.v_resolution) ? 2 :
+                                 1;
+
     always_ff @(posedge pixel_clk) begin
-        // TODO: fix +1 thing
-        // TODO: currently letting it overflow. do something about that?
-        pixel_addr <= (y >> 1) * ((H_RESOLUTION >> 1) + 1) + (x >> 1); // Remove rightshift for 640*480
+        pixel_addr <= get_upscaled_address(x, y, BUFFER_WIDTH, BUFFER_HEIGHT, VIDEO_MODE);
     end
+
 
     // Draw from image buffer
     logic [3:0] paint_r, paint_g, paint_b;
