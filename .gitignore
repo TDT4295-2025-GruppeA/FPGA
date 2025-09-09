@@ -2,10 +2,13 @@
 build/
 report/
 .Xil/
+xsim.dir/
+*.pb
 
 # Vivado log files
 *.log
 *.jou
+.pb
 
 # env
 .venv/

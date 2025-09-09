@@ -1,0 +1,9 @@
+# This is a custom file used to keep track of the files
+# that should be tested and (more importantly) their
+# dependencies in order of dependency.
+
+# This file is sadly necessary because xsim is dumb and
+# parses files in the provided order. Meaning that a file
+# must be read before its dependencies or xsim will crash.
+
+example_tb.sv # Example test bench.
