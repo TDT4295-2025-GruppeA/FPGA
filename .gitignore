@@ -2,10 +2,12 @@
 build/
 report/
 .Xil/
+**/gen
 
 # Vivado log files
 *.log
 *.jou
+clockinfo.txt
 
 # env
 .venv/

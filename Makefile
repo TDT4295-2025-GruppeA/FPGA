@@ -19,9 +19,21 @@ endif
 
 synth:
 	@echo "Synthesizing and implementing design for target $(TARGET)"
+	
 	mkdir -p build/logs
-	FPGA_BOARD=$(BOARD) FPGA_TARGET="$(TARGET)" FPGA_PART_LONG="$(PART_LONG)" vivado -mode batch -source scripts/synth.tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
-	rm build/lastlog.*
+
+	FPGA_BOARD=$(BOARD) FPGA_TARGET="$(TARGET)" FPGA_PART_LONG="$(PART_LONG)" vivado \
+		-mode batch \
+		-source scripts/synth.tcl \
+		-journal "build/logs/synth_$(BUILD_TIME).jou" \
+		-log "build/logs/synth_$(BUILD_TIME).log" | \
+		sed -e \ 
+		-e 's/INFO:/\x1b[34m&\x1b[0m/g' \
+		-e 's/WARNING:/\x1b[33m&\x1b[0m/g' \
+		-e 's/ERROR:/\x1b[31m&\x1b[0m/g' \
+		-e 's/CRITICAL WARNING:/\x1b[41m&\x1b[0m/g'
+
+	rm -f build/lastlog.*
 	ln -s logs/synth_$(BUILD_TIME).jou build/lastlog.jou
 	ln -s logs/synth_$(BUILD_TIME).log build/lastlog.log
 	[ -f "clockInfo.txt" ] && mv clockInfo.txt build/reports
@@ -29,8 +41,14 @@ synth:
 
 flash:
 	@echo "Flashing FPGA target $(TARGET)"
+	
 	mkdir -p build/logs
-	FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" vivado -mode batch -source scripts/flash.tcl -journal "build/logs/flash_$(BUILD_TIME).jou"  -log "build/logs/flash_$(BUILD_TIME).log"
+
+	FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" vivado \
+		-mode batch \
+		-source scripts/flash.tcl \
+		-journal "build/logs/flash_$(BUILD_TIME).jou" \
+		-log "build/logs/flash_$(BUILD_TIME).log"
 
 clean:
 	rm -r build
@@ -39,5 +57,8 @@ rmlogs:
 	rm -r build/logs
 
 shell:
-	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
+	vivado \
+		-mode tcl \
+		-journal "build/logs/synth_$(BUILD_TIME).jou" \
+		-log "build/logs/synth_$(BUILD_TIME).log"
 	
