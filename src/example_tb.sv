@@ -1,15 +1,42 @@
+// This is an example testbench file.
+// Is it quite rudimentary and not scalable, but it demonstrates basic functionality.
+// For more complex testbenches, use other methodologies.
+
+module example_module (
+  input logic a,
+  input logic b,
+  output logic y
+);
+  assign y = a & b;
+endmodule
+
 module tb;
+  logic a, b, y;
+  example_module dut (.a(a), .b(b), .y(y));
+
   initial begin
-    assert(1 == 1) else begin
-      $error("1 is not equal to 1");
+    a = 0; b = 0;
+    #1;
+    assert(y == 0) else begin
+      $error("y should be 0 when a and b are both 0");
     end
 
-    assert(2 + 2 == 4) else begin
-      $error("2 + 2 is equal to 4");
+    a = 1; b = 0;
+    #1;
+    assert(y == 0) else begin
+      $error("y should be 0 when a is 1 and b is 0");
     end
 
-    assert(2 * 2 != 5) else begin
-      $error("2 * 2 is not equal to 5");
+    a = 0; b = 1;
+    #1;
+    assert(y == 0) else begin
+      $error("y should be 0 when a is 0 and b is 1");
+    end
+
+    a = 1; b = 1;
+    #1;
+    assert(y == 1) else begin
+      $error("y should be 2 when a and b are both 1");
     end
 
     $finish;
