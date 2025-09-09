@@ -8,24 +8,23 @@ set part_long $::env(FPGA_PART_LONG)
 set target $::env(FPGA_TARGET)
 set board $::env(FPGA_BOARD)
 
+# Set the target part for the rest of the script
+set_part $part_long
+
+# Generate IP cores
+read_ip ip/mig_ddr3/mig_ddr3.xci
+generate_target all [get_ips mig_ddr3]
+
 # Load configuration and code
 read_verilog [ fileutil::findByPattern src *.*v ]
 
-# Synthesize
-
-# Basys 3
-#read_xdc verilog/vivado/constraints/basys3_cpu.xdc
-# synth_design -top Top -part xc7a35tcpg236-1
-
-# Nexys A7
-# read_xdc verilog/vivado/constraints/nexysa7_cpu.xdc
-# synth_design -top Top -part xc7a100tcsg324-1
-
-# Arty A7
 read_xdc constraints/${board}.xdc
-synth_design -top Top -part $part_long
+# read_xdc constraints/${board}_ddr3.xdc
 
-write_checkpoint -force $rpt_dir/post_synth_checkpoint
+# Synthesize design
+synth_design -top Top
+
+write_checkpoint -force $rpt_dir/_design_synth_checkpoint
 
 # Implement
 opt_design
@@ -38,7 +37,6 @@ write_checkpoint -force $rpt_dir/post_route_checkpoint
 report_power -file $rpt_dir/post_route_power.rpt
 report_utilization -file $rpt_dir/post_route_utilization.rpt
 report_timing -delay_type min_max -max_paths 1 -file $rpt_dir/post_route_timing.rpt
-
 
 # Write bitstream result
 exec mkdir -p build
