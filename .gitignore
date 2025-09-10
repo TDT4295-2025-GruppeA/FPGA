@@ -1,16 +1,18 @@
-# Vivado generated folders
+# Generated folders
 build/
+build_tb/
 report/
 .Xil/
 xsim.dir/
+
+# Generated files
 *.pb
 
-# Vivado log files
+# Log files
 *.log
 *.jou
-.pb
 
-# env
+# Environment
 .venv/
 venv/
 .envrc
