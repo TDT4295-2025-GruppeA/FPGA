@@ -67,4 +67,4 @@ shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
 test:
-	verilator src/clock/clock_modes.sv src/clock/clock.sv src/clock/clock_manager.sv src/display/video_modes.sv src/display/upscale_img.sv src/buffer.sv src/display/display.sv src/main.sv --binary
+	verilator -DSIMULATION --structs-packed src/clock/simulator_mock.sv src/math/linalg.sv src/clock/clock_modes.sv src/clock/clock.sv src/clock/clock_manager.sv src/display/video_modes.sv src/buffer.sv src/display/display.sv src/main.sv --binary
