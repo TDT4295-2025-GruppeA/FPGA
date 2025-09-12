@@ -1,6 +1,8 @@
 
 BUILD_TIME := $(shell date +"%Y%m%d_%H%M%S")
 
+SOURCES := $(shell find src | grep ".\.sv")
+
 PART_A735T_SHORT := xc7a35t_0
 PART_A735T_LONG := xc7a35ticsg324-1L
 PART_A7100T_SHORT := xc7a100t_0
@@ -63,4 +65,6 @@ rmlogs:
 
 shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
-	
+
+test:
+	verilator src/clock/clock_modes.sv src/clock/clock.sv src/clock/clock_manager.sv src/display/video_modes.sv src/display/upscale_img.sv src/buffer.sv src/display/display.sv src/main.sv --binary
