@@ -10,10 +10,10 @@ module Clock #(
     output logic rstn_out
 );
     // clock period in nanoseconds
-    localparam real CLK_PERIOD = CLOCK_CONFIG.clk_input_period;
-    localparam real MASTER_MULTIPLY = CLOCK_CONFIG.master_mul;
+    localparam real CLK_PERIOD = R(CLOCK_CONFIG.clk_input_period);
+    localparam real MASTER_MULTIPLY = R(CLOCK_CONFIG.master_mul);
     localparam int MASTER_DIVIDE = CLOCK_CONFIG.master_div;
-    localparam int CLK_DIVIDE_F = CLOCK_CONFIG.clk_div_f;
+    localparam real CLK_DIVIDE_F = R(CLOCK_CONFIG.clk_div_f);
 
     logic feedback;
     logic clk_out_unbuf;
