@@ -19,7 +19,7 @@ else ifeq ($(TARGET),100t)
 	PART_SHORT = $(PART_A7100T_SHORT)
 endif
 
-.PHONY : synth flash test clean rmbuid rmgen rmlogs shell
+.PHONY : synth flash test clean rmbuild rmgen rmlogs shell
 
 synth:
 	@echo "Synthesizing and implementing design for target $(TARGET)"
@@ -36,28 +36,20 @@ flash:
 	mkdir -p build/logs
 	FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" vivado -mode batch -source scripts/flash.tcl -journal "build/logs/flash_$(BUILD_TIME).jou"  -log "build/logs/flash_$(BUILD_TIME).log"
 
-test:
-	@echo "Running testbenches"
-	bash scripts/test.bash
-
 clean:
 	@echo "Cleaning up"
-	make rmbuid
+	make rmbuild
 	make rmgen
 	make rmtest
 	make rmlogs
 
-rmbuid:
+rmbuild:
 	@echo "Removing build files"
 	rm -rf build
 
 rmgen:
 	@echo "Removing generated ip cores files"
 	rm -rf ip/**/gen
-
-rmtest:
-	@echo "Removing testbench files"
-	rm -rf build_tb
 
 rmlogs:
 	@echo "Removing log files"
@@ -67,4 +59,4 @@ shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
 test:
-	verilator -DSIMULATION --structs-packed src/clock/simulator_mock.sv src/math/linalg.sv src/clock/clock_modes.sv src/clock/clock.sv src/clock/clock_manager.sv src/display/video_modes.sv src/buffer.sv src/display/display.sv src/main.sv --binary
+	verilator -DSIMULATION --structs-packed -f tb-files.txt --binary --Mdir build/test

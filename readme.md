@@ -47,20 +47,15 @@ Images should be stored in `static` with the name `<IMAGE_NAME>_<RES_H>x<RES_V>p
 
 To run the testbenches simply run `make test`.
 
-The testbenches are run using Xilinx Vivado Simulator.
-This comes packaged with Vivado and is good enough for our use case.
+The testbenches are simulated with verilator, using cocotb as test manager.
 
-The test runner is a simple bash script.
-It loads the specified files in `tb-files.txt`.
-Then, it elaborates them in the specified order.
-And finally, it runs the test and simply checks if the output contained "Error".
-
-An example testbench `src/example_tb.sv` has been provided.
-It can be used as a template (if you are very lazy).
+Verilator reads files in the order specified in `tb-files.txt`. The order
+is important for making sure verilator sees a module declaration before
+trying to use it.
 
 #### A note on `tb-files.txt`
 It would be preferrable to not have to specify the testbench files manually.
-However, Xilinx Vivado Simulator parses the files in the provided
-order without any dependency analysis. If one file that depends on anohter
+However, verilator parses the files in the provided
+order without any dependency analysis. If one file that depends on another
 is provided first the parsing will fail. Thus, simple globbing will not do.
 If anyone has a better suggestion please inform us.

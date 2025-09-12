@@ -1,9 +1,17 @@
-# This is a custom file used to keep track of the files
-# that should be tested and (more importantly) their
-# dependencies in order of dependency.
+// This is a custom file used to keep track of the files
+// that should be tested and (more importantly) their
+// dependencies in order of dependency.
 
-# This file is sadly necessary because xsim is dumb and
-# parses files in the provided order. Meaning that a file
-# must be read before its dependencies or xsim will crash.
+// This file is sadly necessary because verilator is dumb and
+// has to parse files in the provided order. Meaning that a file
+// must be read before its dependencies or verilator will crash.
 
-example_tb.sv # Example test bench.
+src/clock/simulator_mock.sv
+src/math/linalg.sv
+src/clock/clock_modes.sv
+src/clock/clock.sv
+src/clock/clock_manager.sv
+src/display/video_modes.sv
+src/buffer.sv
+src/display/display.sv
+src/main.sv
