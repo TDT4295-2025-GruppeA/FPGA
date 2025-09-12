@@ -1,6 +1,9 @@
 localparam DECIMAL_WIDTH = 24;
 localparam TOTAL_WIDTH = 64;
 
+`ifndef FIXED_H
+`define FIXED_H
+
 typedef logic signed [TOTAL_WIDTH-1:0] fixed;
 
 // FADD and FSUB are not realy necessary,
@@ -20,3 +23,5 @@ typedef logic signed [TOTAL_WIDTH-1:0] fixed;
 `define F(f) (fixed'(f * real'(1 << DECIMAL_WIDTH)))
 // Convert fixed to real
 `define R(f) ((f) / real'(1 << DECIMAL_WIDTH))
+
+`endif // FIXED_H
