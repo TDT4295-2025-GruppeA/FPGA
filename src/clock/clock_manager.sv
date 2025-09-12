@@ -43,7 +43,7 @@ module ClockManager #(
         .rstn_in(rstn),
 
         .clk_out(clk_system),
-        .rstn_out(clk_system)
+        .rstn_out(rstn_system)
     );
 
 endmodule
