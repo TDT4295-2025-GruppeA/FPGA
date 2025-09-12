@@ -32,7 +32,7 @@ module Top (
     ClockManager #(
         .CLK_DISPLAY(VIDEO_MODE.clock_config),
         .CLK_SYSTEM(CLK_100_50_MHZ)
-    )(
+    ) clock_manager_inst (
         .clk_ext(clk_ext),
         .reset(reset),
 
@@ -50,7 +50,7 @@ module Top (
 
     Display #(
         .VIDEO_MODE(VIDEO_MODE)
-    ) display (
+    ) display_inst (
         .clk_pixel(clk_display),
         .rstn_pixel(rstn_display),
 
