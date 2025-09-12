@@ -26,6 +26,6 @@ package video_modes_pkg;
 
     // TESTED
     // UNTESTED
-    localparam video_mode_t VMODE_640x480p60 = {640, 16, 96, 48, neg, 480, 10, 2, 33, neg, clock_modes_pkg::CLK_100_25_175_MHZ};
-    localparam video_mode_t VMODE_800x600p60 = {800, 40, 128, 88, pos, 600, 1, 4, 23, pos, clock_modes_pkg::CLK_100_40_MHZ};
+    localparam video_mode_t VMODE_640x480p60 = '{640, 16, 96, 48, neg, 480, 10, 2, 33, neg, clock_modes_pkg::CLK_100_25_175_MHZ};
+    localparam video_mode_t VMODE_800x600p60 = '{800, 40, 128, 88, pos, 600, 1, 4, 23, pos, clock_modes_pkg::CLK_100_40_MHZ};
 endpackage
