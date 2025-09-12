@@ -59,4 +59,4 @@ shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
 test:
-	verilator -DSIMULATION --structs-packed -f tb-files.txt --binary --Mdir build/test
+	make -f Makefile.sim

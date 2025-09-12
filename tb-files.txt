@@ -1,11 +1,3 @@
-// This is a custom file used to keep track of the files
-// that should be tested and (more importantly) their
-// dependencies in order of dependency.
-
-// This file is sadly necessary because verilator is dumb and
-// has to parse files in the provided order. Meaning that a file
-// must be read before its dependencies or verilator will crash.
-
 src/clock/simulator_mock.sv
 src/math/linalg.sv
 src/clock/clock_modes.sv
