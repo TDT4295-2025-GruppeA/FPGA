@@ -2,7 +2,7 @@
 `define MATRIX(rows, cols, name) fixed name [0:rows-1][0:cols-1]
 
 `define VECTOR(dim, name) `MATRIX(dim, 1, name)
-
+`ifdef WIP
 module Add #(
     parameter int M = 3,
     parameter int N = 1
@@ -51,7 +51,7 @@ endmodule
 
 module ScaMul #(
     parameter int M = 3,
-    parameter int N = 1,
+    parameter int N = 1
 )(
     input fixed l,
     input `MATRIX(M, N, r),
@@ -107,10 +107,11 @@ module T #(
 endmodule
 
 module Inv #(
-    parameter int N = 3,
+    parameter int N = 3
 )(
     input `MATRIX(N, N, i),
     output `MATRIX(N, N, o)
-)
+);
     
 endmodule
+`endif
