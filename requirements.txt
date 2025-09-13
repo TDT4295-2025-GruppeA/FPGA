@@ -16,4 +16,4 @@ pluggy==1.6.0
 Pygments==2.19.2
 pytest==8.4.2
 #copra @ git+https://github.com/cocotb/copra.git@455d6a93b3e80b9c004a1481210b29b02832ee29
-copra @ file:///home/nico/coding/projects/copra
+copra @ git+https://github.com/sommervold/copra.git@fb16dd15ea78bb2c0a08ce7903b74fa7a853a838
