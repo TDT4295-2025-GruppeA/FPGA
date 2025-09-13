@@ -4,13 +4,19 @@ from types import ModuleType
 from dataclasses import dataclass
 import warnings
 import sys
+import os
 
 import jinja2
 import cocotb._decorators
 
 DIR_TESTS = "tests"
 DIR_TOOLS = "testtools"
-sys.path.append("tests")
+
+# TODO: clean up paths accross modules?
+abs_path = os.path.abspath(".")
+test_path = os.path.join(abs_path, DIR_TESTS)
+sys.path.insert(0, abs_path)
+sys.path.insert(0, test_path)
 
 
 @dataclass
@@ -34,7 +40,7 @@ def import_module(module_name: str) -> TestModule:
     name = name.split(f"{DIR_TESTS}/", 1)[1]
     name = name.replace("/", ".")
 
-    module = importlib.import_module(name)
+    module = importlib.import_module(".".join(("tests", name)))
     tests = find_tests(module)
 
     # Get name of verilog toplevel module
