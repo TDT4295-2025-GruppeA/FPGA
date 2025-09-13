@@ -1,9 +1,0 @@
-SIM := verilator
-MODULE := tb.test_example
-TOPLEVEL_LANG := verilog
-VERILOG_SOURCES := $(shell cat tb-files.txt)
-COMPILE_ARGS := -DSIMULATION --structs-packed
-SIM_BUILD := build/test
-COCOTB_RESULTS_FILE := build/test/results.xml
-
-include $(shell cocotb-config --makefiles)/Makefile.sim

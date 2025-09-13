@@ -59,4 +59,5 @@ shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
 test:
-	make -f Makefile.sim
+	python testtools/gentest.py
+	pytest testtools/testrunner.py
