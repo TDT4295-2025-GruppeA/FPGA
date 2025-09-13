@@ -4,13 +4,22 @@ import pytest
 import cocotb_test.simulator
 import os
 
-DIR_TESTS = os.path.join(os.path.abspath("."), "tests")
+DIR_TESTS = os.path.join(os.path.abspath("."), "tests") # TODO: ability to change path
+
+def get_dependencies(verilog_module: str):
+    # TODO: fail more gracefully
+    with open("build/file_compile_order.txt") as f: # TODO: ability to change path
+        dependencies = f.read().split("\n")
+    for line in dependencies:
+        if line.startswith(verilog_module):
+            # Line contains file for this
+            return line.split(verilog_module + " ", 1)[1].split(":")
+    raise RuntimeError(f"Could not find file compile order for module '{verilog_module}'")
 
 
 def create_test(toplevel: str, filename, module_name: str, testcase: str | None = None):
     def decorator(func):
-        with open("tb-files.txt") as f:
-            files = f.read().split("\n")
+        files = get_dependencies(toplevel)
 
         @functools.wraps(func)
         @pytest.mark.module(filename, module_name, testcase)
@@ -25,7 +34,7 @@ def create_test(toplevel: str, filename, module_name: str, testcase: str | None 
                 compile_args=["--structs-packed", "-DSIMULATION"],
                 testcase=testcase,
                 # Different simbuild dir to utilize cache on each module
-                sim_build=f"build/test/simbuild_{toplevel}",
+                sim_build=f"build/test/simbuild_{toplevel}", # TODO: ability to change path
                 python_search=[DIR_TESTS],
             )
 
