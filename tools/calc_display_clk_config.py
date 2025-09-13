@@ -34,7 +34,9 @@ def main(clk_in: float, outputs: list[float]) -> ClockConfig:
     CLKDIV_STEP = 0.125
 
     if len(outputs) > 6 or len(outputs) == 0:
-        raise ValueError(f"Number of output clocks must be between 1 and 6, not {len(outputs)}")
+        raise ValueError(
+            f"Number of output clocks must be between 1 and 6, not {len(outputs)}"
+        )
 
     clk_out = outputs[0]
 
@@ -73,10 +75,19 @@ def main(clk_in: float, outputs: list[float]) -> ClockConfig:
 def parse_args() -> Arguments:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--input", type=float, help="Input frequency measured in MHz", dest="clk_in", required=True
+        "--input",
+        type=float,
+        help="Input frequency measured in MHz",
+        dest="clk_in",
+        required=True,
     )
     parser.add_argument(
-        "--output", type=float, help="Output frequency measured in MHz", dest="clk_out", required=True, action="append"
+        "--output",
+        type=float,
+        help="Output frequency measured in MHz",
+        dest="clk_out",
+        required=True,
+        action="append",
     )
     args = parser.parse_args()
 

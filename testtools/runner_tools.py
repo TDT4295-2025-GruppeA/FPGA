@@ -6,6 +6,7 @@ import os
 
 DIR_TESTS = os.path.join(os.path.abspath("."), "tests")
 
+
 def create_test(toplevel: str, filename, module_name: str, testcase: str | None = None):
     def decorator(func):
         with open("tb-files.txt") as f:

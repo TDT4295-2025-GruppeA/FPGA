@@ -81,7 +81,7 @@ def find_tests(module: ModuleType) -> dict[str, TestFunction]:
             func = getattr(module, var)
             if isinstance(func, cocotb._decorators.Test):
                 tests[var] = TestFunction(var, func)
-            
+
     return tests
 
 
