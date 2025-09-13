@@ -8,6 +8,8 @@ xsim.dir/
 # Generated files
 *.pb
 __pycache__/
+.pytest_cache/
+testtools/testrunner.py
 
 # Log files
 *.log

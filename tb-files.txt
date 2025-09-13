@@ -7,3 +7,4 @@ src/display/video_modes.sv
 src/buffer.sv
 src/display/display.sv
 src/main.sv
+src/math/adder.sv
