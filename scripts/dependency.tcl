@@ -12,9 +12,12 @@ read_verilog [ fileutil::findByPattern src *.*v ]
 # TODO: ability to change path
 set fh [open "build/file_compile_order.txt" w]
 
+# Modules to include in dependency analysis
+set modules {Adder Example FixedTB Top}
+
 set_property verilog_define SIMULATION [current_fileset]
 set_property source_mgmt_mode All [current_project]
-foreach item {Adder Top} {
+foreach item $modules {
     set_property top $item [current_fileset]
     set files [get_files -compile_order sources -used_in simulation -of_objects [ get_filesets sources_1 ]]
     set file_list [join $files ":"]
