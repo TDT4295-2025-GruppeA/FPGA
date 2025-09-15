@@ -4,6 +4,7 @@ from typing import Any
 import pytest
 import cocotb_test.simulator
 import os
+import re
 
 DIR_TESTS = os.path.join(os.path.abspath("."), "tests") # TODO: ability to change path
 
@@ -24,6 +25,11 @@ def get_dependencies(verilog_module: str):
             return line.split(verilog_module + " ", 1)[1].split(":")
     raise RuntimeError(f"Could not find file compile order for module '{verilog_module}'")
 
+def parameters_to_safe_filename(parameters: dict) -> str:
+    # Sort keys for deterministic order
+    unsafe = "_".join([f"{key}-{parameters[key]}" for key in sorted(parameters)])
+    safe = re.sub(r'[^a-zA-Z0-9_.-]', '_', unsafe)
+    return safe
 
 def create_test(toplevel: str, filename: str, module_name: str, testcase: str | None = None, parameters: dict[str, Any] | None = None):
     def decorator(func):
@@ -41,6 +47,10 @@ def create_test(toplevel: str, filename: str, module_name: str, testcase: str | 
             with open(filename, "w") as f:
                 f.write(STUB_CODE)
 
+            build_dir = f"build/test/simbuild_{toplevel}"
+            if parameters:
+                build_dir += "_" + parameters_to_safe_filename(parameters)
+
             cocotb_test.simulator.run(
                 simulator="verilator",
                 verilog_sources=files,
@@ -50,7 +60,7 @@ def create_test(toplevel: str, filename: str, module_name: str, testcase: str | 
                 compile_args=["--structs-packed", "-DSIMULATION"],
                 testcase=testcase,
                 # Different simbuild dir to utilize cache on each module
-                sim_build=f"build/test/simbuild_{toplevel}", # TODO: ability to change path
+                sim_build=build_dir, # TODO: ability to change path
                 python_search=[DIR_TESTS],
                 parameters=parameters,
             )
