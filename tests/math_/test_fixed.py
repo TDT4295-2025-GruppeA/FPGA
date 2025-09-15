@@ -3,14 +3,13 @@ import numpy as np
 from stubs.fixedtb import Fixedtb
 from cocotb.triggers import Timer
 
+from utils import within_tolerance
+
 VERILOG_MODULE = "FixedTB"
 
 TOLERANCE = 0.001
 
 TEST_VALUES = set(np.linspace(-1, 1, 101) + np.linspace(-10, 10, 101))
-
-def within_tolerance(a, b, tol=TOLERANCE):
-    return abs(a - b) < tol
 
 @cocotb.test()
 async def test_fixed_arithmetic(dut: Fixedtb):

@@ -1,11 +1,11 @@
+`ifndef FIXED_H
+`define FIXED_H
+
 localparam DECIMAL_WIDTH = 16;
 localparam TOTAL_WIDTH = 32;
 
 // Used to avoid overflow in multiplication
 localparam DOUBLE_WIDTH = TOTAL_WIDTH * 2;
-
-`ifndef FIXED_H
-`define FIXED_H
 
 typedef logic signed [TOTAL_WIDTH-1:0] fixed;
 
