@@ -64,6 +64,7 @@ shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
 build/file_compile_order.txt: scripts/dependency.tcl
+	mkdir -p build
 	vivado -mode batch -journal /dev/null -log /dev/null -source scripts/dependency.tcl 2>&1 >/dev/null
 
 test: build/file_compile_order.txt

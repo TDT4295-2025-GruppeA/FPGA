@@ -54,16 +54,17 @@ way around this other than including the typing stubs upstream.
 
 ### Example test
 
-Here is an example test testing the `Adder` module, located in
-`src/math/adder.sv`
+Here is an example test testing the `Example` module, located in
+`src/example.sv`
 
     import cocotb
-    from stubs.adder import Adder
+    from cocotb.triggers import Timer
+    from stubs.example import Example
 
-    VERILOG_MODULE = "Adder"
+    VERILOG_MODULE = "Example"
 
     @cocotb.test()
-    async def test_adder_1(dut: Adder):
+    async def test_adder_1(dut: Example):
         """Very simple test to demonstrate test-system"""
         dut.a.value = 1
         dut.b.value = 2
@@ -72,7 +73,9 @@ Here is an example test testing the `Adder` module, located in
 
         assert dut.sum.value == 3
 
-In this test, the `dut` will be the `Adder`-module. we set values for
+    ...
+
+In this test, the `dut` will be the `Example`-module. we set values for
 a and b, then yielding to the simulator to calculate the result. The
 result is then available and asserted to see if it is correct.
 
