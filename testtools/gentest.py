@@ -31,6 +31,7 @@ class TestModule:
     module: ModuleType
     tests: dict[str, TestFunction]
     verilog_toplevel: str
+    verilog_parameters: str
 
 
 def import_module(module_name: str) -> TestModule:
@@ -55,12 +56,21 @@ def import_module(module_name: str) -> TestModule:
         raise ImportError(
             f"Module '{name}' has invalid value for 'VERILOG_MODULE'. Got '{type(name)}', expected str. Ignoring module"
         )
+    
+    # Get parameters to toplevel module if available
+    if hasattr(module, "VERILOG_PARAMETERS"):
+        verilog_parameters = getattr(module, "VERILOG_PARAMETERS")
+        assert isinstance(verilog_parameters, dict), f"Module '{name}' has non-dict value for 'VERILOG_PARAMETERS."
+        verilog_parameters = repr(verilog_parameters)
+    else:
+        verilog_parameters = None
 
     return TestModule(
         name=name,
         module=module,
         tests=tests,
         verilog_toplevel=verilog_toplevel,
+        verilog_parameters=verilog_parameters,
     )
 
 

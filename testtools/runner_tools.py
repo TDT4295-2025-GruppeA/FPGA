@@ -1,4 +1,5 @@
 import functools
+from typing import Any
 
 import pytest
 import cocotb_test.simulator
@@ -24,7 +25,7 @@ def get_dependencies(verilog_module: str):
     raise RuntimeError(f"Could not find file compile order for module '{verilog_module}'")
 
 
-def create_test(toplevel: str, filename, module_name: str, testcase: str | None = None):
+def create_test(toplevel: str, filename: str, module_name: str, testcase: str | None = None, parameters: dict[str, Any] | None = None):
     def decorator(func):
         files = get_dependencies(toplevel)
 
@@ -51,6 +52,7 @@ def create_test(toplevel: str, filename, module_name: str, testcase: str | None 
                 # Different simbuild dir to utilize cache on each module
                 sim_build=f"build/test/simbuild_{toplevel}", # TODO: ability to change path
                 python_search=[DIR_TESTS],
+                parameters=parameters,
             )
 
         return wrapper
