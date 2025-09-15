@@ -4,18 +4,9 @@ import numpy as np
 from stubs.cross import Cross
 
 from utils import numpy_to_cocotb, cocotb_to_numpy, within_tolerance
+from cases import TEST_VECTORS
 
 VERILOG_MODULE = "Cross"
-
-TEST_VECTORS = [
-    np.array([    1,    0,     0]),
-    np.array([    0,    2,     0]),
-    np.array([    0,    0,     3]),
-    np.array([    1,   -1,     1]),
-    np.array([   -1,    0,     0]),
-    np.array([ 0.25, 0.50,  0.75]),
-    np.array([-0.10, 0.20, -0.50]),
-]
 
 @cocotb.test()
 async def test_cross(dut: Cross):

@@ -1,23 +1,23 @@
 import cocotb
 from cocotb.triggers import Timer
 import numpy as np
-from stubs.dot import Dot
+# from stubs.sub import Sub
 
 from utils import numpy_to_cocotb, cocotb_to_numpy, within_tolerance
 from cases import TEST_VECTORS
 
-VERILOG_MODULE = "Dot"
+VERILOG_MODULE = "Sub"
 VERILOG_PARAMETERS = {
     "N": 3,
 }
 
 @cocotb.test()
-async def test_dot(dut: Dot):
+async def test_dot(dut):
     for l in TEST_VECTORS:
         for r in TEST_VECTORS:
-            expected_o = np.dot(l, r)
+            expected_o = l - r
 
-            dut._log.info(f"Testing: {l} · {r} = {expected_o}")
+            dut._log.info(f"Testing: {l} - {r} = {expected_o}")
 
             dut.l.set(numpy_to_cocotb(l))
             dut.r.set(numpy_to_cocotb(r))
@@ -26,4 +26,4 @@ async def test_dot(dut: Dot):
 
             actual_o = cocotb_to_numpy(dut.o.get())
 
-            assert within_tolerance(actual_o, expected_o), f"Dot product failed: {l} · {r} = {actual_o} != {expected_o}"
+            assert within_tolerance(actual_o, expected_o), f"Subtraction failed: {l} - {r} = {actual_o} != {expected_o}"
