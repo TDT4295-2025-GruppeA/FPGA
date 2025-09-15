@@ -20,3 +20,4 @@ testtools/testrunner.py
 venv/
 .envrc
 .vscode
+.python-version
