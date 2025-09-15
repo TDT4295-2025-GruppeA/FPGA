@@ -5,8 +5,8 @@ import video_modes_pkg::*;
 
 module Display #(
     parameter video_mode_t VIDEO_MODE = VMODE_640x480p60,
-    parameter int BUFFER_WIDTH = 320,
-    parameter int BUFFER_HEIGHT = 240,
+    parameter int BUFFER_WIDTH = 160,
+    parameter int BUFFER_HEIGHT = 120,
     parameter int BUFFER_DATA_WIDTH = 12
 ) (
     input logic clk_pixel,
@@ -56,12 +56,20 @@ module Display #(
                     && y <= VH'(V_RESOLUTION - 1));
     end
 
+    // A signal to select which buffer to display
+    logic buffer_select;
 
     // Iterate through pixels in image
     always_ff @(posedge clk_pixel or negedge rstn_pixel) begin
         if (x == VW'(LINEWIDTH-1)) begin
             x <= 0;
-            y <= (y == VH'(LINEHEIGHT-1)) ? 0 : y + 1;
+            if (y == VH'(LINEHEIGHT-1)) begin
+                y <= 0;
+                // Toggle the buffer select at the end of each frame
+                buffer_select <= ~buffer_select;
+            end else begin
+                y <= y + 1;
+            end
         end else begin
             x <= x + 1;
         end
@@ -70,6 +78,7 @@ module Display #(
         if (!rstn_pixel) begin
             x <= 0;
             y <= 0;
+            buffer_select <= 0;
         end
     end
 
@@ -82,23 +91,42 @@ module Display #(
     localparam int BUFFER_SIZE = BUFFER_WIDTH * BUFFER_HEIGHT;
     // Determine the address width required for the buffer
     localparam int BUFFER_ADDR_WIDTH = $clog2(BUFFER_SIZE);
+
+    logic[BUFFER_DATA_WIDTH-1:0] fb_data_a;
+    logic[BUFFER_DATA_WIDTH-1:0] fb_data_b;
+
     logic[BUFFER_ADDR_WIDTH-1:0] pixel_addr;
-    logic[BUFFER_DATA_WIDTH-1:0] fb_data;
     
     // Only scales based on width, and assumes a multiple of 2.
     localparam int SCALE = $clog2(H_RESOLUTION / BUFFER_WIDTH);
     assign pixel_addr = (32'(y) >> SCALE) * BUFFER_WIDTH + (32'(x) >> SCALE);
 
     Buffer #(
-        .FILE_SOURCE("static/red_320x240p12.mem"),
+        .FILE_SOURCE("static/pacman_160x120p12.mem"),
         .FILE_SIZE(BUFFER_WIDTH * BUFFER_HEIGHT),
         .DATA_WIDTH(BUFFER_DATA_WIDTH)
-    ) buffer_inst (
+    ) fb_a (
         .clk(clk_pixel),
         .rstn(rstn_pixel),
         .addr(pixel_addr),
-        .data(fb_data)
+        .data(fb_data_a)
     );
+
+    Buffer #(
+        .FILE_SOURCE("static/red_160x120p12.mem"),
+        .FILE_SIZE(BUFFER_WIDTH * BUFFER_HEIGHT),
+        .DATA_WIDTH(BUFFER_DATA_WIDTH)
+    ) fb_b (
+        .clk(clk_pixel),
+        .rstn(rstn_pixel),
+        .addr(pixel_addr),
+        .data(fb_data_b)
+    );
+
+    // Select correct buffer to use for display
+    // TODO: Add dual port for frame buffers
+    logic[BUFFER_DATA_WIDTH-1:0] fb_data;
+    assign fb_data = (buffer_select) ? fb_data_b : fb_data_a;
 
     // Draw from image buffer
     logic [3:0] paint_r, paint_g, paint_b;
