@@ -7,7 +7,7 @@ from utils import numpy_to_cocotb, cocotb_to_numpy, within_tolerance
 
 VERILOG_MODULE = "Cross"
 
-TEST_CASES = [
+TEST_VECTORS = [
     np.array([    1,    0,     0]),
     np.array([    0,    2,     0]),
     np.array([    0,    0,     3]),
@@ -19,8 +19,8 @@ TEST_CASES = [
 
 @cocotb.test()
 async def test_cross(dut: Cross):
-    for l in TEST_CASES:
-        for r in TEST_CASES:
+    for l in TEST_VECTORS:
+        for r in TEST_VECTORS:
             expected_o = np.cross(l, r)
 
             dut._log.info(f"Testing: {l} x {r} = {expected_o}")

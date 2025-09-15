@@ -23,19 +23,19 @@ def within_tolerance(a: int | float | np.ndarray, b: int | float | np.ndarray, t
     """Check if two values are within a certain tolerance. The values may be scalars or numpy arrays."""
     return bool(np.allclose(a, b, atol=TOLERANCE, rtol=0))
 
-def cocotb_to_numpy(cocotb_matrix: Array) -> np.ndarray:
+def cocotb_to_numpy(cocotb_matrix: Array | LogicArray) -> np.ndarray:
     """Converts a cocotb ArrayObject of fixed point integers to a numpy array of floats."""
-    def convert_element(elem) -> int | np.ndarray:
-        if isinstance(elem, Array):
-            return np.array([convert_element(e) for e in elem])
+    def convert_array(array: Array | LogicArray) -> int | np.ndarray:
+        if isinstance(array, Array):
+            return np.array([convert_array(element) for element in array])
 
-        if isinstance(elem, LogicArray):
-            return elem.to_signed()
+        if isinstance(array, LogicArray):
+            return array.to_signed()
         
         # This should never happen
         raise RuntimeError("Element is not an Array or LogicArray")
     
-    res = convert_element(cocotb_matrix)
+    res = convert_array(cocotb_matrix)
 
     return to_float(res) # type: ignore
 

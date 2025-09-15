@@ -13,7 +13,8 @@ read_verilog [ fileutil::findByPattern src *.*v ]
 set fh [open "build/file_compile_order.txt" w]
 
 # Modules to include in dependency analysis
-set modules {Adder Example FixedTB MatMul Cross Top}
+# TODO: Somehow infer this automatically?
+set modules {Adder Example FixedTB MatMul Cross Dot Top}
 
 set_property verilog_define SIMULATION [current_fileset]
 set_property source_mgmt_mode All [current_project]
