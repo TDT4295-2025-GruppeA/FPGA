@@ -6,7 +6,8 @@ import video_modes_pkg::*;
 module Display #(
     parameter video_mode_t VIDEO_MODE = VMODE_640x480p60,
     parameter int BUFFER_WIDTH = 320,
-    parameter int BUFFER_HEIGHT = 240
+    parameter int BUFFER_HEIGHT = 240,
+    parameter int BUFFER_DATA_WIDTH = 12
 ) (
     input logic clk_pixel,
     input logic rstn_pixel,
@@ -78,17 +79,20 @@ module Display #(
     // ##### Drawing from image #####
     // ##############################
 
-    // TODO: dynamic scaled pixel_addr
-    logic[31:0] pixel_addr;
-    logic[11:0] fb_data;
+    localparam int BUFFER_SIZE = BUFFER_WIDTH * BUFFER_HEIGHT;
+    // Determine the address width required for the buffer
+    localparam int BUFFER_ADDR_WIDTH = $clog2(BUFFER_SIZE);
+    logic[BUFFER_ADDR_WIDTH-1:0] pixel_addr;
+    logic[BUFFER_DATA_WIDTH-1:0] fb_data;
     
     // Only scales based on width, and assumes a multiple of 2.
     localparam int SCALE = $clog2(H_RESOLUTION / BUFFER_WIDTH);
-    assign pixel_addr = (32'(y) >> 1) * BUFFER_WIDTH + (32'(x) >> 1);
+    assign pixel_addr = (32'(y) >> SCALE) * BUFFER_WIDTH + (32'(x) >> SCALE);
 
     Buffer #(
         .FILE_SOURCE("static/red_320x240p12.mem"),
-        .FILE_SIZE(BUFFER_WIDTH * BUFFER_HEIGHT)
+        .FILE_SIZE(BUFFER_WIDTH * BUFFER_HEIGHT),
+        .DATA_WIDTH(BUFFER_DATA_WIDTH)
     ) buffer_inst (
         .clk(clk_pixel),
         .rstn(rstn_pixel),
