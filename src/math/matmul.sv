@@ -6,7 +6,7 @@ module MatMul #(
     parameter int M = 3,
     parameter int K = 3,
     parameter int N = 3
-)(
+) (
     input `MATRIX(M, K, l),
     input `MATRIX(K, N, r),
     output `MATRIX(M, N, o)
