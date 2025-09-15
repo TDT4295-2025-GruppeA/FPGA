@@ -36,6 +36,11 @@ flash:
 	mkdir -p build/logs
 	FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" vivado -mode batch -source scripts/flash.tcl -journal "build/logs/flash_$(BUILD_TIME).jou"  -log "build/logs/flash_$(BUILD_TIME).log"
 
+script:
+	@echo "Running tcl script"
+	mkdir -p build/logs
+	vivado -mode batch -source $(SCRIPT) -journal "build/logs/$(SCRIPT)_$(BUILD_TIME).jou"  -log "build/logs/$(SCRIPT)_$(BUILD_TIME).log"
+
 clean:
 	@echo "Cleaning up"
 	make rmbuild
@@ -58,5 +63,9 @@ rmlogs:
 shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
-test:
-	make -f Makefile.sim
+build/file_compile_order.txt: scripts/dependency.tcl
+	vivado -mode batch -journal /dev/null -log /dev/null -source scripts/dependency.tcl 2>&1 >/dev/null
+
+test: build/file_compile_order.txt
+	python testtools/gentest.py
+	pytest testtools/testrunner.py

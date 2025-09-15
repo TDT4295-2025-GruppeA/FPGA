@@ -1,9 +1,0 @@
-src/clock/simulator_mock.sv
-src/math/linalg.sv
-src/clock/clock_modes.sv
-src/clock/clock.sv
-src/clock/clock_manager.sv
-src/display/video_modes.sv
-src/buffer.sv
-src/display/display.sv
-src/main.sv

@@ -1,9 +1,19 @@
-cocotb==1.9.2
+black==25.1.0
+click==8.2.1
+cocotb==2.0.0
+cocotb-test==0.2.6
 find_libpython==0.4.1
 iniconfig==2.1.0
+Jinja2==3.1.6
+MarkupSafe==3.0.2
+mypy_extensions==1.1.0
 numpy==2.3.2
 packaging==25.0
+pathspec==0.12.1
 pillow==11.3.0
+platformdirs==4.4.0
 pluggy==1.6.0
 Pygments==2.19.2
 pytest==8.4.2
+#copra @ git+https://github.com/cocotb/copra.git@455d6a93b3e80b9c004a1481210b29b02832ee29
+copra @ git+https://github.com/sommervold/copra.git@fb16dd15ea78bb2c0a08ce7903b74fa7a853a838

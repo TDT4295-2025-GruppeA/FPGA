@@ -33,7 +33,11 @@ def convert_image(source: BytesIO, destination: TextIOWrapper, res: Resolution) 
     for y in range(res.height):
         for x in range(res.width):
             pxl = arr[y][x]
-            color = (int(pxl[0]) << (2*res.color_depth)) | (int(pxl[1]) << res.color_depth) | int(pxl[2])
+            color = (
+                (int(pxl[0]) << (2 * res.color_depth))
+                | (int(pxl[1]) << res.color_depth)
+                | int(pxl[2])
+            )
             destination.write(f"{color:x}\n")
 
 
