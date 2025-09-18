@@ -53,13 +53,14 @@ module Top (
     ) display_inst (
         .clk_pixel(clk_display),
         .rstn_pixel(rstn_display),
-
         .vga_hsync(vga_hsync),
         .vga_vsync(vga_vsync),
         .vga_red(vga_red),
         .vga_green(vga_green),
         .vga_blue(vga_blue)
     );
+
+    Rasterizer rast ();
 
 endmodule
 
