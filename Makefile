@@ -45,7 +45,6 @@ clean:
 	@echo "Cleaning up"
 	make rmbuild
 	make rmgen
-	make rmtest
 	make rmlogs
 
 rmbuild:

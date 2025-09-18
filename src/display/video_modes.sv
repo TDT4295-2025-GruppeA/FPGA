@@ -1,4 +1,7 @@
+
 package video_modes_pkg;
+    import clock_modes_pkg::*;
+    
     localparam neg = 0;
     localparam pos = 1;
 
@@ -18,7 +21,7 @@ package video_modes_pkg;
         bit v_sync_pol;
 
         // Clock config
-        clock_modes_pkg::clock_config_t clock_config;
+        clock_config_t clock_config;
     } video_mode_t;
 
     // Values are fetched from https://projectf.io/posts/video-timings-vga-720p-1080p/

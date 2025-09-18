@@ -1,0 +1,28 @@
+import cocotb
+import numpy as np
+from stubs.fixedtb import Fixedtb
+from cocotb.triggers import Timer
+
+from utils import within_tolerance
+
+VERILOG_MODULE = "FixedTB"
+
+TEST_VALUES = set(np.linspace(-1, 1, 101) + np.linspace(-10, 10, 101))
+
+@cocotb.test()
+async def test_fixed_arithmetic(dut: Fixedtb):
+    for a in TEST_VALUES:
+        for b in TEST_VALUES:
+            dut._log.info(f"Testing a={a:.5f}, b={b:.5f}")
+
+            dut.a.value = a
+            dut.b.value = b
+
+            await Timer(1)
+
+            assert within_tolerance(dut.sum.value, a + b), f"Addition failed: {a:.5f} + {b:.5f} = {dut.sum.value:.5f} != {a + b:.5f}"
+            assert within_tolerance(dut.diff.value, a - b), f"Subtraction failed: {a:.5f} - {b:.5f} = {dut.diff.value:.5f} != {a - b:.5f}"
+            assert within_tolerance(dut.prod.value, a * b), f"Multiplication failed: {a:.5f} * {b:.5f} = {dut.prod.value:.5f} != {a * b:.5f}"
+            if b != 0:
+                assert within_tolerance(dut.quot.value, a / b), f"Division failed: {a:.5f} / {b:.5f} = {dut.quot.value:.5f} != {a / b:.5f}"
+    
