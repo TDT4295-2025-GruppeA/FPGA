@@ -1,5 +1,4 @@
-`include "src/math/fixed.svh"
-
+import fixed_pkg::*;
 import clock_modes_pkg::*;
 
 module Clock #(
@@ -12,10 +11,10 @@ module Clock #(
     output logic rstn_out
 );
     // clock period in nanoseconds
-    localparam real CLK_PERIOD = `R(CLOCK_CONFIG.clk_input_period);
-    localparam real MASTER_MULTIPLY = `R(CLOCK_CONFIG.master_mul);
+    localparam real CLK_PERIOD = ftor(CLOCK_CONFIG.clk_input_period);
+    localparam real MASTER_MULTIPLY = ftor(CLOCK_CONFIG.master_mul);
     localparam int MASTER_DIVIDE = CLOCK_CONFIG.master_div;
-    localparam real CLK_DIVIDE_F = `R(CLOCK_CONFIG.clk_div_f);
+    localparam real CLK_DIVIDE_F = ftor(CLOCK_CONFIG.clk_div_f);
 
     logic feedback;
     logic clk_out_unbuf;

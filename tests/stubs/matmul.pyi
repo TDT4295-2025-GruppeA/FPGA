@@ -13,9 +13,9 @@ class Matmul(cocotb.handle.HierarchyObject):
     i: cocotb.handle.LogicArrayObject
     j: cocotb.handle.LogicArrayObject
     k: cocotb.handle.LogicArrayObject
-    l: cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]
-    o: cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]
-    r: cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]
+    lhs: cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]
+    out: cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]
+    rhs: cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]
 
     @overload
     def __getitem__(self, name: Literal['K']) -> cocotb.handle.LogicArrayObject: ...
@@ -36,13 +36,13 @@ class Matmul(cocotb.handle.HierarchyObject):
     def __getitem__(self, name: Literal['k']) -> cocotb.handle.LogicArrayObject: ...
 
     @overload
-    def __getitem__(self, name: Literal['l']) -> cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]: ...
+    def __getitem__(self, name: Literal['lhs']) -> cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]: ...
 
     @overload
-    def __getitem__(self, name: Literal['o']) -> cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]: ...
+    def __getitem__(self, name: Literal['out']) -> cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]: ...
 
     @overload
-    def __getitem__(self, name: Literal['r']) -> cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]: ...
+    def __getitem__(self, name: Literal['rhs']) -> cocotb.handle.ArrayObject[cocotb.types.Array[cocotb.types.LogicArray], cocotb.handle.ArrayObject[cocotb.types.LogicArray, cocotb.handle.LogicArrayObject]]: ...
 
     @overload
     def __getitem__(self, name: str) -> cocotb.handle.SimHandleBase: ...

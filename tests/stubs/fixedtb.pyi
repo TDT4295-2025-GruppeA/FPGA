@@ -11,12 +11,12 @@ class Fixedtb(cocotb.handle.HierarchyObject):
     a_fixed: cocotb.handle.LogicArrayObject
     b: cocotb.handle.RealObject
     b_fixed: cocotb.handle.LogicArrayObject
-    div: cocotb.handle.RealObject
-    div_fixed: cocotb.handle.LogicArrayObject
-    mul: cocotb.handle.RealObject
-    mul_fixed: cocotb.handle.LogicArrayObject
-    sub: cocotb.handle.RealObject
-    sub_fixed: cocotb.handle.LogicArrayObject
+    diff: cocotb.handle.RealObject
+    diff_fixed: cocotb.handle.LogicArrayObject
+    prod: cocotb.handle.RealObject
+    prod_fixed: cocotb.handle.LogicArrayObject
+    quot: cocotb.handle.RealObject
+    quot_fixed: cocotb.handle.LogicArrayObject
     sum: cocotb.handle.RealObject
     sum_fixed: cocotb.handle.LogicArrayObject
 
@@ -33,22 +33,22 @@ class Fixedtb(cocotb.handle.HierarchyObject):
     def __getitem__(self, name: Literal['b_fixed']) -> cocotb.handle.LogicArrayObject: ...
 
     @overload
-    def __getitem__(self, name: Literal['div']) -> cocotb.handle.RealObject: ...
+    def __getitem__(self, name: Literal['diff']) -> cocotb.handle.RealObject: ...
 
     @overload
-    def __getitem__(self, name: Literal['div_fixed']) -> cocotb.handle.LogicArrayObject: ...
+    def __getitem__(self, name: Literal['diff_fixed']) -> cocotb.handle.LogicArrayObject: ...
 
     @overload
-    def __getitem__(self, name: Literal['mul']) -> cocotb.handle.RealObject: ...
+    def __getitem__(self, name: Literal['prod']) -> cocotb.handle.RealObject: ...
 
     @overload
-    def __getitem__(self, name: Literal['mul_fixed']) -> cocotb.handle.LogicArrayObject: ...
+    def __getitem__(self, name: Literal['prod_fixed']) -> cocotb.handle.LogicArrayObject: ...
 
     @overload
-    def __getitem__(self, name: Literal['sub']) -> cocotb.handle.RealObject: ...
+    def __getitem__(self, name: Literal['quot']) -> cocotb.handle.RealObject: ...
 
     @overload
-    def __getitem__(self, name: Literal['sub_fixed']) -> cocotb.handle.LogicArrayObject: ...
+    def __getitem__(self, name: Literal['quot_fixed']) -> cocotb.handle.LogicArrayObject: ...
 
     @overload
     def __getitem__(self, name: Literal['sum']) -> cocotb.handle.RealObject: ...

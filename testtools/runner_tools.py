@@ -31,7 +31,7 @@ def read_dependencies_file(file_path: str = "build/file_compile_order.txt") -> d
         module, files = parts
         return module, files.split(":")
 
-    return dict(parse_line(line) for line in dependencies)
+    return dict(parse_line(line) for line in dependencies if line)
 
 def get_dependencies(verilog_module: str):
     dependencies = read_dependencies_file()

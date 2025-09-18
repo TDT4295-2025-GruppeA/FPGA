@@ -7,42 +7,42 @@ from utils import within_tolerance, numpy_to_cocotb, cocotb_to_numpy
 
 VERILOG_MODULE = "MatMul"
 VERILOG_PARAMETERS = {
-    "M": 3,
-    "K": 3,
-    "N": 3,
+    "M": 4,
+    "K": 4,
+    "N": 4,
 }
 
 TEST_MATRICIES = [
     np.array([
-        [1, 0, 0],
-        [0, 1, 0],
-        [0, 0, 1],
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
     ]),
     np.array([
-        [0, 1, 0],
-        [1, 0, 0],
-        [0, 0, 1],
+        [0, 1, 0, 0],
+        [1, 0, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
     ]),
     np.array([
-        [0, 1, 0],
-        [-1, 0, 0],
-        [0, 0, 1],
+        [0, 1, 0, 0],
+        [-1, 0, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
     ]),
     np.array([
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
+        [1, 2, 3, 4],
+        [5, 6, 7, 8],
+        [9, 10, 11, 12],
+        [13, 14, 15, 16],
     ]),
     np.array([
-        [9, 8, 7],
-        [6, 5, 4],
-        [3, 2, 1],
+        [0.1, 0.2, 0.3, 0.4],
+        [0.5, 0.6, 0.7, 0.8],
+        [0.9, 0.1, 0.2, 0.3],
+        [0.4, 0.5, 0.6, 0.7],
     ]),
-    np.array([
-        [0.5, 0.25, 0.1],
-        [0.75, 0.1, 0.05],
-        [0.2, 0.4, 0.6],
-    ])
 ]
 
 @cocotb.test()
@@ -53,11 +53,11 @@ async def test_matmul(dut: Matmul):
 
             dut._log.info(f"Testing:\n{a} @ \n{b} = \n{expected_c}")
 
-            dut.l.set(numpy_to_cocotb(a))
-            dut.r.set(numpy_to_cocotb(b))
+            dut.lhs.set(numpy_to_cocotb(a))
+            dut.rhs.set(numpy_to_cocotb(b))
 
             await Timer(1)
 
-            actual_c = cocotb_to_numpy(dut.o.get())
+            actual_c = cocotb_to_numpy(dut.out.get())
 
             assert within_tolerance(actual_c, expected_c), f"Matrix multiplication failed: \n{a} @ \n{b} = \n{actual_c} != \n{expected_c}"

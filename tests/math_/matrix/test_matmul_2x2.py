@@ -43,11 +43,11 @@ async def test_matmul(dut: Matmul):
 
             dut._log.info(f"Testing:\n{a} @ \n{b} = \n{expected_c}")
 
-            dut.l.set(numpy_to_cocotb(a))
-            dut.r.set(numpy_to_cocotb(b))
+            dut.lhs.set(numpy_to_cocotb(a))
+            dut.rhs.set(numpy_to_cocotb(b))
 
             await Timer(1)
 
-            actual_c = cocotb_to_numpy(dut.o.get())
+            actual_c = cocotb_to_numpy(dut.out.get())
 
             assert within_tolerance(actual_c, expected_c), f"Matrix multiplication failed: \n{a} @ \n{b} = \n{actual_c} != \n{expected_c}"

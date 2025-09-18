@@ -1,31 +1,31 @@
-`include "src/math/fixed.svh"
+import fixed_pkg::*;
 
 module FixedTB (
     input real a,
     input real b,
     output real sum,
-    output real sub,
-    output real mul,
-    output real div
+    output real diff,
+    output real prod,
+    output real quot
 );
     fixed a_fixed;
     fixed b_fixed;
 
     fixed sum_fixed;
-    fixed sub_fixed;
-    fixed mul_fixed;
-    fixed div_fixed;
+    fixed diff_fixed;
+    fixed prod_fixed;
+    fixed quot_fixed;
 
-    assign a_fixed = `F(a);
-    assign b_fixed = `F(b);
+    assign a_fixed = rtof(a);
+    assign b_fixed = rtof(b);
 
-    assign sum_fixed = `ADD(a_fixed, b_fixed);
-    assign sub_fixed = `SUB(a_fixed, b_fixed);
-    assign mul_fixed = `MUL(a_fixed, b_fixed);
-    assign div_fixed = `DIV(a_fixed, b_fixed);
+    assign sum_fixed = add(a_fixed, b_fixed);
+    assign diff_fixed = sub(a_fixed, b_fixed);
+    assign prod_fixed = mul(a_fixed, b_fixed);
+    assign quot_fixed = div(a_fixed, b_fixed);
 
-    assign sum = `R(sum_fixed);
-    assign sub = `R(sub_fixed);
-    assign mul = `R(mul_fixed);
-    assign div = `R(div_fixed);
+    assign sum = ftor(sum_fixed);
+    assign diff = ftor(diff_fixed);
+    assign prod = ftor(prod_fixed);
+    assign quot = ftor(quot_fixed);
 endmodule

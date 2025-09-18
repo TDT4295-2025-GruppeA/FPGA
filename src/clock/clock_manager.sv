@@ -1,5 +1,3 @@
-
-
 module ClockManager #(
     parameter clock_config_t CLK_DISPLAY,
     parameter clock_config_t CLK_SYSTEM
