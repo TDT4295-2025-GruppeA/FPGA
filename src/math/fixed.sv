@@ -55,6 +55,9 @@ package fixed_pkg;
         return fixed'(wide_result >>> DECIMAL_WIDTH);
     endfunction
 
+    // NOTE: This function is currently not used and we should
+    // figure out if we need a more advanced/efficient division
+    // algortihm than what SystemVerilog synthesizes.
     function automatic fixed div(fixed lhs, fixed rhs);
         // Store numerator in wider type to avoid overflow.
         logic signed [TOTAL_WIDTH+DECIMAL_WIDTH-1:0] numerator;
