@@ -1,7 +1,7 @@
 import cocotb
 from cocotb.triggers import Timer
 import numpy as np
-from stubs.cross import Cross
+from stubs.veccross import Veccross
 
 from utils import numpy_to_cocotb, cocotb_to_numpy, within_tolerance
 from cases import TEST_VECTORS
@@ -9,7 +9,7 @@ from cases import TEST_VECTORS
 VERILOG_MODULE = "VecCross"
 
 @cocotb.test()
-async def test_cross(dut: Cross):
+async def test_cross(dut: Veccross):
     for lhs in TEST_VECTORS:
         for rhs in TEST_VECTORS:
             expected_out = np.cross(lhs, rhs)

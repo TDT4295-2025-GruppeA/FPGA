@@ -1,7 +1,7 @@
 import cocotb
 from cocotb.triggers import Timer
 import numpy as np
-from stubs.dot import Dot
+from stubs.vecdot import Vecdot
 
 from utils import numpy_to_cocotb, cocotb_to_numpy, within_tolerance
 from cases import TEST_VECTORS
@@ -12,7 +12,7 @@ VERILOG_PARAMETERS = {
 }
 
 @cocotb.test()
-async def test_dot(dut: Dot):
+async def test_dot(dut: Vecdot):
     for lhs in TEST_VECTORS:
         for rhs in TEST_VECTORS:
             expected_out = np.dot(lhs, rhs)

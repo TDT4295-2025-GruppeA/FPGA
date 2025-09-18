@@ -1,7 +1,7 @@
 import cocotb
 from cocotb.triggers import Timer
 import numpy as np
-# from stubs.sub import Sub
+from stubs.vecsub import Vecsub
 
 from utils import numpy_to_cocotb, cocotb_to_numpy, within_tolerance
 from cases import TEST_VECTORS
@@ -12,7 +12,7 @@ VERILOG_PARAMETERS = {
 }
 
 @cocotb.test()
-async def test_dot(dut):
+async def test_dot(dut: Vecsub):
     for lhs in TEST_VECTORS:
         for rhs in TEST_VECTORS:
             expected_out = lhs - rhs
