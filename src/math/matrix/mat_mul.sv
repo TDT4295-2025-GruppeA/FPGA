@@ -1,5 +1,7 @@
 import fixed_pkg::*;
 
+// NOTE: This module is currently only used for experimental purposes.
+// We should consider making it serial for synthesis.
 module MatMul #(
     parameter int M = 3,
     parameter int K = 3,
