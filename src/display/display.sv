@@ -7,8 +7,9 @@ module Display #(
     parameter video_mode_t VIDEO_MODE = VMODE_640x480p60,
     parameter int BUFFER_WIDTH = 160,
     parameter int BUFFER_HEIGHT = 120,
-    parameter int BUFFER_DATA_WIDTH = 12
-) (
+    parameter int BUFFER_DATA_WIDTH = 12,
+    parameter int BUFFER_ADDR_WIDTH = $clog2(BUFFER_WIDTH * BUFFER_HEIGHT)
+)(
     input logic clk_pixel,
     input logic rstn_pixel,
 
@@ -16,10 +17,15 @@ module Display #(
     output logic vga_vsync,
     output logic[3:0] vga_red,
     output logic[3:0] vga_green,
-    output logic[3:0] vga_blue
+    output logic[3:0] vga_blue,
+
+    output logic[BUFFER_ADDR_WIDTH-1:0] read_addr,
+    input logic[BUFFER_DATA_WIDTH-1:0] read_data,
+    
+    // Output to the Top module to signal which buffer is free
+    output logic buffer_select
 );
     // Generate pixel coords and hsync/vsync
-    // TODO: this can probably be simplified.
     localparam int H_RESOLUTION = VIDEO_MODE.h_resolution;
     localparam int H_FRONT_PORCH = VIDEO_MODE.h_front_porch;
     localparam int H_SYNC = VIDEO_MODE.h_sync;
@@ -32,9 +38,6 @@ module Display #(
     localparam int V_BACK_PORCH = VIDEO_MODE.v_back_porch;
     localparam int LINEHEIGHT = V_RESOLUTION + V_FRONT_PORCH + V_SYNC + V_BACK_PORCH;
 
-
-    // These are intentionally 1 bit wider than resolution, due to
-    // front+back porch and sync window.
     localparam int VW = $clog2(LINEWIDTH) + 1;
     localparam int VH = $clog2(LINEHEIGHT) + 1;
     logic [VW - 1:0] x;
@@ -56,10 +59,7 @@ module Display #(
                     && y <= VH'(V_RESOLUTION - 1));
     end
 
-    // A signal to select which buffer to display
-    logic buffer_select;
-
-    // Iterate through pixels in image
+    // Iterate through pixels and generate buffer_select
     always_ff @(posedge clk_pixel or negedge rstn_pixel) begin
         if (x == VW'(LINEWIDTH-1)) begin
             x <= 0;
@@ -82,59 +82,17 @@ module Display #(
         end
     end
 
-
-    // TODO: move this to drawing module or something. Not here.
-    // ##############################
-    // ##### Drawing from image #####
-    // ##############################
-
-    localparam int BUFFER_SIZE = BUFFER_WIDTH * BUFFER_HEIGHT;
-    // Determine the address width required for the buffer
-    localparam int BUFFER_ADDR_WIDTH = $clog2(BUFFER_SIZE);
-
-    logic[BUFFER_DATA_WIDTH-1:0] fb_data_a;
-    logic[BUFFER_DATA_WIDTH-1:0] fb_data_b;
-
-    logic[BUFFER_ADDR_WIDTH-1:0] pixel_addr;
-    
-    // Only scales based on width, and assumes a multiple of 2.
+    // Assign read address from VGA controller to the output port
     localparam int SCALE = $clog2(H_RESOLUTION / BUFFER_WIDTH);
-    assign pixel_addr = (32'(y) >> SCALE) * BUFFER_WIDTH + (32'(x) >> SCALE);
+    assign read_addr = (32'(y) >> SCALE) * BUFFER_WIDTH + (32'(x) >> SCALE);
 
-    Buffer #(
-        .FILE_SOURCE("static/pacman_160x120p12.mem"),
-        .FILE_SIZE(BUFFER_WIDTH * BUFFER_HEIGHT),
-        .DATA_WIDTH(BUFFER_DATA_WIDTH)
-    ) fb_a (
-        .clk(clk_pixel),
-        .rstn(rstn_pixel),
-        .addr(pixel_addr),
-        .data(fb_data_a)
-    );
-
-    Buffer #(
-        .FILE_SOURCE("static/red_160x120p12.mem"),
-        .FILE_SIZE(BUFFER_WIDTH * BUFFER_HEIGHT),
-        .DATA_WIDTH(BUFFER_DATA_WIDTH)
-    ) fb_b (
-        .clk(clk_pixel),
-        .rstn(rstn_pixel),
-        .addr(pixel_addr),
-        .data(fb_data_b)
-    );
-
-    // Select correct buffer to use for display
-    // TODO: Add dual port for frame buffers
-    logic[BUFFER_DATA_WIDTH-1:0] fb_data;
-    assign fb_data = (buffer_select) ? fb_data_b : fb_data_a;
-
-    // Draw from image buffer
+    // Use the single read_data input to drive the VGA color outputs
     logic [3:0] paint_r, paint_g, paint_b;
     logic [3:0] display_r, display_g, display_b;
     always_comb begin
-        paint_r = fb_data[3:0];
-        paint_g = fb_data[7:4];
-        paint_b = fb_data[11:8];
+        paint_r = read_data[3:0];
+        paint_g = read_data[7:4];
+        paint_b = read_data[11:8];
 
         display_r = (data_enable) ? paint_r : 4'h0;
         display_g = (data_enable) ? paint_g : 4'h0;
@@ -142,7 +100,6 @@ module Display #(
     end
 
     // Flip-flops for output
-    // TODO: remove/simplify
     logic hsync_delay;
     logic vsync_delay;
     logic hsync_delay2;
