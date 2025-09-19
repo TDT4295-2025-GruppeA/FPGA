@@ -77,6 +77,7 @@ module DrawingManager #(
     ) background_drawer (
         .clk(clk), .rstn(rstn),
         .draw_start(bg_draw_start),
+        .quadrant_select(buffer_select_s2),
         .draw_done(bg_draw_done),
         .write_en(bg_write_en),
         .write_addr(bg_write_addr),
@@ -117,7 +118,7 @@ module DrawingManager #(
                 write_addr = bg_write_addr;
                 write_data = bg_write_data;
                 if (bg_draw_done) begin
-                    next_state = DRAWING_SPRITES;
+                    next_state = FRAME_DONE;
                 end
             end
             DRAWING_SPRITES: begin
