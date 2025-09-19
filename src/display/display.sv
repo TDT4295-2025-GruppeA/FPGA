@@ -20,10 +20,7 @@ module Display #(
     output logic[3:0] vga_blue,
 
     output logic[BUFFER_ADDR_WIDTH-1:0] read_addr,
-    input logic[BUFFER_DATA_WIDTH-1:0] read_data,
-    
-    // Output to the Top module to signal which buffer is free
-    output logic buffer_select
+    input logic[BUFFER_DATA_WIDTH-1:0] read_data
 );
     // Generate pixel coords and hsync/vsync
     localparam int H_RESOLUTION = VIDEO_MODE.h_resolution;
@@ -59,14 +56,11 @@ module Display #(
                     && y <= VH'(V_RESOLUTION - 1));
     end
 
-    // Iterate through pixels and generate buffer_select
     always_ff @(posedge clk_pixel or negedge rstn_pixel) begin
         if (x == VW'(LINEWIDTH-1)) begin
             x <= 0;
             if (y == VH'(LINEHEIGHT-1)) begin
                 y <= 0;
-                // Toggle the buffer select at the end of each frame
-                buffer_select <= ~buffer_select;
             end else begin
                 y <= y + 1;
             end
@@ -78,7 +72,6 @@ module Display #(
         if (!rstn_pixel) begin
             x <= 0;
             y <= 0;
-            buffer_select <= 0;
         end
     end
 

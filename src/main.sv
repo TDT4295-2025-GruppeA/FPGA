@@ -51,14 +51,20 @@ module Top (
     logic dm_write_en;
     logic [BUFFER_ADDR_WIDTH-1:0] dm_write_addr;
     logic [BUFFER_DATA_WIDTH-1:0] dm_write_data;
+    logic dm_frame_done; // Signal from DrawingManager to Top
+    logic draw_ack;      // Acknowledgment from Top to DrawingManager
 
     // Signals from buffers to the Display
-    logic disp_read_en; // Not used in your Display module, but good practice
     logic [BUFFER_ADDR_WIDTH-1:0] disp_read_addr;
     logic [BUFFER_DATA_WIDTH-1:0] disp_read_data;
 
     // The shared buffer select signal
     logic buffer_select;
+    logic buffer_select_reg;
+    logic buffer_select_d;
+    logic draw_start;
+
+    assign buffer_select = buffer_select_reg;
 
     // Frame Buffer A signals
     logic [BUFFER_ADDR_WIDTH-1:0] fb_a_read_addr;
@@ -77,6 +83,19 @@ module Top (
     ///////////////////////////////////////
     ////////////// DRAWING ////////////////
     ///////////////////////////////////////
+    
+    // Edge detection for buffer_select to generate draw_start signal
+    always_ff @(posedge clk_system or negedge rstn_system) begin
+        if (!rstn_system) begin
+            buffer_select_d <= 1'b0;
+        end else begin
+            buffer_select_d <= buffer_select;
+        end
+    end
+
+    // Generate draw start pulse when buffer_select changes
+    assign draw_start = (buffer_select != buffer_select_d);
+
     DrawingManager #(
         .BUFFER_WIDTH(BUFFER_WIDTH),
         .BUFFER_HEIGHT(BUFFER_HEIGHT),
@@ -85,12 +104,71 @@ module Top (
     ) drawing_manager_inst (
         .clk(clk_system),
         .rstn(rstn_system),
-
-        .buffer_select(buffer_select),
+        .draw_start(draw_start),
+        .draw_ack(draw_ack), // Pass the new signal
         .write_en(dm_write_en),
         .write_addr(dm_write_addr),
-        .write_data(dm_write_data)
+        .write_data(dm_write_data),
+        .frame_done(dm_frame_done)
     );
+
+    // Synchronize dm_frame_done to clk_display domain and handle buffer swapping
+    logic dm_frame_done_s1, dm_frame_done_s2;
+    logic draw_ack_s1, draw_ack_s2;
+    logic swap_req;
+
+    // Synchronizer for dm_frame_done (clk_system -> clk_display)
+    always_ff @(posedge clk_display or negedge rstn_display) begin
+        if (!rstn_display) begin
+            dm_frame_done_s1 <= 1'b0;
+            dm_frame_done_s2 <= 1'b0;
+        end else begin
+            dm_frame_done_s1 <= dm_frame_done;
+            dm_frame_done_s2 <= dm_frame_done_s1;
+        end
+    end
+
+       // Add logic to detect the positive edge of vga_vsync
+    logic vga_vsync_d;
+    always_ff @(posedge clk_display or negedge rstn_display) begin
+        if (!rstn_display) begin
+            vga_vsync_d <= 1'b0;
+        end else begin
+            vga_vsync_d <= vga_vsync;
+        end
+    end
+
+    logic vga_vsync_pos_edge;
+    assign vga_vsync_pos_edge = vga_vsync && !vga_vsync_d;
+
+    // Request a swap when VSync positive edge and the synchronized frame_done are true
+    assign swap_req = vga_vsync_pos_edge && dm_frame_done_s2;
+
+    // Buffer swap logic
+    always_ff @(posedge clk_display or negedge rstn_display) begin
+        if (!rstn_display) begin
+            buffer_select_reg <= 1'b0;
+        end else begin
+            if (swap_req) begin
+                buffer_select_reg <= !buffer_select_reg;
+            end
+        end
+    end
+
+    // Synchronizer for draw_ack (clk_display -> clk_system)
+    always_ff @(posedge clk_system or negedge rstn_system) begin
+        if (!rstn_system) begin
+            draw_ack_s1 <= 1'b0;
+            draw_ack_s2 <= 1'b0;
+        end else begin
+            draw_ack_s1 <= swap_req;
+            draw_ack_s2 <= draw_ack_s1;
+        end
+    end
+    
+    // Generate a single-cycle pulse on the draw_ack signal
+    assign draw_ack = draw_ack_s2 && !buffer_select_d;
+
 
     ///////////////////////////////////////
     ////////////// FRAME BUFFERS //////////
@@ -141,19 +219,20 @@ module Top (
         .vga_green(vga_green),
         .vga_blue(vga_blue),
         .read_addr(disp_read_addr),
-        .read_data(disp_read_data),
-        .buffer_select(buffer_select)
+        .read_data(disp_read_data)
     );
 
-    // The buffer_select signal decides which buffer is being read from and written to.
-
-    // Display reads from the ACTIVE buffer.
-    // The Display module drives disp_read_addr.
+    ///////////////////////////////////////
+    ////////////// BUFFER ROUTING /////////
+    ///////////////////////////////////////
+    
+    // Display reads from the ACTIVE buffer
+    // The Display module drives disp_read_addr
     assign fb_a_read_addr = !buffer_select ? disp_read_addr : '0;
     assign fb_b_read_addr = buffer_select ? disp_read_addr : '0;
     assign disp_read_data = !buffer_select ? fb_a_read_data : fb_b_read_data;
 
-    // DrawingManager writes to the INACTIVE buffer.
+    // DrawingManager writes to the INACTIVE buffer
     assign fb_a_write_en = !buffer_select ? dm_write_en : 1'b0;
     assign fb_a_write_addr = !buffer_select ? dm_write_addr : '0;
     assign fb_a_write_data = !buffer_select ? dm_write_data : '0;
@@ -161,4 +240,5 @@ module Top (
     assign fb_b_write_en = buffer_select ? dm_write_en : 1'b0;
     assign fb_b_write_addr = buffer_select ? dm_write_addr : '0;
     assign fb_b_write_data = buffer_select ? dm_write_data : '0;
+
 endmodule
