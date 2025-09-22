@@ -28,7 +28,7 @@ TEST_MODULES ?= $(VERILOG_MODULES)
 
 .PHONY : synth flash test clean rmbuild rmgen rmlogs shell
 
-synth:
+build/top_$(TARGET).bit: $(VERILOG_SOURCES)
 	@echo "Synthesizing and implementing design for target $(TARGET)"
 	mkdir -p build/logs
 	FPGA_BOARD=$(BOARD) FPGA_TARGET="$(TARGET)" FPGA_PART_LONG="$(PART_LONG)" vivado -mode batch -source scripts/synth.tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
@@ -38,7 +38,9 @@ synth:
 	[ ! -f "clockInfo.txt" ] || mv clockInfo.txt build/reports
 	[ ! -f "tight_setup_hold_pins.txt" ] || mv tight_setup_hold_pins.txt build/reports
 
-flash:
+synth: build/top_$(TARGET).bit
+
+flash: build/top_$(TARGET).bit
 	@echo "Flashing FPGA target $(TARGET)"
 	mkdir -p build/logs
 	FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" vivado -mode batch -source scripts/flash.tcl -journal "build/logs/flash_$(BUILD_TIME).jou"  -log "build/logs/flash_$(BUILD_TIME).log"
