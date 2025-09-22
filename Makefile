@@ -72,7 +72,6 @@ rmlogs:
 shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
-# NOTE: Do not add to .PHONY
 tests/stubs/generate_stubs.stamp: $(VERILOG_SOURCES)
 	@echo "Generating typing stubs"
 	rm -rf tests/stubs
