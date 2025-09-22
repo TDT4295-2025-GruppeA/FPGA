@@ -39,7 +39,6 @@ report_power -file $rpt_dir/post_route_power.rpt
 report_utilization -file $rpt_dir/post_route_utilization.rpt
 report_timing -delay_type min_max -max_paths 1 -file $rpt_dir/post_route_timing.rpt
 
-
 # Write bitstream result
-exec mkdir -p build
+file mkdir -p build
 write_bitstream -force build/top_${target}.bit

@@ -77,7 +77,7 @@ module Rasterizer #(
         .rhs(v2),
         .out(c2)
     );
-    VecCross cros3 (
+    VecCross cross3 (
         .lhs(p3),
         .rhs(v3),
         .out(c3)

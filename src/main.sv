@@ -2,8 +2,9 @@ import video_modes_pkg::*;
 import clock_modes_pkg::*;
 
 module Top (
-    input btn,
-    output led,
+    input logic [3:0] sws,
+    input logic [2:0] btns,
+    output logic [2:0] leds,
 
     input logic clk_ext, // 100MHz for now
     input logic reset,
@@ -17,7 +18,7 @@ module Top (
 );
     localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
 
-    assign led = btn;
+    assign leds = btns;
 
     ////////////////////////////////////////////////
     ////////////// CLOCK GENERATION ////////////////
@@ -51,6 +52,8 @@ module Top (
     Display #(
         .VIDEO_MODE(VIDEO_MODE)
     ) display_inst (
+        .sws(sws),
+        .btns(btns),
         .clk_pixel(clk_display),
         .rstn_pixel(rstn_display),
         .vga_hsync(vga_hsync),
@@ -60,8 +63,4 @@ module Top (
         .vga_blue(vga_blue)
     );
 
-    Rasterizer rast ();
-
 endmodule
-
-

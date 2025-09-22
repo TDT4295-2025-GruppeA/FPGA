@@ -25,11 +25,11 @@ synth:
 	@echo "Synthesizing and implementing design for target $(TARGET)"
 	mkdir -p build/logs
 	FPGA_BOARD=$(BOARD) FPGA_TARGET="$(TARGET)" FPGA_PART_LONG="$(PART_LONG)" vivado -mode batch -source scripts/synth.tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
-	rm build/lastlog.*
+	rm -f build/lastlog.*
 	ln -s logs/synth_$(BUILD_TIME).jou build/lastlog.jou
 	ln -s logs/synth_$(BUILD_TIME).log build/lastlog.log
-	[ -f "clockInfo.txt" ] && mv clockInfo.txt build/reports
-	[ -f "tight_setup_hold_pins.txt" ] && mv tight_setup_hold_pins.txt build/reports
+	[ ! -f "clockInfo.txt" ] || mv clockInfo.txt build/reports
+	[ ! -f "tight_setup_hold_pins.txt" ] || mv tight_setup_hold_pins.txt build/reports
 
 flash:
 	@echo "Flashing FPGA target $(TARGET)"
