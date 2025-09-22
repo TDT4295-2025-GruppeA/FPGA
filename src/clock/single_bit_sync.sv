@@ -1,5 +1,5 @@
 // Inspired by https://docs.amd.com/r/en-US/ug906-vivado-design-analysis/Single-Bit-Synchronizer
-module single_bit_synchronizer (
+module SingleBitSync (
         input  logic clk_dst,
         input  logic rst_dst_n,
         input  logic data_in_src,
@@ -20,7 +20,6 @@ module single_bit_synchronizer (
 
         assign data_out_dst = sync_ff2;
 
-        // Synthesis attributes
         (* ASYNC_REG = "TRUE" *) logic sync_ff1_attr = sync_ff1;
         (* ASYNC_REG = "TRUE" *) logic sync_ff2_attr = sync_ff2;
 
