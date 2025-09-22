@@ -3,10 +3,10 @@
 // mock so verilator does not freak out.
 `ifdef SIMULATION
 module MMCME2_BASE #(
-    parameter real CLKFBOUT_MULT_F,
-    parameter int DIVCLK_DIVIDE,
-    parameter real CLKIN1_PERIOD,
-    parameter real CLKOUT0_DIVIDE_F
+    parameter real CLKFBOUT_MULT_F = 1.0,
+    parameter int DIVCLK_DIVIDE = 1,
+    parameter real CLKIN1_PERIOD = 1.0,
+    parameter real CLKOUT0_DIVIDE_F = 1.0
 ) (
     input logic CLKIN1,
     input logic RST,

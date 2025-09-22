@@ -1,5 +1,5 @@
 module Buffer #(
-    parameter string FILE_SOURCE,
+    parameter string FILE_SOURCE = "static/foreleser_320x240p12.mem",
     parameter int FILE_SIZE = 640*480
 )(
     input logic clk,

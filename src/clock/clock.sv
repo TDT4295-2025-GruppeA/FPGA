@@ -2,7 +2,7 @@ import fixed_pkg::*;
 import clock_modes_pkg::*;
 
 module Clock #(
-    parameter clock_config_t CLOCK_CONFIG
+    parameter clock_config_t CLOCK_CONFIG = CLK_100_100_MHZ
 ) (
     input logic clk_in,
     input logic rstn_in,
