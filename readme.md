@@ -77,6 +77,18 @@ In this test, the `dut` will be the `Example`-module. we set values for
 a and b, then yielding to the simulator to calculate the result. The
 result is then available and asserted to see if it is correct.
 
+### Stub generation
+
+> [!Warning]
+> Stub generation requires all verilog modules to have a default value
+> assigned for all parameters.
+
+Python typing stubs for tests can be generated with
+
+    make stubs
+
+The stubs will also be automatically generated when running `make test`
+
 
 ## Tools
 
