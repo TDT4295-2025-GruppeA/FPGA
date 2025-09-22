@@ -19,19 +19,29 @@ else ifeq ($(TARGET),100t)
 	PART_SHORT = $(PART_A7100T_SHORT)
 endif
 
-.PHONY : synth flash test clean rmbuild rmgen rmlogs shell
+VERILOG_SOURCES := $(shell find src -type f -name "*.*v")
 
-synth:
+# Requires build/file_compile_order.txt as dependency when used.
+VERILOG_MODULES = $(shell awk '{print $$1}' build/file_compile_order.txt)
+STUB_FILES = $(foreach t,$(VERILOG_MODULES),$(shell echo tests/stubs/$(t).py | tr '[:upper:]' '[:lower:]'))
+
+TEST_MODULES ?= $(VERILOG_MODULES)
+
+.PHONY : synth flash test clean rmbuild rmgen rmlogs shell stubs
+
+build/top_$(TARGET).bit: $(VERILOG_SOURCES)
 	@echo "Synthesizing and implementing design for target $(TARGET)"
 	mkdir -p build/logs
 	FPGA_BOARD=$(BOARD) FPGA_TARGET="$(TARGET)" FPGA_PART_LONG="$(PART_LONG)" vivado -mode batch -source scripts/synth.tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
-	rm build/lastlog.*
+	rm -f build/lastlog.*
 	ln -s logs/synth_$(BUILD_TIME).jou build/lastlog.jou
 	ln -s logs/synth_$(BUILD_TIME).log build/lastlog.log
-	[ -f "clockInfo.txt" ] && mv clockInfo.txt build/reports
-	[ -f "tight_setup_hold_pins.txt" ] && mv tight_setup_hold_pins.txt build/reports
+	[ ! -f "clockInfo.txt" ] || mv clockInfo.txt build/reports
+	[ ! -f "tight_setup_hold_pins.txt" ] || mv tight_setup_hold_pins.txt build/reports
 
-flash:
+synth: build/top_$(TARGET).bit
+
+flash: build/top_$(TARGET).bit
 	@echo "Flashing FPGA target $(TARGET)"
 	mkdir -p build/logs
 	FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" vivado -mode batch -source scripts/flash.tcl -journal "build/logs/flash_$(BUILD_TIME).jou"  -log "build/logs/flash_$(BUILD_TIME).log"
@@ -62,10 +72,22 @@ rmlogs:
 shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
-build/file_compile_order.txt: scripts/dependency.tcl
+tests/stubs/generate_stubs.stamp: $(VERILOG_SOURCES)
+	@echo "Generating typing stubs"
+	rm -rf tests/stubs
+	mkdir -p tests/stubs
+	python testtools/genstubs.py $(VERILOG_MODULES)
+	pytest testtools/stub_dummytests.py > /dev/null
+	touch tests/stubs/generate_stubs.stamp
+
+$(STUB_FILES): tests/stubs/generate_stubs.stamp
+
+stubs: $(STUB_FILES)
+
+build/file_compile_order.txt: scripts/dependency.tcl $(VERILOG_SOURCES)
 	mkdir -p build
 	vivado -mode batch -journal /dev/null -log /dev/null -source scripts/dependency.tcl 2>&1 >/dev/null
 
-test: build/file_compile_order.txt
+test: build/file_compile_order.txt $(STUB_FILES)
 	python testtools/gentest.py
-	pytest testtools/testrunner.py
+	pytest testtools/testrunner.py -k "$(shell echo $(TEST_MODULES) | sed 's/ / or /g')"

@@ -47,10 +47,8 @@ cocotb test-run configured specifically for that test. It then modifies
 `pytest`'s test-report to make it look like the original user-written
 tests. It does not do this perfectly, but its close.
 
-typing stubs are also generated for each module, but there is a bit of
-a chicken-egg situation there, where the program generating stubs
-needs the tests, which again needs the stubs. Could not find a good
-way around this other than including the typing stubs upstream.
+Typing stubs are also auto-generated for every verilog-module when running
+tests. You can also manually generate these by running `make stubs`
 
 ### Example test
 
@@ -78,6 +76,18 @@ Here is an example test testing the `Example` module, located in
 In this test, the `dut` will be the `Example`-module. we set values for
 a and b, then yielding to the simulator to calculate the result. The
 result is then available and asserted to see if it is correct.
+
+### Stub generation
+
+> [!Warning]
+> Stub generation requires all verilog modules to have a default value
+> assigned for all parameters.
+
+Python typing stubs for tests can be generated with
+
+    make stubs
+
+The stubs will also be automatically generated when running `make test`
 
 
 ## Tools

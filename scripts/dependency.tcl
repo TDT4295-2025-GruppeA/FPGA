@@ -9,12 +9,18 @@ package require fileutil
 
 read_verilog [ fileutil::findByPattern src *.*v ]
 
+
+# Find modules to include in dependency analysis
+set modules {}
+foreach file [get_files] {
+    set names [exec ./scripts/find_modules.sh $file]
+    foreach name [split $names "\n"] {
+        lappend modules $name
+    }
+}
+
 # TODO: ability to change path
 set fh [open "build/file_compile_order.txt" w]
-
-# Modules to include in dependency analysis
-# TODO: Somehow infer this automatically?
-set modules {Example FixedTB MatMul VecCross VecDot VecSub VecAdd Rasterizer Top}
 
 set_property verilog_define SIMULATION [current_fileset]
 set_property source_mgmt_mode All [current_project]
