@@ -1,6 +1,6 @@
 module ClockManager #(
-    parameter clock_config_t CLK_DISPLAY,
-    parameter clock_config_t CLK_SYSTEM
+    parameter clock_config_t CLK_DISPLAY = CLK_100_25_175_MHZ,
+    parameter clock_config_t CLK_SYSTEM = CLK_100_100_MHZ
 )(
     input logic clk_ext,
     input logic reset,
