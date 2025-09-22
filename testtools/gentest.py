@@ -31,7 +31,7 @@ class TestModule:
     module: ModuleType
     tests: dict[str, TestFunction]
     verilog_toplevel: str
-    verilog_parameters: str
+    verilog_parameters: str | None
 
 
 def import_module(module_name: str) -> TestModule:
