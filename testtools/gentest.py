@@ -60,7 +60,10 @@ def import_module(module_name: str) -> TestModule:
     # Get parameters to toplevel module if available
     if hasattr(module, "VERILOG_PARAMETERS"):
         verilog_parameters = getattr(module, "VERILOG_PARAMETERS")
-        assert isinstance(verilog_parameters, dict), f"Module '{name}' has non-dict value for 'VERILOG_PARAMETERS."
+
+        if not isinstance(verilog_parameters, dict):
+            raise ImportError(f"Module '{name}' has non-dict value for 'VERILOG_PARAMETERS.")
+
         verilog_parameters = repr(verilog_parameters)
     else:
         verilog_parameters = None
