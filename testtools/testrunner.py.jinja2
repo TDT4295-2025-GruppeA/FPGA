@@ -9,7 +9,7 @@ from runner_tools import create_test
 {% for full_name, module in modules.items() %}
 {% for test_name, test in module.tests.items() %}
 @create_test("{{module.verilog_toplevel}}", "{{full_name}}", "{{module.name}}", "{{test.name}}", {{module.verilog_parameters}})
-def test_{{ counter.value }}(): ...
+def test_{{module.verilog_toplevel}}_{{ counter.value }}(): ...
 {% set counter.value = counter.value + 1 %}
 {% endfor %}
 {% endfor %}
