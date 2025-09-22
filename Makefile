@@ -23,10 +23,11 @@ VERILOG_SOURCES := $(shell find src -type f -name "*.*v")
 
 # Requires build/file_compile_order.txt as dependency when used.
 VERILOG_MODULES = $(shell awk '{print $$1}' build/file_compile_order.txt)
+STUB_FILES = $(foreach t,$(VERILOG_MODULES),$(shell echo tests/stubs/$(t).py | tr '[:upper:]' '[:lower:]'))
 
 TEST_MODULES ?= $(VERILOG_MODULES)
 
-.PHONY : synth flash test clean rmbuild rmgen rmlogs shell
+.PHONY : synth flash test clean rmbuild rmgen rmlogs shell stubs
 
 build/top_$(TARGET).bit: $(VERILOG_SOURCES)
 	@echo "Synthesizing and implementing design for target $(TARGET)"
@@ -71,10 +72,23 @@ rmlogs:
 shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
+# NOTE: Do not add to .PHONY
+tests/stubs/generate_stubs.stamp: $(VERILOG_SOURCES)
+	@echo "Generating typing stubs"
+	rm -rf tests/stubs
+	mkdir -p tests/stubs
+	python testtools/genstubs.py $(VERILOG_MODULES)
+	pytest testtools/stub_dummytests.py > /dev/null
+	touch tests/stubs/generate_stubs.stamp
+
+$(STUB_FILES): tests/stubs/generate_stubs.stamp
+
+stubs: $(STUB_FILES)
+
 build/file_compile_order.txt: scripts/dependency.tcl $(VERILOG_SOURCES)
 	mkdir -p build
 	vivado -mode batch -journal /dev/null -log /dev/null -source scripts/dependency.tcl 2>&1 >/dev/null
 
-test: build/file_compile_order.txt
+test: build/file_compile_order.txt $(STUB_FILES)
 	python testtools/gentest.py
 	pytest testtools/testrunner.py -k "$(shell echo $(TEST_MODULES) | sed 's/ / or /g')"
