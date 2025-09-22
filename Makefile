@@ -19,6 +19,13 @@ else ifeq ($(TARGET),100t)
 	PART_SHORT = $(PART_A7100T_SHORT)
 endif
 
+VERILOG_SOURCES := $(shell find src -type f -name "*.*v")
+
+# Requires build/file_compile_order.txt as dependency when used.
+VERILOG_MODULES = $(shell awk '{print $$1}' build/file_compile_order.txt)
+
+TEST_MODULES ?= $(VERILOG_MODULES)
+
 .PHONY : synth flash test clean rmbuild rmgen rmlogs shell
 
 synth:
@@ -62,10 +69,10 @@ rmlogs:
 shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
-build/file_compile_order.txt: scripts/dependency.tcl
+build/file_compile_order.txt: scripts/dependency.tcl $(VERILOG_SOURCES)
 	mkdir -p build
 	vivado -mode batch -journal /dev/null -log /dev/null -source scripts/dependency.tcl 2>&1 >/dev/null
 
 test: build/file_compile_order.txt
 	python testtools/gentest.py
-	pytest testtools/testrunner.py
+	pytest testtools/testrunner.py -k "$(shell echo $(TEST_MODULES) | sed 's/ / or /g')"
