@@ -13,7 +13,7 @@ read_verilog [ fileutil::findByPattern src *.*v ]
 set fh [open "build/file_compile_order.txt" w]
 
 # Modules to include in dependency analysis
-set modules {Adder Example FixedTB Top SingleBitSync}
+set modules {Adder Example FixedTB Top PulseSync SingleBitSync}
 
 set_property verilog_define SIMULATION [current_fileset]
 set_property source_mgmt_mode All [current_project]
