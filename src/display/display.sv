@@ -2,13 +2,11 @@
 // https://github.com/projf/projf-explore/blob/main/lib/clock/xc7/clock_480p.sv
 
 import video_modes_pkg::*;
+import buffer_config_pkg::*;
 
 module Display #(
     parameter video_mode_t VIDEO_MODE = VMODE_640x480p60,
-    parameter int BUFFER_WIDTH = 160,
-    parameter int BUFFER_HEIGHT = 120,
-    parameter int BUFFER_DATA_WIDTH = 12,
-    parameter int BUFFER_ADDR_WIDTH = $clog2(BUFFER_WIDTH * BUFFER_HEIGHT)
+    parameter buffer_config_t BUFFER_CONFIG = BUFFER_160x120x12
 )(
     input logic clk_pixel,
     input logic rstn_pixel,
@@ -19,8 +17,8 @@ module Display #(
     output logic[3:0] vga_green,
     output logic[3:0] vga_blue,
 
-    output logic[BUFFER_ADDR_WIDTH-1:0] read_addr,
-    input logic[BUFFER_DATA_WIDTH-1:0] read_data
+    output logic[BUFFER_CONFIG.addr_width-1:0] read_addr,
+    input logic[BUFFER_CONFIG.data_width-1:0] read_data
 );
     // Generate pixel coords and hsync/vsync
     localparam int H_RESOLUTION = VIDEO_MODE.h_resolution;
@@ -76,8 +74,8 @@ module Display #(
     end
 
     // Assign read address from VGA controller to the output port
-    localparam int SCALE = $clog2(H_RESOLUTION / BUFFER_WIDTH);
-    assign read_addr = (32'(y) >> SCALE) * BUFFER_WIDTH + (32'(x) >> SCALE);
+    localparam int SCALE = $clog2(VIDEO_MODE.h_resolution / BUFFER_CONFIG.width);
+    assign read_addr = (32'(y) >> SCALE) * BUFFER_CONFIG.width + (32'(x) >> SCALE);
 
     // Use the single read_data input to drive the VGA color outputs
     logic [3:0] paint_r, paint_g, paint_b;
