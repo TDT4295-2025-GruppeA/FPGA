@@ -10,6 +10,8 @@ xsim.dir/
 __pycache__/
 .pytest_cache/
 testtools/testrunner.py
+testtools/stub_dummytests.py
+tests/stubs
 
 # Log files
 *.log

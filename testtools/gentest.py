@@ -31,13 +31,14 @@ class TestModule:
     module: ModuleType
     tests: dict[str, TestFunction]
     verilog_toplevel: str
+    verilog_parameters: str | None
 
 
-def import_module(module_name: str) -> TestModule:
+def import_module(module_name: str, testdir: str) -> TestModule:
     # Find and import the module
     # Remove prefix and suffix, and replace remaining / with .
     name = module_name.rsplit(".py", 1)[0]
-    name = name.split(f"{DIR_TESTS}/", 1)[1]
+    name = name.split(f"{testdir}/", 1)[1]
     name = name.replace("/", ".")
 
     module = importlib.import_module(".".join(("tests", name)))
@@ -55,25 +56,37 @@ def import_module(module_name: str) -> TestModule:
         raise ImportError(
             f"Module '{name}' has invalid value for 'VERILOG_MODULE'. Got '{type(name)}', expected str. Ignoring module"
         )
+    
+    # Get parameters to toplevel module if available
+    if hasattr(module, "VERILOG_PARAMETERS"):
+        verilog_parameters = getattr(module, "VERILOG_PARAMETERS")
+
+        if not isinstance(verilog_parameters, dict):
+            raise ImportError(f"Module '{name}' has non-dict value for 'VERILOG_PARAMETERS.")
+
+        verilog_parameters = repr(verilog_parameters)
+    else:
+        verilog_parameters = None
 
     return TestModule(
         name=name,
         module=module,
         tests=tests,
         verilog_toplevel=verilog_toplevel,
+        verilog_parameters=verilog_parameters,
     )
 
 
-def find_test_modules() -> dict[str, TestModule]:
+def find_test_modules(testdir: str) -> dict[str, TestModule]:
     modules = {}
-    for module_name in glob.glob(f"{DIR_TESTS}/**/test_*.py", recursive=True):
+    for module_name in glob.glob(f"{testdir}/**/test_*.py", recursive=True):
         try:
-            module = import_module(module_name=module_name)
+            module = import_module(module_name=module_name, testdir=testdir)
         except (ImportError, ModuleNotFoundError) as e:
             warnings.warn(f"Failed to import module '{module_name}': {e!s}")
             continue
 
-        module_name = module_name.split(f"{DIR_TESTS}/", 1)[1]
+        module_name = module_name.split(f"{testdir}/", 1)[1]
 
         modules[module_name] = module
     return modules
@@ -94,7 +107,7 @@ def find_tests(module: ModuleType) -> dict[str, TestFunction]:
 def main():
 
     # Discover tests
-    modules = find_test_modules()
+    modules = find_test_modules(DIR_TESTS)
 
     # Generate tests
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(DIR_TOOLS))

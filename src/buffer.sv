@@ -1,8 +1,6 @@
 module Buffer #(
-    parameter string FILE_SOURCE,
-    parameter int FILE_SIZE = 640*480,
-    parameter int DATA_WIDTH = 12,
-    parameter int ADDR_WIDTH = $clog2(FILE_SIZE)
+    parameter string FILE_SOURCE = "static/foreleser_320x240p12.mem",
+    parameter int FILE_SIZE = 640*480
 )(
     input logic clk,
     input logic rstn,
