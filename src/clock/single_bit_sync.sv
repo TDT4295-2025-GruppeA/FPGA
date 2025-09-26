@@ -6,7 +6,7 @@ module SingleBitSync (
         output logic data_out_dst
     );
 
-        logic sync_ff1, sync_ff2;
+        (* ASYNC_REG = "TRUE" *) logic sync_ff1, sync_ff2; 
 
         always_ff @(posedge clk_dst or negedge rst_dst_n) begin
             if (!rst_dst_n) begin
@@ -19,8 +19,5 @@ module SingleBitSync (
         end
 
         assign data_out_dst = sync_ff2;
-
-        (* ASYNC_REG = "TRUE" *) logic sync_ff1_attr = sync_ff1;
-        (* ASYNC_REG = "TRUE" *) logic sync_ff2_attr = sync_ff2;
 
     endmodule
