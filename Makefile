@@ -80,7 +80,7 @@ rmlogs:
 shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
-tests/stubs/generate_stubs.stamp: $(VERILOG_SOURCES)
+tests/stubs/generate_stubs.stamp: $(VERILOG_SOURCES) build/file_compile_order.txt
 	@echo "Generating typing stubs"
 	rm -rf tests/stubs
 	mkdir -p tests/stubs
