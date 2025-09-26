@@ -22,3 +22,4 @@ tests/stubs
 venv/
 .envrc
 .vscode
+.python-version
