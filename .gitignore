@@ -12,6 +12,7 @@ __pycache__/
 testtools/testrunner.py
 testtools/stub_dummytests.py
 tests/stubs
+waveform
 
 # Log files
 *.log
