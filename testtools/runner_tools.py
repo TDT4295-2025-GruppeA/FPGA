@@ -83,27 +83,30 @@ def create_test(toplevel: str, filename: str, module_name: str, testcase: str | 
                 parameters=parameters,
             )
 
-            runner.test(
-                hdl_toplevel=toplevel,
-                test_module=",".join(("copra.integration.autostub", module_name)),
-                testcase=testcase,
-                build_dir=build_dir,
-                test_dir=DIR_TESTS,
-                waves=True,
-                results_xml=f"{build_dir}/results.xml",
-            )
+            try:
+                runner.test(
+                    hdl_toplevel=toplevel,
+                    test_module=",".join(("copra.integration.autostub", module_name)),
+                    testcase=testcase,
+                    build_dir=build_dir,
+                    test_dir=DIR_TESTS,
+                    waves=True,
+                    results_xml=f"{build_dir}/results.xml",
+                )
+            except:
+                raise
+            finally:
+                # Move the "dump.vcd"-file generated
+                os.makedirs("waveform/history/", exist_ok=True)
 
-            # Move the "dump.vcd"-file generated
-            os.makedirs("waveform/history/", exist_ok=True)
+                timestamp = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
+                vcd_name = os.path.abspath(f"waveform/history/{testcase}_{timestamp}.vcd")
+                os.rename(f"{DIR_TESTS}/dump.vcd", vcd_name)
 
-            timestamp = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
-            vcd_name = os.path.abspath(f"waveform/history/{testcase}_{timestamp}.vcd")
-            os.rename(f"{DIR_TESTS}/dump.vcd", vcd_name)
-
-            vcd_symlink = f"waveform/{testcase}.vcd"
-            if os.path.exists(vcd_symlink):
-                os.remove(vcd_symlink)
-            os.symlink(vcd_name, vcd_symlink)
+                vcd_symlink = f"waveform/{testcase}.vcd"
+                if os.path.exists(vcd_symlink):
+                    os.remove(vcd_symlink)
+                os.symlink(vcd_name, vcd_symlink)
 
         return wrapper
 
