@@ -5,6 +5,8 @@ import pytest
 import cocotb_test.simulator
 import os
 import re
+import cocotb_tools.runner
+
 
 DIR_TESTS = os.path.join(os.path.abspath("."), "tests") # TODO: ability to change path
 
@@ -48,6 +50,9 @@ def parameters_to_safe_filename(parameters: dict) -> str:
     return safe
 
 def create_test(toplevel: str, filename: str, module_name: str, testcase: str | None = None, parameters: dict[str, Any] | None = None):
+    if parameters is None:
+        parameters = {}
+
     def decorator(func):
         files = get_dependencies(toplevel)
 
@@ -64,21 +69,26 @@ def create_test(toplevel: str, filename: str, module_name: str, testcase: str | 
                 f.write(STUB_CODE)
 
             build_dir = f"build/test/simbuild_{toplevel}"
-            if parameters:
+            if len(parameters) > 0:
                 build_dir += "_" + parameters_to_safe_filename(parameters)
-
-            cocotb_test.simulator.run(
-                simulator="verilator",
-                verilog_sources=files,
-                toplevel=toplevel,
-                module=",".join(("copra.integration.autostub", module_name)),
+            runner = cocotb_tools.runner.Verilator()
+            runner.build(
+                sources=files,
+                hdl_toplevel=toplevel,
                 includes=["."],
-                compile_args=["--structs-packed", "-DSIMULATION"],
-                testcase=testcase,
-                # Different simbuild dir to utilize cache on each module
-                sim_build=build_dir, # TODO: ability to change path
-                python_search=[DIR_TESTS],
+                build_args=["--structs-packed", "-DSIMULATION", "--trace", "--trace-structs"],
+                waves=True,
+                build_dir=build_dir,
                 parameters=parameters,
+            )
+
+            runner.test(
+                hdl_toplevel=toplevel,
+                test_module=",".join(("copra.integration.autostub", module_name)),
+                testcase=testcase,
+                build_dir=build_dir,
+                test_dir=DIR_TESTS,
+                waves=True
             )
 
         return wrapper
