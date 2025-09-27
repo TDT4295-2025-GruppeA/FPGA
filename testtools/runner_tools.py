@@ -1,10 +1,10 @@
 import functools
 from typing import Any
-
-import pytest
-import cocotb_test.simulator
+import datetime
 import os
 import re
+
+import pytest
 import cocotb_tools.runner
 
 
@@ -69,6 +69,7 @@ def create_test(toplevel: str, filename: str, module_name: str, testcase: str | 
                 f.write(STUB_CODE)
 
             build_dir = f"build/test/simbuild_{toplevel}"
+            build_dir = os.path.abspath(build_dir)
             if len(parameters) > 0:
                 build_dir += "_" + parameters_to_safe_filename(parameters)
             runner = cocotb_tools.runner.Verilator()
@@ -88,8 +89,21 @@ def create_test(toplevel: str, filename: str, module_name: str, testcase: str | 
                 testcase=testcase,
                 build_dir=build_dir,
                 test_dir=DIR_TESTS,
-                waves=True
+                waves=True,
+                results_xml=f"{build_dir}/results.xml",
             )
+
+            # Move the "dump.vcd"-file generated
+            os.makedirs("waveform/history/", exist_ok=True)
+
+            timestamp = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y%m%d%H%M%S")
+            vcd_name = os.path.abspath(f"waveform/history/{testcase}_{timestamp}.vcd")
+            os.rename(f"{DIR_TESTS}/dump.vcd", vcd_name)
+
+            vcd_symlink = f"waveform/{testcase}.vcd"
+            if os.path.exists(vcd_symlink):
+                os.remove(vcd_symlink)
+            os.symlink(vcd_name, vcd_symlink)
 
         return wrapper
 
