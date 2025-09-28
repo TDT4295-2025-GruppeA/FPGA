@@ -30,4 +30,5 @@ foreach item $modules {
     set file_list [join $files ":"]
     puts $fh "$item $file_list"
 }
+
 close $fh
