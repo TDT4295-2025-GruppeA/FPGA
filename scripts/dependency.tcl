@@ -14,7 +14,22 @@ set fh [open "build/file_compile_order.txt" w]
 
 # Modules to include in dependency analysis
 # TODO: Somehow infer this automatically?
-set modules {Example FixedTB MatMul VecCross VecDot VecSub VecAdd Rasterizer Top}
+set modules {
+    Example
+    FixedTB
+    MatMul
+    VecCross
+    VecDot
+    VecSub
+    VecAdd
+    Rasterizer
+    ShiftRegister
+    BinaryToGray
+    GrayToBinary
+    PointerSynchronizer
+    AsyncFifo
+    Top
+}
 
 set_property verilog_define SIMULATION [current_fileset]
 set_property source_mgmt_mode All [current_project]
@@ -24,4 +39,5 @@ foreach item $modules {
     set file_list [join $files ":"]
     puts $fh "$item $file_list"
 }
+
 close $fh
