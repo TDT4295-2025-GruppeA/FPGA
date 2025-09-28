@@ -100,7 +100,7 @@ def find_tests(module: ModuleType) -> dict[str, TestFunction]:
         if var.startswith("test_"):
             # This is probably a test. Check if it is a cocotb test
             func = getattr(module, var)
-            if isinstance(func, cocotb._decorators.Test):
+            if isinstance(func, (cocotb._decorators.Test, cocotb._decorators.Parameterized)):
                 tests[var] = TestFunction(var, func)
 
     return tests
