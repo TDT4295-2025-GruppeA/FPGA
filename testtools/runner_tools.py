@@ -87,7 +87,7 @@ def create_test(toplevel: str, filename: str, module_name: str, testcase: str | 
                 runner.test(
                     hdl_toplevel=toplevel,
                     test_module=",".join(("copra.integration.autostub", module_name)),
-                    testcase=testcase,
+                    test_filter=f"({testcase}|copra.integration.autostub)",
                     build_dir=build_dir,
                     test_dir=DIR_TESTS,
                     waves=True,
