@@ -82,12 +82,20 @@ module ModelBuffer #(
     always_ff @(posedge clk or negedge rstn) begin
         // Mark model as written if we have started writing to another model
         // It is only allowed to write to a model once.
-        if (write_en && write_legal && (write_model_index != write_prev_model_index)) begin
+        if (write_en && write_legal && (write_model_index != write_prev_model_index) && rstn) begin
             if (registry[write_prev_model_index].state == STATE_WRITING)
                 registry[write_prev_model_index].state <= STATE_WRITTEN;
         end
 
-        if (write_en && write_legal) begin
+        if (!rstn) begin // Reset control signals
+            addr_next <= 0;
+            write_prev_model_index <= 0;
+            for (int i = 0; i < MAX_MODEL_COUNT; i++) begin
+                registry[i].state = STATE_EMPTY;
+                registry[i].size = 0;
+                registry[i].index = 0;
+            end
+        end else if (write_en && write_legal) begin
             // Write the triangle and update model states
             model_buffer[write_addr] <= write_triangle;
             registry[write_model_index].size += 1;
