@@ -1,3 +1,7 @@
+// Async FIFO is a FIFO queue for crossing clock domains.
+// `WIDTH` is the data witdth in bits.
+// `MIN_LENGTH` is the minimum number of entries the FIFO should have.
+// The actual length is the next power of two greater than `MIN_LENGTH`.
 module AsyncFifo #(
     parameter int WIDTH = 8,
     parameter int MIN_LENGTH = 8
