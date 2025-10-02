@@ -56,13 +56,15 @@ def import_module(module_name: str, testdir: str) -> TestModule:
         raise ImportError(
             f"Module '{name}' has invalid value for 'VERILOG_MODULE'. Got '{type(name)}', expected str. Ignoring module"
         )
-    
+
     # Get parameters to toplevel module if available
     if hasattr(module, "VERILOG_PARAMETERS"):
         verilog_parameters = getattr(module, "VERILOG_PARAMETERS")
 
         if not isinstance(verilog_parameters, dict):
-            raise ImportError(f"Module '{name}' has non-dict value for 'VERILOG_PARAMETERS.")
+            raise ImportError(
+                f"Module '{name}' has non-dict value for 'VERILOG_PARAMETERS."
+            )
 
         verilog_parameters = repr(verilog_parameters)
     else:

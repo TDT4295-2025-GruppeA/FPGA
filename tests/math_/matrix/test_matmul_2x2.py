@@ -13,27 +13,38 @@ VERILOG_PARAMETERS = {
 }
 
 TEST_MATRICIES = [
-    np.array([
-        [1, 0],
-        [0, 1],
-    ]),
-    np.array([
-        [0, 1],
-        [1, 0],
-    ]),
-    np.array([
-        [0, 1],
-        [-1, 0],
-    ]),
-    np.array([
-        [1, 2],
-        [3, 4],
-    ]),
-    np.array([
-        [0.5, 0.25],
-        [0.75, 0.1],
-    ]),
+    np.array(
+        [
+            [1, 0],
+            [0, 1],
+        ]
+    ),
+    np.array(
+        [
+            [0, 1],
+            [1, 0],
+        ]
+    ),
+    np.array(
+        [
+            [0, 1],
+            [-1, 0],
+        ]
+    ),
+    np.array(
+        [
+            [1, 2],
+            [3, 4],
+        ]
+    ),
+    np.array(
+        [
+            [0.5, 0.25],
+            [0.75, 0.1],
+        ]
+    ),
 ]
+
 
 @cocotb.test()
 async def test_matmul(dut: Matmul):
@@ -50,4 +61,6 @@ async def test_matmul(dut: Matmul):
 
             actual_c = cocotb_to_numpy(dut.out.get())
 
-            assert within_tolerance(actual_c, expected_c), f"Matrix multiplication failed: \n{a} @ \n{b} = \n{actual_c} != \n{expected_c}"
+            assert within_tolerance(
+                actual_c, expected_c
+            ), f"Matrix multiplication failed: \n{a} @ \n{b} = \n{actual_c} != \n{expected_c}"
