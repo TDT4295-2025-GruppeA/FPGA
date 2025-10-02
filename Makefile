@@ -28,11 +28,11 @@ STUB_FILES = $(foreach t,$(VERILOG_MODULES),$(shell echo tests/stubs/$(t).py | t
 TEST_MODULES ?= $(VERILOG_MODULES)
 
 # Option to disable stub-generation (takes a lot of time)
-STUBS ?= on
-ifeq ($(STUBS), "on")
-	USE_STUBS = $(STUB_FILES)
+RECOMPILE ?= yes
+ifeq ($(RECOMPILE), yes)
+    TESTDEPS = build/file_compile_order.txt $(USE_STUBS)
 else
-	USE_STUBS =
+    TESTDEPS = 
 endif
 
 .PHONY : synth flash test clean rmbuild rmgen rmlogs shell stubs
@@ -96,6 +96,6 @@ build/file_compile_order.txt: scripts/dependency.tcl $(VERILOG_SOURCES)
 	mkdir -p build
 	vivado -mode batch -journal /dev/null -log /dev/null -source scripts/dependency.tcl 2>&1 >/dev/null
 
-test: build/file_compile_order.txt $(USE_STUBS)
+test: $(TESTDEPS)
 	python testtools/gentest.py
 	pytest testtools/testrunner.py -k "$(shell echo $(TEST_MODULES) | sed 's/ / or /g')"
