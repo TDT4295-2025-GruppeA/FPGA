@@ -2,7 +2,7 @@
 typedef struct packed {
     logic [31:0] index; // Index in the model buffer
     logic [31:0] size;     // Number of triangles in the model
-    logic state;
+    logic [1:0] state;
 } model_index_t;
 
 typedef struct packed {
@@ -42,6 +42,7 @@ module ModelBuffer #(
     logic [31:0] write_addr;
 
     logic write_legal;
+    logic [31:0] write_prev_model_index; // used to detect model change
 
     // Highest addr used in the buffer
     logic [31:0] addr_next = 0;
@@ -80,6 +81,11 @@ module ModelBuffer #(
     end
 
     always_ff @(posedge clk or negedge rstn) begin
+        if (write_en && write_legal && (write_model_index != write_prev_model_index)) begin
+            if (registry[write_prev_model_index].state == STATE_WRITING)
+                registry[write_prev_model_index].state <= STATE_WRITTEN;
+        end
+
         if (write_en && write_legal) begin
             model_buffer[write_addr] <= write_triangle;
             registry[write_model_index].size += 1;
@@ -92,6 +98,8 @@ module ModelBuffer #(
             if (registry[write_model_index].state == STATE_EMPTY) begin
                 registry[write_model_index].state <= STATE_WRITING;
             end
+
+            write_prev_model_index <= write_model_index;
         end
     end
 endmodule
