@@ -2,11 +2,20 @@ import video_modes_pkg::*;
 import clock_modes_pkg::*;
 
 module Top (
-    input btn,
-    output led,
+    // Fun stuff
+    input logic btn,
+    output logic led,
+    output logic [7:0] seg,
 
+    // Borin stuff
     input logic clk_ext, // 100MHz for now
     input logic reset,
+
+    // SPI (Slave)
+    input logic spi_sclk,
+    input logic spi_ssn,
+    input logic spi_mosi,
+    output logic spi_miso,
 
     // VGA control
     output logic vga_hsync,
@@ -60,6 +69,28 @@ module Top (
         .vga_green(vga_green),
         .vga_blue(vga_blue)
     );
+
+    logic [7:0] spi_data_rx;
+    logic spi_data_ready;
+
+    Spi spi_inst (
+        .sclk(spi_sclk),
+        .ssn(spi_ssn),
+        .miso(spi_miso),
+        .mosi(spi_mosi),
+        .data_rx(spi_data_rx),
+        .data_ready(spi_data_ready)
+    );
+
+    always_ff @(posedge clk_system or negedge rstn_system) begin
+        if (!rstn_system) begin
+            seg <= 8'b0;
+        end else begin
+            if (spi_data_ready) begin
+                seg <= ~spi_data_rx;
+            end
+        end
+    end
 
 endmodule
 
