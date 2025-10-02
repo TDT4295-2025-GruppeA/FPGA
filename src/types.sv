@@ -12,5 +12,11 @@ package types_pkg;
         fixed y;
         fixed z;
         color_t color;
+    } vertex_t;
+
+    typedef struct packed {
+        vertex_t a;
+        vertex_t b;
+        vertex_t c;
     } triangle_t;
 endpackage
