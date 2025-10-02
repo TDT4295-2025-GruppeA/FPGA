@@ -1,11 +1,4 @@
-import fixed_pkg::*;
-
-typedef struct packed {
-    fixed coordinate;
-    fixed coordinate2;
-    fixed coordinate3;
-    logic [11:0] color;
-} triangle_t;
+import types_pkg::*;
 
 module ModelBuffer #(
     parameter MAX_MODEL_COUNT = 10,
