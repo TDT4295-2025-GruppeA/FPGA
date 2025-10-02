@@ -124,3 +124,18 @@ async def test_multimodel(dut: Modelbuffer):
     assert model3 == model3_result
 
 
+@cocotb.test()
+async def test_no_overwrite(dut: Modelbuffer):
+    """Test that its not possible to redefine a module"""
+    await make_clock(dut)
+
+    model1 = [Triangle(i,i,i, RGB(i,i,i)) for i in range(1, 4)]
+    model2 = [Triangle(i,i,i, RGB(i,i,i)) for i in range(4, 7)]
+
+    await write_model(dut, 0, model1)
+    await write_model(dut, 1, model1)
+    await write_model(dut, 0, model2)
+
+    model1_result = await read_model(dut, 0)
+    
+    assert model1 == model1_result
