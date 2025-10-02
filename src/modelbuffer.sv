@@ -1,14 +1,9 @@
+import fixed_pkg::*;
 
 typedef struct packed {
-    logic [31:0] index; // Index in the model buffer
-    logic [31:0] size;     // Number of triangles in the model
-    logic [1:0] state;
-} model_index_t;
-
-typedef struct packed {
-    logic [31:0] coordinate;
-    logic [31:0] coordinate2;
-    logic [31:0] coordinate3;
+    fixed coordinate;
+    fixed coordinate2;
+    fixed coordinate3;
     logic [11:0] color;
 } triangle_t;
 
@@ -21,30 +16,42 @@ module ModelBuffer #(
 
     input logic write_en,
     input triangle_t write_triangle,
-    input logic [31:0] write_model_index,
-    input logic [31:0] write_triangle_index,
+    input logic [$clog2(MAX_MODEL_COUNT) - 1:0] write_model_index,
+    input logic [$clog2(MAX_TRIANGLE_COUNT) - 1:0] write_triangle_index,
 
-    input logic [31:0] read_model_index,
-    input logic [31:0] read_triangle_index,
+    input logic [$clog2(MAX_MODEL_COUNT) - 1:0] read_model_index,
+    input logic [$clog2(MAX_TRIANGLE_COUNT) - 1:0] read_triangle_index,
 
     output triangle_t read_triangle,
     output logic read_last_index,
 
     output logic buffer_full
 );
-    localparam STATE_EMPTY = 0;
-    localparam STATE_WRITING = 1;
-    localparam STATE_WRITTEN = 2;
+    typedef enum logic [1:0] {
+        STATE_EMPTY = 2'b00,
+        STATE_WRITING = 2'b01,
+        STATE_WRITTEN = 2'b10
+    } state_t;
+
+    typedef logic [$clog2(MAX_TRIANGLE_COUNT) - 1:0] triangle_idx_t;
+    typedef logic [$clog2(MAX_MODEL_COUNT) - 1:0] model_idx_t;
+
+    typedef struct packed {
+        model_idx_t index; // Index in the model buffer
+        triangle_idx_t size;     // Number of triangles in the model
+        logic [1:0] state;
+    } model_index_t;
+
 
     // Current index we are reading/writing from/to (model start addr + triangle_index)
-    logic [31:0] read_addr;
-    logic [31:0] write_addr;
+    triangle_idx_t read_addr;
+    triangle_idx_t write_addr;
 
     logic write_legal;
-    logic [31:0] write_prev_model_index; // used to detect model change
+    triangle_idx_t write_prev_model_index; // used to detect model change
 
     // Highest addr used in the buffer
-    logic [31:0] addr_next = 0;
+    triangle_idx_t addr_next = 0;
 
     // This is a table keeping track of which models exist in the memory,
     // and their start index and size.
