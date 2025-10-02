@@ -27,6 +27,14 @@ STUB_FILES = $(foreach t,$(VERILOG_MODULES),$(shell echo tests/stubs/$(t).py | t
 
 TEST_MODULES ?= $(VERILOG_MODULES)
 
+# Option to disable stub-generation (takes a lot of time)
+STUBS ?= on
+ifeq ($(STUBS), "on")
+	USE_STUBS = $(STUB_FILES)
+else
+	USE_STUBS =
+endif
+
 .PHONY : synth flash test clean rmbuild rmgen rmlogs shell stubs
 
 build/top_$(TARGET).bit: $(VERILOG_SOURCES)
@@ -72,7 +80,7 @@ rmlogs:
 shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 
-tests/stubs/generate_stubs.stamp: $(VERILOG_SOURCES)
+tests/stubs/generate_stubs.stamp: $(VERILOG_SOURCES) build/file_compile_order.txt
 	@echo "Generating typing stubs"
 	rm -rf tests/stubs
 	mkdir -p tests/stubs
@@ -88,6 +96,6 @@ build/file_compile_order.txt: scripts/dependency.tcl $(VERILOG_SOURCES)
 	mkdir -p build
 	vivado -mode batch -journal /dev/null -log /dev/null -source scripts/dependency.tcl 2>&1 >/dev/null
 
-test: build/file_compile_order.txt $(STUB_FILES)
+test: build/file_compile_order.txt $(USE_STUBS)
 	python testtools/gentest.py
 	pytest testtools/testrunner.py -k "$(shell echo $(TEST_MODULES) | sed 's/ / or /g')"
