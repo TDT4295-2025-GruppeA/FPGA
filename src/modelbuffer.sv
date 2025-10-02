@@ -24,7 +24,6 @@ module ModelBuffer #(
     input logic [31:0] write_model_index,
     input logic [31:0] write_triangle_index,
 
-    input logic read_en, // TODO: is this signal needed?
     input logic [31:0] read_model_index,
     input logic [31:0] read_triangle_index,
 
