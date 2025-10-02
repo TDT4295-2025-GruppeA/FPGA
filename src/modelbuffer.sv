@@ -30,9 +30,9 @@ module ModelBuffer #(
     typedef logic [$clog2(MAX_MODEL_COUNT) - 1:0] model_idx_t;
 
     typedef struct packed {
-        model_idx_t index; // Index in the model buffer
-        triangle_idx_t size;     // Number of triangles in the model
-        logic [1:0] state;
+        model_idx_t index;    // Index in the model buffer
+        triangle_idx_t size;  // Number of triangles in the model
+        logic [1:0] state;    // State of the model
     } model_index_t;
 
 
@@ -40,7 +40,7 @@ module ModelBuffer #(
     triangle_idx_t read_addr;
     triangle_idx_t write_addr;
 
-    logic write_legal;
+    logic write_legal; // disallow writing to model which is already written
     triangle_idx_t write_prev_model_index; // used to detect model change
 
     // Highest addr used in the buffer
@@ -80,12 +80,15 @@ module ModelBuffer #(
     end
 
     always_ff @(posedge clk or negedge rstn) begin
+        // Mark model as written if we have started writing to another model
+        // It is only allowed to write to a model once.
         if (write_en && write_legal && (write_model_index != write_prev_model_index)) begin
             if (registry[write_prev_model_index].state == STATE_WRITING)
                 registry[write_prev_model_index].state <= STATE_WRITTEN;
         end
 
         if (write_en && write_legal) begin
+            // Write the triangle and update model states
             model_buffer[write_addr] <= write_triangle;
             registry[write_model_index].size += 1;
 
@@ -94,6 +97,7 @@ module ModelBuffer #(
             end
             addr_next <= write_addr + 1;
 
+            // Update state of the model we are writing to
             if (registry[write_model_index].state == STATE_EMPTY) begin
                 registry[write_model_index].state <= STATE_WRITING;
             end
