@@ -10,9 +10,12 @@ class Shiftregister(cocotb.handle.HierarchyObject):
     SIZE: cocotb.handle.LogicArrayObject
     buffer: cocotb.handle.LogicArrayObject
     clk: cocotb.handle.LogicObject
-    data_in: cocotb.handle.LogicObject
-    data_out: cocotb.handle.LogicObject
+    parallel_in: cocotb.handle.LogicArrayObject
+    parallel_in_en: cocotb.handle.LogicObject
+    parallel_out: cocotb.handle.LogicArrayObject
     rstn: cocotb.handle.LogicObject
+    serial_in: cocotb.handle.LogicObject
+    serial_out: cocotb.handle.LogicObject
 
     @overload
     def __getitem__(self, name: Literal['SIZE']) -> cocotb.handle.LogicArrayObject: ...
@@ -24,13 +27,22 @@ class Shiftregister(cocotb.handle.HierarchyObject):
     def __getitem__(self, name: Literal['clk']) -> cocotb.handle.LogicObject: ...
 
     @overload
-    def __getitem__(self, name: Literal['data_in']) -> cocotb.handle.LogicObject: ...
+    def __getitem__(self, name: Literal['parallel_in']) -> cocotb.handle.LogicArrayObject: ...
 
     @overload
-    def __getitem__(self, name: Literal['data_out']) -> cocotb.handle.LogicObject: ...
+    def __getitem__(self, name: Literal['parallel_in_en']) -> cocotb.handle.LogicObject: ...
+
+    @overload
+    def __getitem__(self, name: Literal['parallel_out']) -> cocotb.handle.LogicArrayObject: ...
 
     @overload
     def __getitem__(self, name: Literal['rstn']) -> cocotb.handle.LogicObject: ...
+
+    @overload
+    def __getitem__(self, name: Literal['serial_in']) -> cocotb.handle.LogicObject: ...
+
+    @overload
+    def __getitem__(self, name: Literal['serial_out']) -> cocotb.handle.LogicObject: ...
 
     @overload
     def __getitem__(self, name: str) -> cocotb.handle.SimHandleBase: ...
