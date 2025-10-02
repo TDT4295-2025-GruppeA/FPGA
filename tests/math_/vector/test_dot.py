@@ -11,6 +11,7 @@ VERILOG_PARAMETERS = {
     "N": 3,
 }
 
+
 @cocotb.test()
 async def test_dot(dut: Vecdot):
     for lhs in TEST_VECTORS:
@@ -26,4 +27,6 @@ async def test_dot(dut: Vecdot):
 
             actual_out = cocotb_to_numpy(dut.out.get())
 
-            assert within_tolerance(actual_out, expected_out), f"Dot product failed: {lhs} · {rhs} = {actual_out} != {expected_out}"
+            assert within_tolerance(
+                actual_out, expected_out
+            ), f"Dot product failed: {lhs} · {rhs} = {actual_out} != {expected_out}"
