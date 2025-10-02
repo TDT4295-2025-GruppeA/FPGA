@@ -28,6 +28,7 @@ set modules {
     GrayToBinary
     PointerSynchronizer
     AsyncFifo
+    SpiSub
     Top
 }
 
