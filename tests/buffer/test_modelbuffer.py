@@ -76,7 +76,6 @@ async def read_model(dut: Modelbuffer, model_index: int) -> list[Triangle]:
     i = 0
     result: list[Triangle] = []
     dut.read_model_index.value = model_index
-    dut.read_en.value = 1
     while not dut.read_last_index.value:
         dut.read_triangle_index.value = i
         await RisingEdge(dut.clk)
@@ -84,7 +83,6 @@ async def read_model(dut: Modelbuffer, model_index: int) -> list[Triangle]:
         i += 1
     
     dut.read_triangle_index.value = 0
-    dut.read_en.value = 0
     dut.read_model_index.value = 0
     await RisingEdge(dut.clk)
 
