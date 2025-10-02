@@ -117,7 +117,7 @@ module SpiSub #(
     logic pop_new_tx, load_new_tx;
     assign pop_new_tx = bit_count == 3;
     assign load_new_tx = bit_count == 2;
-
+    
     ShiftRegister #(
         .SIZE(WORD_SIZE)
     ) tx_shift_register (
