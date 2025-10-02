@@ -57,7 +57,7 @@ module Top (
     // The shared buffer select signal
     logic buffer_select;
     logic buffer_select_reg;
-    logic draw_start;
+    (* MARK_DEBUG = "true" *) logic draw_start;
 
     assign buffer_select = buffer_select_reg;
 
@@ -99,8 +99,20 @@ module Top (
         end
     end
 
-    // Generate draw start pulse when buffer_select changes
-    assign draw_start = (buffer_select_sync_sys != buffer_select_sync_sys_d);
+    logic rstn_sys_d;
+    logic rst_deassert_pulse;
+
+    always_ff @(posedge clk_system or negedge rstn_system) begin
+        if (!rstn_system) begin
+            rstn_sys_d <= 1'b0;
+        end else begin
+            rstn_sys_d <= 1'b1;
+        end
+    end
+
+    assign rst_deassert_pulse = rstn_system & !rstn_sys_d;
+
+    assign draw_start = rst_deassert_pulse | (buffer_select_sync_sys != buffer_select_sync_sys_d);
 
     DrawingManager #(
         .BUFFER_WIDTH(BUFFER_CONFIG.width),
@@ -176,8 +188,9 @@ module Top (
     FrameBuffer #(
         .BUFFER_CONFIG(BUFFER_CONFIG)
     ) frame_buffer_A (
-        .clk(clk_system),
-        .rstn(rstn_system),
+        .clk_write(clk_system),
+        .rstn_write(rstn_system),
+        .clk_read(clk_display),
         .read_addr(fb_a_read_addr),
         .read_data(fb_a_read_data),
         .write_en(fb_a_write_en),
@@ -188,8 +201,9 @@ module Top (
     FrameBuffer #(
         .BUFFER_CONFIG(BUFFER_CONFIG)
     ) frame_buffer_B (
-        .clk(clk_system),
-        .rstn(rstn_system),
+        .clk_write(clk_system),
+        .rstn_write(rstn_system),
+        .clk_read(clk_display),
         .read_addr(fb_b_read_addr),
         .read_data(fb_b_read_data),
         .write_en(fb_b_write_en),
@@ -226,12 +240,12 @@ module Top (
     assign disp_read_data = !buffer_select ? fb_a_read_data : fb_b_read_data;
 
     // DrawingManager writes to the INACTIVE buffer
-    assign fb_a_write_en = !buffer_select ? dm_write_en : 1'b0;
-    assign fb_a_write_addr = !buffer_select ? dm_write_addr : '0;
-    assign fb_a_write_data = !buffer_select ? dm_write_data : '0;
-    
-    assign fb_b_write_en = buffer_select ? dm_write_en : 1'b0;
-    assign fb_b_write_addr = buffer_select ? dm_write_addr : '0;
-    assign fb_b_write_data = buffer_select ? dm_write_data : '0;
+    assign fb_a_write_en = !buffer_select_sync_sys ? dm_write_en : 1'b0;
+    assign fb_a_write_addr = !buffer_select_sync_sys ? dm_write_addr : '0;
+    assign fb_a_write_data = !buffer_select_sync_sys ? dm_write_data : '0;
+
+    assign fb_b_write_en = buffer_select_sync_sys ? dm_write_en : 1'b0;
+    assign fb_b_write_addr = buffer_select_sync_sys ? dm_write_addr : '0;
+    assign fb_b_write_data = buffer_select_sync_sys ? dm_write_data : '0;
 
 endmodule
