@@ -30,6 +30,8 @@ class Triangle(LogicObject):
 
 async def make_clock(dut: Modelbuffer):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    dut.rstn.value = 1
+
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
 
@@ -101,8 +103,9 @@ async def test_write_model(dut: Modelbuffer):
 
 
 @cocotb.test()
-async def test_multimodel(dut: Modelbuffer):
-    await make_clock(dut)
+async def test_multimodel(dut: Modelbuffer, create_clock: bool = True):
+    if create_clock:
+        await make_clock(dut)
 
     model1 = [Triangle(i,i,i, RGB(i,i,i)) for i in range(1,4)]
     model2 = [Triangle(i,i,i, RGB(i,i,i)) for i in range(4, 7)]
@@ -137,3 +140,15 @@ async def test_no_overwrite(dut: Modelbuffer):
     model1_result = await read_model(dut, 0)
     
     assert model1 == model1_result
+
+@cocotb.test()
+async def test_reset(dut: Modelbuffer):
+    """Test reset behaviour"""
+    await make_clock(dut)
+    await test_multimodel.func(dut, create_clock=False)
+    dut.rstn.value = 0
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    dut.rstn.value = 1
+    await test_multimodel.func(dut)
