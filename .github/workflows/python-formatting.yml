@@ -1,0 +1,25 @@
+name: Check formatting with black
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  black:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        # Manually maintained version, keep in sync with requirements.txt
+        run: pip install black==25.1.0
+
+      - name: Check code formatting
+        run: black --check .
