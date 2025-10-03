@@ -1,8 +1,15 @@
 import cocotb
-from cocotb.triggers import RisingEdge, Timer, ClockCycles, with_timeout, SimTimeoutError
+from cocotb.triggers import (
+    RisingEdge,
+    Timer,
+    ClockCycles,
+    with_timeout,
+    SimTimeoutError,
+)
 from cocotb.clock import Clock
 
 VERILOG_MODULE = "PulseSync"
+
 
 @cocotb.test()
 async def test_pulse_sync(dut):
@@ -26,11 +33,11 @@ async def test_pulse_sync(dut):
     await RisingEdge(dut.clk_dst)
 
     dut._log.info("Test 1: Sending a single pulse")
-    
+
     dut.pulse_in_src.value = 1
     await RisingEdge(dut.clk_src)
     dut.pulse_in_src.value = 0
-    
+
     try:
         await with_timeout(RisingEdge(dut.pulse_out_dst), 100, timeout_unit="ns")
         assert dut.pulse_out_dst.value == 1, "Pulse was not received correctly"
@@ -40,16 +47,16 @@ async def test_pulse_sync(dut):
 
     await RisingEdge(dut.clk_dst)
 
-    await Timer(1, units="ns") # Small delay to ensure value is stable
+    await Timer(1, units="ns")  # Small delay to ensure value is stable
 
     assert dut.pulse_out_dst.value == 0, "Pulse was not a single cycle."
 
     dut._log.info("Test 2: Sending a second pulse")
-    
+
     dut.pulse_in_src.value = 1
     await RisingEdge(dut.clk_src)
     dut.pulse_in_src.value = 0
-    
+
     try:
         await with_timeout(RisingEdge(dut.pulse_out_dst), 100, timeout_unit="ns")
         assert dut.pulse_out_dst.value == 1, "Second pulse was not received correctly"
@@ -59,6 +66,6 @@ async def test_pulse_sync(dut):
 
     await RisingEdge(dut.clk_dst)
 
-    await Timer(1, units="ns") # Small delay to ensure value is stable
-    
+    await Timer(1, units="ns")  # Small delay to ensure value is stable
+
     assert dut.pulse_out_dst.value == 0, "Second pulse was not a single cycle."

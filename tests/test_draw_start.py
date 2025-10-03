@@ -5,6 +5,7 @@ from stubs.top import Top
 
 VERILOG_MODULE = "Top"
 
+
 @cocotb.test()
 async def test_startup_signals(dut: Top):
     # 100 MHz clock on clk_ext
@@ -13,7 +14,7 @@ async def test_startup_signals(dut: Top):
     # Assert reset
     dut.reset.value = 1
     for _ in range(5):
-        await RisingEdge(dut.clk_ext)   # hold reset for 5 cycles
+        await RisingEdge(dut.clk_ext)  # hold reset for 5 cycles
 
     # Release reset
     dut.reset.value = 0
