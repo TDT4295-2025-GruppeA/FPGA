@@ -17,8 +17,16 @@ module BackgroundDrawer #(
 
     localparam int BUFFER_SIZE = BUFFER_WIDTH * BUFFER_HEIGHT;
 
-    localparam logic [BUFFER_DATA_WIDTH-1:0] BACKGROUND_COLOR_A = 12'hF00; // red
-    localparam logic [BUFFER_DATA_WIDTH-1:0] BACKGROUND_COLOR_B = 12'h0F0; // green
+    localparam logic [BUFFER_DATA_WIDTH-1:0] COLOR_ABOVE = 12'h0AF; // light blue
+    localparam logic [BUFFER_DATA_WIDTH-1:0] COLOR_BELOW = 12'hAAA; // light grey
+
+    localparam int CY = BUFFER_HEIGHT/2;
+
+    logic [$clog2(BUFFER_WIDTH)-1:0] px;
+    logic [$clog2(BUFFER_HEIGHT)-1:0] py;
+
+    assign px = counter % BUFFER_WIDTH;
+    assign py = counter / BUFFER_WIDTH;
 
     typedef enum {
         IDLE,
@@ -69,11 +77,13 @@ module BackgroundDrawer #(
                 counter_en = 1'b1;
                 write_en   = 1'b1;
                 write_addr = counter;
-                if (buffer_select == 1'b0)
-                    write_data = BACKGROUND_COLOR_A; // drawing into Buffer A
+
+                // Pick color based on side of flat horizontal line
+                if (py < CY)
+                    write_data = COLOR_ABOVE;  // top half = blue
                 else
-                    write_data = BACKGROUND_COLOR_B; // drawing into Buffer B
-                
+                    write_data = COLOR_BELOW;  // bottom half = grey
+
                 if (counter == BUFFER_ADDR_WIDTH'((BUFFER_SIZE - 1))) begin
                     next_state = IDLE;
                     draw_done  = 1'b1;
