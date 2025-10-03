@@ -8,6 +8,7 @@ from cases import TEST_VECTORS
 
 VERILOG_MODULE = "VecCross"
 
+
 @cocotb.test()
 async def test_cross(dut: Veccross):
     for lhs in TEST_VECTORS:
@@ -23,4 +24,6 @@ async def test_cross(dut: Veccross):
 
             actual_out = cocotb_to_numpy(dut.out.get())
 
-            assert within_tolerance(actual_out, expected_out), f"Cross product failed: {l} x {r} = {actual_out} != {expected_out}"
+            assert within_tolerance(
+                actual_out, expected_out
+            ), f"Cross product failed: {l} x {r} = {actual_out} != {expected_out}"

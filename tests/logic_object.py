@@ -17,7 +17,7 @@ def concat(a: LogicArray, *arr: LogicArray) -> LogicArray:
 
     index = 0
     for x, size in zip(reversed(arr), reversed(sizes)):
-        result[x.range.left + index:x.range.right + index] = x
+        result[x.range.left + index : x.range.right + index] = x
         index += size
     return result
 
@@ -29,7 +29,7 @@ class _Meta(type):
         return dataclass(cls)
 
 
-class LogicObject(metaclass=_Meta):    
+class LogicObject(metaclass=_Meta):
     @classmethod
     def from_logicarray(cls, logic_array: LogicArray):
         field: Field
@@ -40,18 +40,20 @@ class LogicObject(metaclass=_Meta):
                 raise ValueError("Missing 'size' metadata in field")
             size = field.metadata.get("size")
             if not isinstance(size, int):
-                raise TypeError(f"Incorrect metadata value for 'size'. Got: '{type(size)}', expected '{int}'")
-            
+                raise TypeError(
+                    f"Incorrect metadata value for 'size'. Got: '{type(size)}', expected '{int}'"
+                )
+
             value_type = field.metadata.get("type", "int")
 
-            sliced = logic_array[index + size - 1:index]
+            sliced = logic_array[index + size - 1 : index]
 
             if value_type == "int":
                 values[key] = sliced.to_signed()
             elif value_type == "uint":
                 values[key] = sliced.to_unsigned()
             elif value_type == "bytes":
-                values[key] = sliced.to_bytes(byteorder="big") # TODO: expose byteorder
+                values[key] = sliced.to_bytes(byteorder="big")  # TODO: expose byteorder
             elif isinstance(value_type, type) and issubclass(value_type, LogicObject):
                 values[key] = value_type.from_logicarray(sliced)
             else:
@@ -70,8 +72,10 @@ class LogicObject(metaclass=_Meta):
                 raise ValueError("Missing 'size' metadata in field")
             size = field.metadata.get("size")
             if not isinstance(size, int):
-                raise TypeError(f"Incorrect metadata value for 'size'. Got: '{type(size)}', expected '{int}'")
-            
+                raise TypeError(
+                    f"Incorrect metadata value for 'size'. Got: '{type(size)}', expected '{int}'"
+                )
+
             if issubclass(type(value), LogicObject):
                 value = value.to_logicarray()
             arr = LogicArray(value, Range(size - 1, 0))

@@ -4,6 +4,7 @@ from stubs.example import Example
 
 VERILOG_MODULE = "Example"
 
+
 @cocotb.test()
 async def test_adder_1(dut: Example):
     """Very simple test to demonstrate test-system"""
@@ -13,6 +14,7 @@ async def test_adder_1(dut: Example):
     await Timer(1)
 
     assert dut.sum.value == 3
+
 
 @cocotb.test()
 async def test_always_pass(dut):
