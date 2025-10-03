@@ -2,12 +2,12 @@
 // https://github.com/projf/projf-explore/blob/main/lib/clock/xc7/clock_480p.sv
 
 import video_modes_pkg::*;
+import buffer_config_pkg::*;
 
 module Display #(
     parameter video_mode_t VIDEO_MODE = VMODE_640x480p60,
-    parameter int BUFFER_WIDTH = 320,
-    parameter int BUFFER_HEIGHT = 240
-) (
+    parameter buffer_config_t BUFFER_CONFIG = BUFFER_160x120x12
+)(
     input logic clk_pixel,
     input logic rstn_pixel,
 
@@ -15,10 +15,12 @@ module Display #(
     output logic vga_vsync,
     output logic[3:0] vga_red,
     output logic[3:0] vga_green,
-    output logic[3:0] vga_blue
+    output logic[3:0] vga_blue,
+
+    output logic[BUFFER_CONFIG.addr_width-1:0] read_addr,
+    input logic[BUFFER_CONFIG.data_width-1:0] read_data
 );
     // Generate pixel coords and hsync/vsync
-    // TODO: this can probably be simplified.
     localparam int H_RESOLUTION = VIDEO_MODE.h_resolution;
     localparam int H_FRONT_PORCH = VIDEO_MODE.h_front_porch;
     localparam int H_SYNC = VIDEO_MODE.h_sync;
@@ -31,9 +33,6 @@ module Display #(
     localparam int V_BACK_PORCH = VIDEO_MODE.v_back_porch;
     localparam int LINEHEIGHT = V_RESOLUTION + V_FRONT_PORCH + V_SYNC + V_BACK_PORCH;
 
-
-    // These are intentionally 1 bit wider than resolution, due to
-    // front+back porch and sync window.
     localparam int VW = $clog2(LINEWIDTH) + 1;
     localparam int VH = $clog2(LINEHEIGHT) + 1;
     logic [VW - 1:0] x;
@@ -55,12 +54,14 @@ module Display #(
                     && y <= VH'(V_RESOLUTION - 1));
     end
 
-
-    // Iterate through pixels in image
     always_ff @(posedge clk_pixel or negedge rstn_pixel) begin
         if (x == VW'(LINEWIDTH-1)) begin
             x <= 0;
-            y <= (y == VH'(LINEHEIGHT-1)) ? 0 : y + 1;
+            if (y == VH'(LINEHEIGHT-1)) begin
+                y <= 0;
+            end else begin
+                y <= y + 1;
+            end
         end else begin
             x <= x + 1;
         end
@@ -72,37 +73,19 @@ module Display #(
         end
     end
 
-
-    // TODO: move this to drawing module or something. Not here.
-    // ##############################
-    // ##### Drawing from image #####
-    // ##############################
-
-    // TODO: dynamic scaled pixel_addr
-    logic[31:0] pixel_addr;
-    logic[11:0] fb_data;
-    
-    // Only scales based on width, and assumes a multiple of 2.
-    localparam int SCALE = $clog2(H_RESOLUTION / BUFFER_WIDTH);
-    assign pixel_addr = (32'(y) >> 1) * BUFFER_WIDTH + (32'(x) >> 1);
-
-    Buffer #(
-        .FILE_SOURCE("static/red_320x240p12.mem"),
-        .FILE_SIZE(BUFFER_WIDTH * BUFFER_HEIGHT)
-    ) buffer_inst (
-        .clk(clk_pixel),
-        .rstn(rstn_pixel),
-        .addr(pixel_addr),
-        .data(fb_data)
+    // Assign read address from VGA controller to the output port
+    localparam int SCALE = $clog2(VIDEO_MODE.h_resolution / BUFFER_CONFIG.width);
+    assign read_addr = BUFFER_CONFIG.addr_width'(
+        ((32'(y) >> SCALE) * BUFFER_CONFIG.width) + (32'(x) >> SCALE)
     );
 
-    // Draw from image buffer
+    // Use the single read_data input to drive the VGA color outputs
     logic [3:0] paint_r, paint_g, paint_b;
     logic [3:0] display_r, display_g, display_b;
     always_comb begin
-        paint_r = fb_data[3:0];
-        paint_g = fb_data[7:4];
-        paint_b = fb_data[11:8];
+        paint_r = read_data[3:0];
+        paint_g = read_data[7:4];
+        paint_b = read_data[11:8];
 
         display_r = (data_enable) ? paint_r : 4'h0;
         display_g = (data_enable) ? paint_g : 4'h0;
@@ -110,7 +93,6 @@ module Display #(
     end
 
     // Flip-flops for output
-    // TODO: remove/simplify
     logic hsync_delay;
     logic vsync_delay;
     logic hsync_delay2;
