@@ -3,15 +3,15 @@ import clock_modes_pkg::*;
 
 module Top (
     // Fun stuff
-    input logic btn,
-    output logic led,
+    input logic [2:0] btn,
+    output logic [3:0] led,
     output logic [7:0] seg,
 
-    // Borin stuff
+    // Boring stuff
     input logic clk_ext, // 100MHz for now
     input logic reset,
 
-    // SPI (Slave)
+    // SPI (Sub)
     input logic spi_sclk,
     input logic spi_ssn,
     input logic spi_mosi,
@@ -25,8 +25,6 @@ module Top (
     output logic[3:0] vga_blue
 );
     localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
-
-    assign led = btn;
 
     ////////////////////////////////////////////////
     ////////////// CLOCK GENERATION ////////////////
@@ -70,28 +68,30 @@ module Top (
         .vga_blue(vga_blue)
     );
 
-    logic [7:0] spi_data_rx;
-    logic spi_data_ready;
+    /////////
+    // SPI //
+    /////////
 
-    Spi spi_inst (
-        .sclk(spi_sclk),
+    SpiSub spi_controller (
+        // SPI interface
         .ssn(spi_ssn),
-        .miso(spi_miso),
+        .sclk(spi_sclk),
         .mosi(spi_mosi),
-        .data_rx(spi_data_rx),
-        .data_ready(spi_data_ready)
+        .miso(spi_miso),
+
+        // System interface
+        .sys_clk(clk_ext),
+        .sys_rstn(~reset),
+
+        // User data interface
+        .tx_data_en(1'b1), // Never sending anything.
+        .rx_data_en(1'b1), // Always reading.
+        .tx_data(seg), // Sending back received data.
+        .rx_data(seg), // Word to receive.
+        .tx_ready(), // Ignored.
+        .rx_ready(), // Ignored.
+        .active() // Ignored.
     );
-
-    always_ff @(posedge clk_system or negedge rstn_system) begin
-        if (!rstn_system) begin
-            seg <= 8'b0;
-        end else begin
-            if (spi_data_ready) begin
-                seg <= ~spi_data_rx;
-            end
-        end
-    end
-
 endmodule
 
 

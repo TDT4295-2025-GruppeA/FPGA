@@ -10,6 +10,7 @@ class Shiftregister(cocotb.handle.HierarchyObject):
     SIZE: cocotb.handle.LogicArrayObject
     buffer: cocotb.handle.LogicArrayObject
     clk: cocotb.handle.LogicObject
+    next_buffer: cocotb.handle.LogicArrayObject
     parallel_in: cocotb.handle.LogicArrayObject
     parallel_in_en: cocotb.handle.LogicObject
     parallel_out: cocotb.handle.LogicArrayObject
@@ -25,6 +26,9 @@ class Shiftregister(cocotb.handle.HierarchyObject):
 
     @overload
     def __getitem__(self, name: Literal['clk']) -> cocotb.handle.LogicObject: ...
+
+    @overload
+    def __getitem__(self, name: Literal['next_buffer']) -> cocotb.handle.LogicArrayObject: ...
 
     @overload
     def __getitem__(self, name: Literal['parallel_in']) -> cocotb.handle.LogicArrayObject: ...

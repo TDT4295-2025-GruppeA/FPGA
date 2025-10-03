@@ -13,7 +13,9 @@ module ShiftRegister #(
     input logic [SIZE-1:0] parallel_in,
     output logic [SIZE-1:0] parallel_out
 );
-    logic [SIZE-1:0] buffer;
+    logic [SIZE-1:0] buffer, next_buffer;
+
+    assign next_buffer = parallel_in_en ? parallel_in : { buffer[SIZE-2:0], serial_in };
 
     assign serial_out = buffer[SIZE-1];
     assign parallel_out = buffer;
@@ -21,10 +23,8 @@ module ShiftRegister #(
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             buffer <= '0;
-        end else if (parallel_in_en) begin
-            buffer <= parallel_in;
         end else begin
-            buffer <= {buffer[SIZE-2:0], serial_in};
+            buffer <= next_buffer;
         end
     end
 endmodule
