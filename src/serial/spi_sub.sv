@@ -66,6 +66,10 @@ module SpiSub #(
     logic data_ready;
     assign data_ready = bit_count == 0;
 
+    // TODO: Since the shift register adds one clock cycle of delay,
+    // we need one extra clock cycle to read the last word. 
+    // This should probably be fixed in a cleaner way.
+
     ShiftRegister #(
         .SIZE(WORD_SIZE)
     ) rx_shift_register (
@@ -113,7 +117,7 @@ module SpiSub #(
     logic pop_new_tx, load_new_tx;
     assign pop_new_tx = bit_count == 3;
     assign load_new_tx = bit_count == 2;
-   
+
     ShiftRegister #(
         .SIZE(WORD_SIZE)
     ) tx_shift_register (

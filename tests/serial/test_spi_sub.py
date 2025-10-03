@@ -51,7 +51,7 @@ async def main_transaction(
     rx_data = []
 
     for tx_byte in tx_data + tx_padding:
-        dut._log.info(f"Transmitting byte: {tx_byte:02X}")
+        dut._log.info(f"Main transmitting byte: {tx_byte:02X}")
         rx_byte = 0
         
         for i in range(8):
@@ -66,7 +66,7 @@ async def main_transaction(
             rx_byte = (rx_byte << 1) | rx_bit
             await master_clock.cycles(1)
 
-        dut._log.info(f"Received byte: {rx_byte:02X}")
+        dut._log.info(f"Main received byte: {rx_byte:02X}")
         rx_data.append(rx_byte)
 
     # Stop master clock.
@@ -94,11 +94,11 @@ async def sub_transaction(dut: Spisub, receive_callback: Callable[[int], int]) -
             f"rstn={dut.rstn.value}\n"
             f"bit_count={dut.bit_count.value}\n"
             f"rx_shift_register.serial_in={dut.rx_shift_register.serial_in}\n"
-            f"rx_shift_register.buffer={dut.rx_shift_register.buffer}\n"
+            f"rx_shift_register.parallel_out={dut.rx_shift_register.parallel_out}\n"
             f"rx_ready={dut.rx_ready.value}\n"
             f"rx_data={dut.rx_data.value}\n"
-            f"tx_shift_register.serial_in={dut.tx_shift_register.serial_in}\n"
-            f"tx_shift_register.buffer={dut.tx_shift_register.buffer}\n"
+            f"tx_shift_register.serial_out={dut.tx_shift_register.serial_out}\n"
+            f"tx_shift_register.parallel_in={dut.tx_shift_register.parallel_in}\n"
             f"rx_buffer={dut.rx_buffer.value}\n"
             f"tx_ready={dut.tx_ready.value}\n"
             f"tx_data={dut.tx_data.value}\n"
@@ -112,13 +112,13 @@ async def sub_transaction(dut: Spisub, receive_callback: Callable[[int], int]) -
             dut.rx_data_en.value = 0
 
             rx_byte = dut.rx_data.value.to_unsigned()
-            dut._log.info(f"Received byte: {rx_byte:02X}")
+            dut._log.info(f"Sub received byte: {rx_byte:02X}")
             
             tx_byte = receive_callback(rx_byte) & 0xFF
 
         # Send data if available.
         if tx_byte is not None:
-            dut._log.info(f"Sending byte: {tx_byte:02X}")
+            dut._log.info(f"Sub transmitting byte: {tx_byte:02X}")
             dut.tx_data.value = tx_byte
 
             dut.tx_data_en.value = 1
