@@ -6,18 +6,30 @@ typedef enum logic {
 } rasterizer_state;
 
 module Rasterizer #(
+    // The viewport size to rasterize
     parameter logic [12:0] WIDTH = 13'd64,
     parameter logic [12:0] HEIGHT = 13'd64
 )(
+    // System interface
     input logic clk,
     input logic rstn,
+
+    // Raise hight to start rasterization
     input logic start,
+
+    // Triangle data
     input fixed vertex0 [3],
     input fixed vertex1 [3],
     input fixed vertex2 [3],
+
+    // Offset for the viewport from the top left of the screen
     input logic [12:0] offset_x,
     input logic [12:0] offset_y,
+
+    // If the rasterizer is ready new data
     output logic ready,
+
+    // Output data
     output logic [12:0] pixel_x,
     output logic [12:0] pixel_y,
     output logic pixel_covered
