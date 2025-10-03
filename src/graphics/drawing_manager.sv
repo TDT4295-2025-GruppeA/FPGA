@@ -12,7 +12,8 @@ module DrawingManager #(
     output logic write_en,
     output logic [BUFFER_ADDR_WIDTH-1:0] write_addr,
     output logic [BUFFER_DATA_WIDTH-1:0] write_data,
-    output logic frame_done
+    output logic frame_done,
+    input  logic buffer_select // Used for debugging atm
 );
 
     typedef enum {
@@ -53,18 +54,8 @@ module DrawingManager #(
         .draw_done(bg_draw_done),
         .write_en(bg_write_en),
         .write_addr(bg_write_addr),
-        .write_data(bg_write_data)
-    );
-
-    SpriteDrawer #(
-    ) sprite_drawer (
-        .clk(clk), 
-        .rstn(rstn),
-        .draw_start(sprite_draw_start),
-        .draw_done(sprite_draw_done),
-        .write_en(sprite_write_en),
-        .write_addr(sprite_write_addr),
-        .write_data(sprite_write_data)
+        .write_data(bg_write_data),
+        .buffer_select(buffer_select)
     );
     
     always_comb begin
@@ -89,15 +80,6 @@ module DrawingManager #(
                 write_addr = bg_write_addr;
                 write_data = bg_write_data;
                 if (bg_draw_done) begin
-                    next_state = FRAME_DONE; // skip for now
-                end
-            end
-            DRAWING_SPRITES: begin
-                sprite_draw_start = 1'b1;
-                write_en = sprite_write_en;
-                write_addr = sprite_write_addr;
-                write_data = sprite_write_data;
-                if (sprite_draw_done) begin
                     next_state = FRAME_DONE;
                 end
             end
@@ -105,7 +87,7 @@ module DrawingManager #(
                 // Assert frame_done for one cycle
                 frame_done = 1'b1;
                 if (draw_ack) begin // Acknowledge from Top
-                    next_state = IDLE;
+                    next_state = DRAWING_BACKGROUND;
                 end
             end
         endcase

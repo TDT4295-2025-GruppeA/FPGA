@@ -75,7 +75,9 @@ module Display #(
 
     // Assign read address from VGA controller to the output port
     localparam int SCALE = $clog2(VIDEO_MODE.h_resolution / BUFFER_CONFIG.width);
-    assign read_addr = (32'(y) >> SCALE) * BUFFER_CONFIG.width + (32'(x) >> SCALE);
+    assign read_addr = BUFFER_CONFIG.addr_width'(
+        ((32'(y) >> SCALE) * BUFFER_CONFIG.width) + (32'(x) >> SCALE)
+    );
 
     // Use the single read_data input to drive the VGA color outputs
     logic [3:0] paint_r, paint_g, paint_b;

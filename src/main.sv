@@ -50,25 +50,22 @@ module Top (
     logic dm_frame_done; // Signal from DrawingManager to Top
     logic draw_ack;      // Acknowledgment from Top to DrawingManager
 
-    // Signals from buffers to the Display
     logic [BUFFER_CONFIG.addr_width-1:0] disp_read_addr;
     logic [BUFFER_CONFIG.data_width-1:0] disp_read_data;
 
-    // The shared buffer select signal
     logic buffer_select;
     logic buffer_select_reg;
-    (* MARK_DEBUG = "true" *) logic draw_start;
 
     assign buffer_select = buffer_select_reg;
 
-    // Frame Buffer A signals
+    // Frame Buffer A
     logic [BUFFER_CONFIG.addr_width-1:0] fb_a_read_addr;
     logic [BUFFER_CONFIG.data_width-1:0] fb_a_read_data;
     logic fb_a_write_en;
     logic [BUFFER_CONFIG.addr_width-1:0] fb_a_write_addr;
     logic [BUFFER_CONFIG.data_width-1:0] fb_a_write_data;
 
-    // Frame Buffer B signals
+    // Frame Buffer B
     logic [BUFFER_CONFIG.addr_width-1:0] fb_b_read_addr;
     logic [BUFFER_CONFIG.data_width-1:0] fb_b_read_data;
     logic fb_b_write_en;
@@ -112,6 +109,7 @@ module Top (
 
     assign rst_deassert_pulse = rstn_system & !rstn_sys_d;
 
+    logic draw_start;
     assign draw_start = rst_deassert_pulse | (buffer_select_sync_sys != buffer_select_sync_sys_d);
 
     DrawingManager #(
@@ -127,7 +125,8 @@ module Top (
         .write_en(dm_write_en),
         .write_addr(dm_write_addr),
         .write_data(dm_write_data),
-        .frame_done(dm_frame_done)
+        .frame_done(dm_frame_done),
+        .buffer_select(buffer_select_sync_sys)
     );
 
     ///////////////////////////////////////
@@ -143,8 +142,12 @@ module Top (
         end
     end
 
-    logic vga_vsync_pos_edge;
-    assign vga_vsync_pos_edge = vga_vsync && !vga_vsync_d;
+    logic vga_vsync_blank_edge_start;
+    if (VIDEO_MODE.v_sync_pol) begin
+        assign vga_vsync_blank_edge_start = vga_vsync && !vga_vsync_d;
+    end else begin
+        assign vga_vsync_blank_edge_start = !vga_vsync && vga_vsync_d;
+    end
 
     // Synchronize dm_frame_done from system domain to display domain
     logic dm_frame_done_sync;
@@ -156,10 +159,10 @@ module Top (
         .data_out_dst(dm_frame_done_sync)
     );
 
-    // Request a swap when VSync positive edge occurs and frame is done
+    // Request a swap when VSync blanking interval starts and frame is done
     logic swap_req;
     logic swap_rbuffer_select_regeq;
-    assign swap_req = vga_vsync_pos_edge && dm_frame_done_sync;
+    assign swap_req = vga_vsync_blank_edge_start && dm_frame_done_sync;
 
     // Buffer swap logic in display domain
     always_ff @(posedge clk_display or negedge rstn_display) begin

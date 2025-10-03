@@ -1,12 +1,13 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge
+from stubs.drawingmanager import DrawingManager
 
 
 VERILOG_MODULE = "DrawingManager"
 
 @cocotb.test()
-async def test_drawing_manager_states(dut):
+async def test_drawing_manager_states(dut : DrawingManager):
     """Step through each DrawingManager state transition"""
 
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -44,19 +45,17 @@ async def test_drawing_manager_states(dut):
     for i in range(100):
         await RisingEdge(dut.clk)
 
-    # --- Step 3: FRAME_DONE → IDLE ---
+    # --- Step 3: FRAME_DONE → DRAWING ---
     dut.draw_ack.value = 1
     await RisingEdge(dut.clk)
     dut.draw_ack.value = 0
     
     await FallingEdge(dut.frame_done)
-    cocotb.log.info("FSM should be back in IDLE")
+    cocotb.log.info("FSM should be back in DRAWING")
 
-    # --- Back in IDLE ---
     assert dut.frame_done.value == 0
-    assert dut.bg_draw_start.value == 0
-    assert dut.sprite_draw_start.value == 0
-    cocotb.log.info(" FSM returned to IDLE successfully")
+    assert dut.bg_draw_start.value == 1
+    cocotb.log.info(" FSM returned to BACKGROUND successfully")
 
     # For waveform visualization
     for i in range(100):
