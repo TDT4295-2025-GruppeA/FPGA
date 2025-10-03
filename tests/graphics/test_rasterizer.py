@@ -94,5 +94,4 @@ async def test_rasterizer(dut: Rasterizer):
     # This is written to the build folder so it can be viewed after the test
     with open("rasterizer_output.txt", "w") as f:
         f.write(output)
-        
-    assert False
+    
