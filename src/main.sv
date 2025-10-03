@@ -2,11 +2,19 @@ import video_modes_pkg::*;
 import clock_modes_pkg::*;
 
 module Top (
-    input btn,
-    output led,
+    // Fun stuff
+    input logic [2:0] btn,
+    input logic [3:0] sw,
+    output logic [3:0] led,
 
+    // Boring stuff
     input logic clk_ext, // 100MHz for now
     input logic reset,
+
+    // SRAM interface
+    inout logic [7:0] sram_data,
+    output logic [6:0] sram_address,
+    output logic sram_write_en_n,
 
     // VGA control
     output logic vga_hsync,
@@ -59,6 +67,60 @@ module Top (
         .vga_red(vga_red),
         .vga_green(vga_green),
         .vga_blue(vga_blue)
+    );
+
+    //////////
+    // SRAM //
+    //////////
+
+    logic [24:0] sram_clk_counter;
+    always_ff @(posedge clk_system or negedge rstn_system) begin
+        if (!rstn_system) begin
+            sram_clk_counter <= 0;
+            curr_btn <= 0;
+            prev_btn <= 0;
+        end else begin
+            sram_clk_counter <= sram_clk_counter + 1;
+            curr_btn <= btn;
+            prev_btn <= curr_btn;
+        end
+    end
+    logic sram_clk;
+    assign sram_clk = sram_clk_counter[0];
+
+    logic [7:0] data_buffer, new_data_buffer;
+    logic [2:0] curr_btn, prev_btn, delta_btn;
+    // Detect button changes, both rising and falling.
+    assign delta_btn = curr_btn ^ prev_btn;
+
+    logic write_enable;
+    assign write_enable = btn[2];
+
+    always_ff @(posedge sram_clk or negedge rstn_system) begin
+        if (!rstn_system) begin
+            new_data_buffer <= 0;
+        end else begin
+            // Capture new data when button is pressed.
+            if (delta_btn) begin
+                new_data_buffer <= data_buffer + curr_btn[0] - curr_btn[1];
+            end
+        end
+    end
+
+    SramController sram_controller (
+        .clk(sram_clk),
+        .rstn(rstn_system),
+
+        .address(sw), // Ignored.
+        .write_data(new_data_buffer),
+        .read_data(data_buffer), // Ignored.
+        .read_en(~write_enable), // Ignored.
+        .write_en(write_enable), // Ignored.
+        .ready(), // Ignored.
+
+        .sram_data(sram_data),
+        .sram_address(sram_address),
+        .sram_write_en_n(sram_write_en_n)
     );
 
 endmodule
