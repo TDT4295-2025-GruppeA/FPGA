@@ -14,6 +14,9 @@ module AsyncFifo #(
     input logic write_en,
     input logic read_en,
 
+    output logic write_ready,
+    output logic read_ready,
+
     output logic full,
     output logic empty,
 
@@ -54,23 +57,40 @@ module AsyncFifo #(
     assign full = (ADDRESS_WIDTH)'(write_ptr + 1) == read_ptr_synced;
     assign empty = read_ptr == write_ptr_synced;
 
-    // Write logic
+    // Helper signals to indicate if we can write or read.
+    assign write_ready = !full;
+    assign read_ready = !empty;
+
+    /////////////////
+    // Write Logic //
+    /////////////////
+
     always_ff @(posedge write_clk or negedge rstn) begin
         if (!rstn) begin
             write_ptr <= 0;
-        end else if (write_en && !full) begin
+        end else if (write_en && write_ready) begin
+            // Write data to the current write pointer,
+            // but only if there is space available.
             fifo[write_ptr] <= data_in;
+            // Overflow is intentional.
             write_ptr <= write_ptr + 1;
         end
     end
 
-    // Read logic
+    ////////////////
+    // Read Logic //
+    ////////////////
+
+    // Data output is always the current read pointer location.
+    assign data_out = fifo[read_ptr];
+
     always_ff @(posedge read_clk or negedge rstn) begin
         if (!rstn) begin
             read_ptr <= 0;
-            data_out <= 0;
-        end else if (read_en && !empty) begin
-            data_out <= fifo[read_ptr];
+        end else if (read_en && read_ready) begin
+            // Increment when reading, but
+            // only when data is available.
+            // Overflow is intentional.
             read_ptr <= read_ptr + 1;
         end
     end
