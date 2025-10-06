@@ -47,6 +47,7 @@ class LogicObject(metaclass=_Meta):
             value_type = field.metadata.get("type", "int")
 
             sliced = logic_array[index + size - 1 : index]
+            sliced.range = Range(size-1, "downto", 0)
 
             if value_type == "int":
                 values[key] = sliced.to_signed()
