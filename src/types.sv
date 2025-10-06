@@ -11,6 +11,10 @@ package types_pkg;
         fixed x;
         fixed y;
         fixed z;
+    } position_t;
+
+    typedef struct packed {
+        position_t position;
         color_t color;
     } vertex_t;
 
@@ -19,4 +23,26 @@ package types_pkg;
         vertex_t b;
         vertex_t c;
     } triangle_t;
+
+    typedef struct packed {
+        fixed xx;
+        fixed xy;
+        fixed xz;
+        fixed yx;
+        fixed yy;
+        fixed yz;
+        fixed zx;
+        fixed zy;
+        fixed zz;
+    } rotmat_t;
+
+    typedef struct packed {
+        position_t position;
+        rotmat_t rotmat;
+    } transform_t;
+
+    typedef struct packed {
+        logic [7:0] model_id;
+        transform_t transform;
+    } modelinstance_t;
 endpackage

@@ -1,8 +1,24 @@
-from dataclasses import dataclass, Field
-from typing import dataclass_transform
+from dataclasses import dataclass, Field, field
+from typing import dataclass_transform, Literal
 
 from cocotb.types import LogicArray, Range
 
+class _LogicType:
+    def __init__(self, size: int):
+        self.size = size
+
+class Int(_LogicType):
+    def __init__(self, size: int):
+        super().__init__(size)
+
+class UInt(_LogicType):
+    def __init__(self, size: int):
+        super().__init__(size)
+
+class Bytes(_LogicType):
+    def __init__(self, size: int, byteorder: Literal["big", "little"]):
+        super().__init__(size)
+        self.byteorder: Literal["big", "little"] = byteorder
 
 def concat(a: LogicArray, *arr: LogicArray) -> LogicArray:
     arr = (a, *arr)
@@ -32,52 +48,36 @@ class _Meta(type):
 class LogicObject(metaclass=_Meta):
     @classmethod
     def from_logicarray(cls, logic_array: LogicArray):
-        field: Field
         values = {}
         index = 0
-        for key, field in reversed(cls.__dataclass_fields__.items()):
-            if "size" not in field.metadata:
-                raise ValueError("Missing 'size' metadata in field")
-            size = field.metadata.get("size")
-            if not isinstance(size, int):
-                raise TypeError(
-                    f"Incorrect metadata value for 'size'. Got: '{type(size)}', expected '{int}'"
-                )
-
-            value_type = field.metadata.get("type", "int")
+        for key in reversed(cls.__dataclass_fields__.keys()):
+            size = cls._get_field_size(key)
+            field_type = cls._get_field_type(key)
 
             sliced = logic_array[index + size - 1 : index]
             sliced.range = Range(size-1, "downto", 0)
 
-            if value_type == "int":
+            if issubclass(field_type, Int):
                 values[key] = sliced.to_signed()
-            elif value_type == "uint":
+            elif issubclass(field_type, UInt):
                 values[key] = sliced.to_unsigned()
-            elif value_type == "bytes":
+            elif issubclass(field_type, Bytes):
                 values[key] = sliced.to_bytes(byteorder="big")  # TODO: expose byteorder
-            elif isinstance(value_type, type) and issubclass(value_type, LogicObject):
-                values[key] = value_type.from_logicarray(sliced)
+            elif issubclass(field_type, LogicObject):
+                values[key] = field_type.from_logicarray(sliced)
             else:
-                raise ValueError(f"Invalid value type '{value_type}'")
+                raise ValueError(f"Invalid value type '{field_type}'")
 
             index += size
         return cls(**values)
 
     def to_logicarray(self) -> LogicArray:
         arrays = []
-        field: Field
-        for key, field in self.__dataclass_fields__.items():
+        for key in self.__dataclass_fields__.keys():
             value = getattr(self, key)
+            size = self._get_field_size(key)
 
-            if "size" not in field.metadata:
-                raise ValueError("Missing 'size' metadata in field")
-            size = field.metadata.get("size")
-            if not isinstance(size, int):
-                raise TypeError(
-                    f"Incorrect metadata value for 'size'. Got: '{type(size)}', expected '{int}'"
-                )
-
-            if issubclass(type(value), LogicObject):
+            if isinstance(value, LogicObject):
                 value = value.to_logicarray()
             arr = LogicArray(value, Range(size - 1, 0))
             arrays.append(arr)
@@ -86,3 +86,56 @@ class LogicObject(metaclass=_Meta):
             raise ValueError("Cannot pack empty logicarray")
 
         return concat(*arrays)
+
+    @classmethod
+    def _get_field_size(cls, field_name: str) -> int:
+        value_field = cls.__dataclass_fields__.get(field_name)
+        if not isinstance(value_field, Field):
+            raise TypeError(f"dataclass field for '{field_name}' in '{cls.__name__}' is not of type 'Field'")
+        
+        field_type = value_field.metadata.get("type")
+
+        if isinstance(field_type, _LogicType):
+            return field_type.size
+        if isinstance(field_type, type) and issubclass(field_type, LogicObject):
+            return field_type.size()
+        else:
+            raise TypeError(f"Invalid field type '{field_type}' for field '{field_name}'")
+
+    @classmethod
+    def _get_field_type(cls, field_name: str) -> "type[_LogicType] | type[LogicObject]":
+        value_field = cls.__dataclass_fields__.get(field_name)
+        if not isinstance(value_field, Field):
+            raise TypeError(f"dataclass field for '{field_name}' in '{cls.__name__}' is not of type 'Field'")
+        
+        field_type = value_field.metadata.get("type")
+
+        if isinstance(field_type, _LogicType):
+            return type(field_type)
+        elif isinstance(field_type, type) and issubclass(field_type, LogicObject):
+            return field_type
+        else:
+            raise TypeError(f"Invalid field type '{field_type}' for field '{field_name}'")
+
+
+    @classmethod
+    def size(cls) -> int:
+        """Total size of the LogicObject in bits"""
+        total_size = 0
+        for field_name in cls.__dataclass_fields__.keys():
+            field_size = cls._get_field_size(field_name)
+            total_size += field_size
+        
+        return total_size
+
+
+class LogicField(Field):
+    def __new__(cls, field_type: _LogicType | type[LogicObject], *args, **kwargs):
+        metadata = kwargs.get("metadata", {})
+        if not isinstance(metadata, dict):
+            raise TypeError("metadata must be of type 'dict'")
+        metadata.update({"type": field_type})
+        kwargs.update({"metadata": metadata})
+        return field(*args, **kwargs)
+
+    def __init__(self, field_type: _LogicType | type[LogicObject]): ...
