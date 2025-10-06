@@ -96,7 +96,6 @@ async def test_async_fifo_write_to_full_and_read_to_empty(dut: Asyncfifo):
     read_count = 0
     while dut.empty.value == 0 and read_count < write_count:
         expected_value = read_count & 0xFF
-        await Timer(clock_period)
         dut._log.info(
             f"Read {read_count}.\n"
             f" write_ptr: {dut.write_ptr.value}, write_ptr_synced: {dut.write_ptr_synced.value}, full: {dut.full.value}\n"
@@ -105,6 +104,7 @@ async def test_async_fifo_write_to_full_and_read_to_empty(dut: Asyncfifo):
         actual_value = dut.data_out.value.to_unsigned()
         assert actual_value == expected_value, f"Data mismatch at read {read_count}. Actual: {actual_value}, Expected: {expected_value}"
         read_count += 1
+        await Timer(clock_period)
 
     dut.read_en.value = 0
 
@@ -163,8 +163,8 @@ async def test_async_fifo_write_read_different_clock(dut: Asyncfifo, read_clock_
                 )
             
             dut.read_en.value = 1
-            await Timer(read_clock_period)
             actual_value = dut.data_out.value.to_unsigned()
+            await Timer(read_clock_period)
             dut.read_en.value = 0
 
             dut._log.info(

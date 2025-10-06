@@ -1,7 +1,7 @@
-from urllib import response
+from curses.ascii import SP
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import Timer, RisingEdge
+from cocotb.triggers import Timer, RisingEdge, FallingEdge
 
 from stubs.spisub import Spisub
 
@@ -46,7 +46,7 @@ async def main_transaction(
     await Timer(10)
 
     master_clock = Clock(dut.sclk, SPI_CLOCK_PERIOD)
-    cocotb.start_soon(master_clock.start())
+    started = False
 
     rx_data = []
 
@@ -55,16 +55,25 @@ async def main_transaction(
         rx_byte = 0
         
         for i in range(8):
+            dut._log.info(f"{i+1}/8")
+            # Await falling edge to set data.
+            if started:
+                await FallingEdge(dut.sclk)
+
             tx_bit = (tx_byte >> (7 - i)) & 1
-            rx_bit = int(dut.miso.value)
-            dut._log.info(
-                f"{i+1}/8:\n"
-                f"\tmosi: {tx_bit}\n"
-                f"\tmiso: {rx_bit}"
-            )
             dut.mosi.value = tx_bit
+            dut._log.info(f"MOSI: {dut.mosi.value}")
+            
+            # If the clock has not been started yet, start it now.
+            if not started:
+                await Timer(SPI_CLOCK_PERIOD // 2)
+                cocotb.start_soon(master_clock.start())
+                started = True
+            
+            await RisingEdge(dut.sclk)
+            rx_bit = int(dut.miso.value)
             rx_byte = (rx_byte << 1) | rx_bit
-            await master_clock.cycles(1)
+            dut._log.info(f"MISO: {dut.miso.value}")
 
         dut._log.info(f"Main received byte: {rx_byte:02X}")
         rx_data.append(rx_byte)
@@ -88,33 +97,16 @@ async def sub_transaction(dut: Spisub, receive_callback: Callable[[int], int]) -
     tx_byte = None
 
     while dut.active.value:
-        # Could I have used a waveform? Yes.
-        # But, did this work? Yes.
-        dut._log.info(
-            f"rstn={dut.rstn.value}\n"
-            f"bit_count={dut.bit_count.value}\n"
-            f"rx_shift_register.serial_in={dut.rx_shift_register.serial_in}\n"
-            f"rx_shift_register.parallel_out={dut.rx_shift_register.parallel_out}\n"
-            f"rx_ready={dut.rx_ready.value}\n"
-            f"rx_data={dut.rx_data.value}\n"
-            f"tx_shift_register.serial_out={dut.tx_shift_register.serial_out}\n"
-            f"tx_shift_register.parallel_in={dut.tx_shift_register.parallel_in}\n"
-            f"rx_buffer={dut.rx_buffer.value}\n"
-            f"tx_ready={dut.tx_ready.value}\n"
-            f"tx_data={dut.tx_data.value}\n"
-            f"tx_buffer={dut.tx_buffer.value}\n"
-        )
-
         # Receive and process data if available.
         if dut.rx_ready.value:
-            dut.rx_data_en.value = 1
-            await Timer(SYS_CLOCK_PERIOD)
-            dut.rx_data_en.value = 0
-
             rx_byte = dut.rx_data.value.to_unsigned()
             dut._log.info(f"Sub received byte: {rx_byte:02X}")
             
             tx_byte = receive_callback(rx_byte) & 0xFF
+
+            dut.rx_data_en.value = 1
+            await Timer(SYS_CLOCK_PERIOD)
+            dut.rx_data_en.value = 0
 
         # Send data if available.
         if tx_byte is not None:
