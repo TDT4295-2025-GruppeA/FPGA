@@ -3,22 +3,27 @@ from typing import dataclass_transform, Literal
 
 from cocotb.types import LogicArray, Range
 
+
 class _LogicType:
     def __init__(self, size: int):
         self.size = size
+
 
 class Int(_LogicType):
     def __init__(self, size: int):
         super().__init__(size)
 
+
 class UInt(_LogicType):
     def __init__(self, size: int):
         super().__init__(size)
+
 
 class Bytes(_LogicType):
     def __init__(self, size: int, byteorder: Literal["big", "little"]):
         super().__init__(size)
         self.byteorder: Literal["big", "little"] = byteorder
+
 
 def concat(a: LogicArray, *arr: LogicArray) -> LogicArray:
     arr = (a, *arr)
@@ -55,7 +60,7 @@ class LogicObject(metaclass=_Meta):
             field_type = cls._get_field_type(key)
 
             sliced = logic_array[index + size - 1 : index]
-            sliced.range = Range(size-1, "downto", 0)
+            sliced.range = Range(size - 1, "downto", 0)
 
             if issubclass(field_type, Int):
                 values[key] = sliced.to_signed()
@@ -91,8 +96,10 @@ class LogicObject(metaclass=_Meta):
     def _get_field_size(cls, field_name: str) -> int:
         value_field = cls.__dataclass_fields__.get(field_name)
         if not isinstance(value_field, Field):
-            raise TypeError(f"dataclass field for '{field_name}' in '{cls.__name__}' is not of type 'Field'")
-        
+            raise TypeError(
+                f"dataclass field for '{field_name}' in '{cls.__name__}' is not of type 'Field'"
+            )
+
         field_type = value_field.metadata.get("type")
 
         if isinstance(field_type, _LogicType):
@@ -100,14 +107,18 @@ class LogicObject(metaclass=_Meta):
         if isinstance(field_type, type) and issubclass(field_type, LogicObject):
             return field_type.size()
         else:
-            raise TypeError(f"Invalid field type '{field_type}' for field '{field_name}'")
+            raise TypeError(
+                f"Invalid field type '{field_type}' for field '{field_name}'"
+            )
 
     @classmethod
     def _get_field_type(cls, field_name: str) -> "type[_LogicType] | type[LogicObject]":
         value_field = cls.__dataclass_fields__.get(field_name)
         if not isinstance(value_field, Field):
-            raise TypeError(f"dataclass field for '{field_name}' in '{cls.__name__}' is not of type 'Field'")
-        
+            raise TypeError(
+                f"dataclass field for '{field_name}' in '{cls.__name__}' is not of type 'Field'"
+            )
+
         field_type = value_field.metadata.get("type")
 
         if isinstance(field_type, _LogicType):
@@ -115,8 +126,9 @@ class LogicObject(metaclass=_Meta):
         elif isinstance(field_type, type) and issubclass(field_type, LogicObject):
             return field_type
         else:
-            raise TypeError(f"Invalid field type '{field_type}' for field '{field_name}'")
-
+            raise TypeError(
+                f"Invalid field type '{field_type}' for field '{field_name}'"
+            )
 
     @classmethod
     def size(cls) -> int:
@@ -125,7 +137,7 @@ class LogicObject(metaclass=_Meta):
         for field_name in cls.__dataclass_fields__.keys():
             field_size = cls._get_field_size(field_name)
             total_size += field_size
-        
+
         return total_size
 
 
