@@ -13,6 +13,7 @@ CLOCK_PERIOD = 4
 
 TEST_DATA = [0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0xFF, 0x42]
 
+
 @cocotb.test()
 async def test_parallel_to_serial(dut: Paralleltoserial):
     clock = Clock(dut.clk, CLOCK_PERIOD)
@@ -25,7 +26,9 @@ async def test_parallel_to_serial(dut: Paralleltoserial):
     await Timer(CLOCK_PERIOD)
 
     # Assert initial state
-    assert dut.serial.value == 0, f"Initial serial should be zero. Actual: 0x{dut.serial.value:02x}"
+    assert (
+        dut.serial.value == 0
+    ), f"Initial serial should be zero. Actual: 0x{dut.serial.value:02x}"
 
     # Send bytes and check buffer
     for byte in TEST_DATA:
@@ -48,7 +51,9 @@ async def test_parallel_to_serial(dut: Paralleltoserial):
             )
 
             expected_serial = (byte >> (7 - i)) & 1
-            assert dut.serial.value == expected_serial, f"serial mismatch at bit {i+1}. Actual: {dut.serial.value}, Expected: {expected_serial}"
+            assert (
+                dut.serial.value == expected_serial
+            ), f"serial mismatch at bit {i+1}. Actual: {dut.serial.value}, Expected: {expected_serial}"
 
             # If this is the last bit, skip the wait to avoid extra clock cycle.
             if i == 7:
@@ -57,5 +62,6 @@ async def test_parallel_to_serial(dut: Paralleltoserial):
             await Timer(CLOCK_PERIOD)
 
         # Assert that parallel is (almost) empty after shifting out all bits.
-        assert dut.parallel.value.to_unsigned() & 0x7F == 0, f"parallel (except first bit) should be zero after shifting out all bits. Actual: 0x{dut.parallel.value.to_unsigned():02x}"
-    
+        assert (
+            dut.parallel.value.to_unsigned() & 0x7F == 0
+        ), f"parallel (except first bit) should be zero after shifting out all bits. Actual: 0x{dut.parallel.value.to_unsigned():02x}"

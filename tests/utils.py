@@ -51,7 +51,8 @@ def cocotb_to_numpy(cocotb_matrix: Array | LogicArray) -> np.ndarray:
 
 def numpy_to_cocotb(np_matrix: np.ndarray) -> list:
     """Converts a numpy array of floats to a cocotb ArrayObject of fixed point integers."""
-    return to_fixed(np_matrix).tolist() # type: ignore
+    return to_fixed(np_matrix).tolist()  # type: ignore
+
 
 def binary_to_gray(gray: int) -> int:
     """
@@ -59,6 +60,7 @@ def binary_to_gray(gray: int) -> int:
     Implementation take from Wikipedia.
     """
     return gray ^ (gray >> 1)
+
 
 def gray_to_binary(gray: int) -> int:
     """
@@ -70,6 +72,7 @@ def gray_to_binary(gray: int) -> int:
         mask >>= 1
         gray ^= mask
     return gray
+
 
 def differ_by_one_bit(a: int, b: int) -> bool:
     """Check if two integers differ by exactly one bit."""

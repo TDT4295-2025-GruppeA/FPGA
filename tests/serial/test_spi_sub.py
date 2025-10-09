@@ -17,23 +17,27 @@ VERILOG_PARAMETERS = {
 SYS_CLOCK_PERIOD = 10
 SPI_CLOCK_PERIOD = 20
 
+
 async def setup_sys_clock(dut: Spisub):
     sys_clock = Clock(dut.sys_clk, SYS_CLOCK_PERIOD)
     cocotb.start_soon(sys_clock.start())
+
 
 async def reset_spi(dut: Spisub):
     dut.ssn.value = 1
     dut.sys_rstn.value = 0
     await Timer(SYS_CLOCK_PERIOD * 2)
-    dut.sys_rstn.value = 1 
+    dut.sys_rstn.value = 1
+
 
 async def setup_spi(dut: Spisub):
     await setup_sys_clock(dut)
     await reset_spi(dut)
 
+
 async def main_transaction(
     dut: Spisub,
-    tx_data: list[int], 
+    tx_data: list[int],
     rx_start: int = 0,
     rx_length: int = 0,
 ) -> list[int]:
@@ -53,7 +57,7 @@ async def main_transaction(
     for tx_byte in tx_data + tx_padding:
         dut._log.info(f"Main transmitting byte: {tx_byte:02X}")
         rx_byte = 0
-        
+
         for i in range(8):
             dut._log.info(f"{i+1}/8")
             # Await falling edge to set data.
@@ -63,13 +67,13 @@ async def main_transaction(
             tx_bit = (tx_byte >> (7 - i)) & 1
             dut.mosi.value = tx_bit
             dut._log.info(f"MOSI: {dut.mosi.value}")
-            
+
             # If the clock has not been started yet, start it now.
             if not started:
                 await Timer(SPI_CLOCK_PERIOD // 2)
                 cocotb.start_soon(master_clock.start())
                 started = True
-            
+
             await RisingEdge(dut.sclk)
             rx_bit = int(dut.miso.value)
             rx_byte = (rx_byte << 1) | rx_bit
@@ -86,14 +90,15 @@ async def main_transaction(
     dut.ssn.value = 1
     await Timer(10)
 
-    return rx_data[rx_start:rx_start + rx_length]
+    return rx_data[rx_start : rx_start + rx_length]
+
 
 async def sub_transaction(dut: Spisub, receive_callback: Callable[[int], int]) -> None:
     """Simulates a sub device responding to a transaction."""
-    
+
     # Wait until activated by main device.
     await RisingEdge(dut.active)
-    
+
     tx_byte = None
 
     while dut.active.value:
@@ -101,7 +106,7 @@ async def sub_transaction(dut: Spisub, receive_callback: Callable[[int], int]) -
         if dut.rx_ready.value:
             rx_byte = dut.rx_data.value.to_unsigned()
             dut._log.info(f"Sub received byte: {rx_byte:02X}")
-            
+
             tx_byte = receive_callback(rx_byte) & 0xFF
 
             dut.rx_data_en.value = 1
@@ -121,19 +126,22 @@ async def sub_transaction(dut: Spisub, receive_callback: Callable[[int], int]) -
 
         await Timer(SYS_CLOCK_PERIOD)
 
+
 @cocotb.test(timeout_time=2000, timeout_unit="us")
 async def test_spi_transaction(dut: Spisub):
     await setup_spi(dut)
 
     def echo_pluss_one(byte: int) -> int:
         return byte + 1
-    
+
     cocotb.start_soon(sub_transaction(dut, echo_pluss_one))
-    
+
     command = [0xF0, 0x0F, 0x00, 0xFF, 0xAB, 0xCD]
     response = await main_transaction(dut, command, 2, len(command))
 
     # Skip first two bytes which are fill.
     expected_response = [echo_pluss_one(byte) & 0xFF for byte in command]
 
-    assert response == expected_response, f"Received data does not match expectation. Received: {response}, Expected: {expected_response}"
+    assert (
+        response == expected_response
+    ), f"Received data does not match expectation. Received: {response}, Expected: {expected_response}"

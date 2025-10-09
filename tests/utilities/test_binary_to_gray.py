@@ -12,6 +12,7 @@ VERILOG_PARAMETERS = {
     "WIDTH": WIDTH,
 }
 
+
 @cocotb.test()
 async def test_binary_to_gray(dut: Binarytogray):
     results: list[int] = []
@@ -21,7 +22,7 @@ async def test_binary_to_gray(dut: Binarytogray):
         dut.binary.value = i
         await Timer(1)
         results.append(dut.gray.value.to_unsigned())
-    
+
     # Check that all outputs were unique
     assert len(set(results)) == NUM_VALUES, "Not all output values were unique."
 

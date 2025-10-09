@@ -13,6 +13,7 @@ CLOCK_PERIOD = 4
 
 TEST_DATA = [0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0xFF, 0x42]
 
+
 @cocotb.test()
 async def test_serial_to_parallel(dut: Serialtoparallel):
     clock = Clock(dut.clk, CLOCK_PERIOD)
@@ -25,8 +26,12 @@ async def test_serial_to_parallel(dut: Serialtoparallel):
     dut.rstn.value = 1
 
     # Assert initial state
-    assert dut.parallel_ready.value == 0, f"Initial parallel_ready should be zero. Actual: 0x{dut.serial.value:02x}"
-    assert dut.parallel.value == 0, f"Initial parallel should be zero. Actual: 0x{dut.parallel.value:02x}"
+    assert (
+        dut.parallel_ready.value == 0
+    ), f"Initial parallel_ready should be zero. Actual: 0x{dut.serial.value:02x}"
+    assert (
+        dut.parallel.value == 0
+    ), f"Initial parallel should be zero. Actual: 0x{dut.parallel.value:02x}"
 
     previous_byte = 0
 
@@ -53,7 +58,11 @@ async def test_serial_to_parallel(dut: Serialtoparallel):
             f"Previous byte: 0x{previous_byte:02x}"
         )
 
-        assert dut.parallel_ready.value == 1, "parallel_ready should be high after 8 bits have been sent."
-        assert dut.parallel.value.to_unsigned() == byte, f"parallel should match input byte. Actual: 0x{dut.parallel.value.to_unsigned():02x}, Expected: 0x{byte:02x}"
+        assert (
+            dut.parallel_ready.value == 1
+        ), "parallel_ready should be high after 8 bits have been sent."
+        assert (
+            dut.parallel.value.to_unsigned() == byte
+        ), f"parallel should match input byte. Actual: 0x{dut.parallel.value.to_unsigned():02x}, Expected: 0x{byte:02x}"
 
         previous_byte = byte
