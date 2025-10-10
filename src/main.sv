@@ -3,11 +3,20 @@ import buffer_config_pkg::*;
 import clock_modes_pkg::*;
 
 module Top (
-    input btn,
-    output led,
+    // Fun stuff
+    input logic [2:0] btn,
+    output logic [3:0] led,
+    output logic [7:0] seg,
 
+    // Boring stuff
     input logic clk_ext, // 100MHz for now
     input logic reset,
+
+    // SPI (Sub)
+    input logic spi_sclk,
+    input logic spi_ssn,
+    input logic spi_mosi,
+    output logic spi_miso,
 
     // VGA control
     output logic vga_hsync,
@@ -18,8 +27,6 @@ module Top (
 );
     localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
     localparam buffer_config_t BUFFER_CONFIG = BUFFER_160x120x12;
-
-    assign led = btn;
 
     ////////////////////////////////////////////////
     ////////////// CLOCK GENERATION ////////////////
@@ -231,6 +238,32 @@ module Top (
         .read_addr(disp_read_addr),
         .read_data(disp_read_data)
     );
+
+    /////////
+    // SPI //
+    /////////
+
+    SpiSub spi_controller (
+        // SPI interface
+        .ssn(spi_ssn),
+        .sclk(spi_sclk),
+        .mosi(spi_mosi),
+        .miso(spi_miso),
+
+        // System interface
+        .sys_clk(clk_ext),
+        .sys_rstn(~reset),
+
+        // User data interface
+        .tx_data_en(1'b1), // Never sending anything.
+        .rx_data_en(1'b1), // Always reading.
+        .tx_data(seg), // Sending back received data.
+        .rx_data(seg), // Word to receive.
+        .tx_ready(), // Ignored.
+        .rx_ready(), // Ignored.
+        .active() // Ignored.
+    );
+
 
     ///////////////////////////////////////
     ////////////// BUFFER ROUTING /////////
