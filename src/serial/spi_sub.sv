@@ -56,6 +56,7 @@ module SpiSub #(
         .clk(sclk),
         .rstn(rstn),
         .serial(mosi),
+        .serial_valid(1),
         .parallel_ready(rx_buffer_ready),
         .parallel(rx_buffer)
     );

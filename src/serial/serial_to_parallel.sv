@@ -8,6 +8,7 @@ module SerialToParallel #(
     input logic rstn,
     
     input logic [INPUT_SIZE-1:0] serial,
+    input logic serial_valid,
 
     output logic parallel_ready,
     output logic [OUTPUT_SIZE-1:0] parallel
@@ -38,16 +39,24 @@ module SerialToParallel #(
             buffer <= '0;
             element_count <= 0;
         end else begin
-            // Read in the serial data by shifting left and adding the new bit at LSB.
-            buffer <= { buffer[OUTPUT_SIZE - INPUT_SIZE - 1:0], serial };
+            if (serial_valid) begin
+                // Read in the serial data by shifting left and adding the new bit at LSB.
+                buffer <= { buffer[OUTPUT_SIZE - INPUT_SIZE - 1:0], serial };
 
-            if (element_count == element_count_t'(ELEMENT_COUNT)) begin
-                // Start new count after full buffer.
-                // We start at 1 because we've just read in one bit.
-                element_count <= 1;
+                if (element_count == element_count_t'(ELEMENT_COUNT)) begin
+                    // Start new count after full buffer.
+                    // We start at 1 because we've just read in one bit.
+                    element_count <= 1;
+                end else begin
+                    // Increment the element count
+                    element_count <= element_count + 1;
+                end
             end else begin
-                // Increment the element count
-                element_count <= element_count + 1;
+                if (element_count == element_count_t'(ELEMENT_COUNT)) begin
+                    // Set element count back to 0 so we stop giving out
+                    // parallel_ready, and prepare for next data element.
+                    element_count <= 0;
+                end
             end
         end
     end
