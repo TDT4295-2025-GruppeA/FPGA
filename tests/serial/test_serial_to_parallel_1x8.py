@@ -4,15 +4,23 @@ from cocotb.clock import Clock
 
 from stubs.serialtoparallel import Serialtoparallel
 
+# OUTPUT_SIZE must be divisible by INPUT_SIZE
+INPUT_SIZE = 1
+OUTPUT_SIZE = 8
+OUTPUT_WIDTH = OUTPUT_SIZE // 4
+INPUT_WIDTH = INPUT_SIZE // 4
+
+ELEMENT_COUNT = OUTPUT_SIZE // INPUT_SIZE
+
 VERILOG_MODULE = "SerialToParallel"
 VERILOG_PARAMETERS = {
-    "SIZE": 8,
+    "INPUT_SIZE": INPUT_SIZE,
+    "OUTPUT_SIZE": OUTPUT_SIZE,
 }
 
 CLOCK_PERIOD = 4
 
 TEST_DATA = [0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0xFF, 0x42]
-
 
 @cocotb.test()
 async def test_serial_to_parallel(dut: Serialtoparallel):
@@ -36,33 +44,35 @@ async def test_serial_to_parallel(dut: Serialtoparallel):
     previous_byte = 0
 
     # Send bytes and check buffer
-    for byte in TEST_DATA:
-        for i in range(8):
+    for serial_in in TEST_DATA:
+        for i in range(ELEMENT_COUNT):
+            serial_element = (serial_in >> (OUTPUT_SIZE - INPUT_SIZE - i * INPUT_SIZE)) & ((1 << INPUT_SIZE) -1)
             dut._log.info(
-                f"Sending bit {i+1} of byte {byte:02x}: {(byte >> (7 - i)) & 1}\n"
+                f"Sending element {i+1} of test 0x{serial_in:0{OUTPUT_WIDTH}x}: 0b{serial_element:0{INPUT_SIZE}b} (0x{serial_element:0{INPUT_WIDTH}x})\n"
                 f"Current parallel_ready: {dut.parallel_ready.value}\n"
-                f"Current parallel: {dut.parallel.value.to_unsigned():02x}\n"
+                f"Current parallel: {dut.parallel.value.to_unsigned():0{OUTPUT_WIDTH}x}\n"
                 f"Current serial: {dut.serial.value}\n"
-                f"Previous byte: 0x{previous_byte:02x}"
+                f"Previous byte: 0x{previous_byte:02x}\n"
+                f"Element count: {dut.element_count.value.to_unsigned()}"
             )
 
-            dut.serial.value = (byte >> (7 - i)) & 1
-            # Set next bit on falling edges as SPI module samples on rising edge.
+            dut.serial.value = serial_element
+            # Set next element on falling edges as SPI module samples on rising edge.
             await FallingEdge(dut.clk)
 
         dut._log.info(
             f"Asserting parallel output...\n"
             f"Current parallel_ready: {dut.parallel_ready.value}\n"
-            f"Current parallel: {dut.parallel.value.to_unsigned():02x}\n"
+            f"Current parallel: 0x{dut.parallel.value.to_unsigned():0{OUTPUT_WIDTH}x}\n"
             f"Current serial: {dut.serial.value}\n"
             f"Previous byte: 0x{previous_byte:02x}"
         )
 
         assert (
             dut.parallel_ready.value == 1
-        ), "parallel_ready should be high after 8 bits have been sent."
+        ), f"parallel_ready should be high after {ELEMENT_COUNT} elements have been sent."
         assert (
-            dut.parallel.value.to_unsigned() == byte
-        ), f"parallel should match input byte. Actual: 0x{dut.parallel.value.to_unsigned():02x}, Expected: 0x{byte:02x}"
+            dut.parallel.value.to_unsigned() == serial_in
+        ), f"parallel should match input byte. Actual: 0x{dut.parallel.value.to_unsigned():02x}, Expected: 0x{serial_in:02x}"
 
-        previous_byte = byte
+        previous_byte = serial_in

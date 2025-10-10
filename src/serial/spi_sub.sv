@@ -50,7 +50,8 @@ module SpiSub #(
     // This should probably be fixed in a cleaner way.
 
     SerialToParallel #(
-        .SIZE(WORD_SIZE)
+        .INPUT_SIZE(1),
+        .OUTPUT_SIZE(WORD_SIZE)
     ) rx_shift_register (
         .clk(sclk),
         .rstn(rstn),
