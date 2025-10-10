@@ -7,7 +7,7 @@ from cocotb.clock import Clock
 import cocotb.types
 
 from stubs.modelbuffer import Modelbuffer
-from logic_object import LogicObject
+from types_ import Vertex, Triangle, RGB, Position
 
 VERILOG_MODULE = "ModelBuffer"
 
@@ -15,19 +15,6 @@ VERILOG_PARAMETERS = {
     "MAX_TRIANGLE_COUNT": 10,
     "MAX_MODEL_COUNT": 10,
 }
-
-
-class RGB(LogicObject):
-    r: int = field(metadata={"size": 4, "type": "uint"})
-    g: int = field(metadata={"size": 4, "type": "uint"})
-    b: int = field(metadata={"size": 4, "type": "uint"})
-
-
-class Triangle(LogicObject):
-    x: int = field(metadata={"size": 32})
-    y: int = field(metadata={"size": 32})
-    z: int = field(metadata={"size": 32})
-    color: RGB = field(metadata={"size": 12, "type": RGB})
 
 
 async def make_clock(dut: Modelbuffer):
@@ -42,7 +29,11 @@ async def make_clock(dut: Modelbuffer):
 async def test_write_single_triangle(dut: Modelbuffer):
     await make_clock(dut)
 
-    triangle = Triangle(1, 2, 3, RGB(4, 5, 6))
+    triangle = Triangle(
+        Vertex(Position(1, 2, 3), RGB(4, 5, 6)),
+        Vertex(Position(7, 8, 9), RGB(1, 2, 3)),
+        Vertex(Position(10, 11, 12), RGB(1, 2, 3)),
+    )
 
     dut.write_en.value = 1
     dut.write_model_index.value = 0
@@ -100,7 +91,14 @@ async def read_model(dut: Modelbuffer, model_index: int) -> list[Triangle]:
 async def test_write_model(dut: Modelbuffer):
     await make_clock(dut)
 
-    model = [Triangle(i, i, i, RGB(i, i, i)) for i in range(1, 6)]
+    model = [
+        Triangle(
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+        )
+        for i in range(1, 6)
+    ]
     await write_model(dut, 0, model)
 
     model_result = await read_model(dut, 0)
@@ -113,9 +111,30 @@ async def test_multimodel(dut: Modelbuffer, create_clock: bool = True):
     if create_clock:
         await make_clock(dut)
 
-    model1 = [Triangle(i, i, i, RGB(i, i, i)) for i in range(1, 4)]
-    model2 = [Triangle(i, i, i, RGB(i, i, i)) for i in range(4, 7)]
-    model3 = [Triangle(i, i, i, RGB(i, i, i)) for i in range(7, 10)]
+    model1 = [
+        Triangle(
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+        )
+        for i in range(1, 4)
+    ]
+    model2 = [
+        Triangle(
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+        )
+        for i in range(4, 7)
+    ]
+    model3 = [
+        Triangle(
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+        )
+        for i in range(7, 10)
+    ]
 
     await write_model(dut, 0, model1)
     await write_model(dut, 1, model2)
@@ -135,8 +154,22 @@ async def test_no_overwrite(dut: Modelbuffer):
     """Test that its not possible to redefine a module"""
     await make_clock(dut)
 
-    model1 = [Triangle(i, i, i, RGB(i, i, i)) for i in range(1, 4)]
-    model2 = [Triangle(i, i, i, RGB(i, i, i)) for i in range(4, 7)]
+    model1 = [
+        Triangle(
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+        )
+        for i in range(1, 4)
+    ]
+    model2 = [
+        Triangle(
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+            Vertex(Position(i, i, i), RGB(i, i, i)),
+        )
+        for i in range(4, 7)
+    ]
 
     await write_model(dut, 0, model1)
     await write_model(dut, 1, model1)
