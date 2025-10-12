@@ -35,7 +35,13 @@ async def tester_serial_to_parallel(
     await run_testdata(dut, test_data, input_size, output_size, break_index=None)
 
 
-async def run_testdata(dut: Serialtoparallel, test_data: list[int], input_size: int, output_size: int, break_index: int | None = None):
+async def run_testdata(
+    dut: Serialtoparallel,
+    test_data: list[int],
+    input_size: int,
+    output_size: int,
+    break_index: int | None = None,
+):
     element_count = output_size // input_size
     output_width = output_size // 4
     input_width = input_size // 4
@@ -49,13 +55,13 @@ async def run_testdata(dut: Serialtoparallel, test_data: list[int], input_size: 
     range2 = list(range(element_count))[break_index:]
 
     print_info = lambda prev_test: dut._log.info(
-                f"Sending element {i+1} of test 0x{serial_in:0{output_width}x}: 0b{serial_element:0{input_size}b} (0x{serial_element:0{input_width}x})\n"
-                f"Current parallel_ready: {dut.parallel_ready.value}\n"
-                f"Current parallel: {dut.parallel.value.to_unsigned():0{output_width}x}\n"
-                f"Current serial: {dut.serial.value}\n"
-                f"Previous byte: 0x{prev_test:02x}\n"
-                f"Element count: {dut.element_count.value.to_unsigned()}"
-            )
+        f"Sending element {i+1} of test 0x{serial_in:0{output_width}x}: 0b{serial_element:0{input_size}b} (0x{serial_element:0{input_width}x})\n"
+        f"Current parallel_ready: {dut.parallel_ready.value}\n"
+        f"Current parallel: {dut.parallel.value.to_unsigned():0{output_width}x}\n"
+        f"Current serial: {dut.serial.value}\n"
+        f"Previous byte: 0x{prev_test:02x}\n"
+        f"Element count: {dut.element_count.value.to_unsigned()}"
+    )
     previous_test = 0
     for serial_in in test_data:
         for i in range1:
@@ -70,8 +76,10 @@ async def run_testdata(dut: Serialtoparallel, test_data: list[int], input_size: 
             dut.serial_valid.value = 1
             # Set next element on falling edges as SPI module samples on rising edge.
             await FallingEdge(dut.clk)
-            assert dut.parallel_ready != 1, f"parallel_ready is high too early, after {element_count} elements."
-        
+            assert (
+                dut.parallel_ready != 1
+            ), f"parallel_ready is high too early, after {element_count} elements."
+
         if enable_break:
             dut.serial_valid.value = 0
             await FallingEdge(dut.clk)
@@ -88,16 +96,18 @@ async def run_testdata(dut: Serialtoparallel, test_data: list[int], input_size: 
             dut.serial.value = serial_element
             dut.serial_valid.value = 1
             # Set next element on falling edges as SPI module samples on rising edge.
-            assert dut.parallel_ready != 1, f"parallel_ready is high too early, after {element_count} elements."
+            assert (
+                dut.parallel_ready != 1
+            ), f"parallel_ready is high too early, after {element_count} elements."
             await FallingEdge(dut.clk)
-        
+
         assert (
             dut.parallel_ready.value == 1
         ), f"parallel_ready should be high after {element_count} elements have been sent."
         assert (
             dut.parallel.value.to_unsigned() == serial_in
         ), f"parallel should match input byte. Actual: 0x{dut.parallel.value.to_unsigned():02x}, Expected: 0x{serial_in:02x}"
-        
+
         previous_test = serial_in
 
 

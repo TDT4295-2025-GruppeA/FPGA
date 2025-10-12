@@ -1,7 +1,10 @@
 import cocotb
 
 from stubs.serialtoparallel import Serialtoparallel
-from serial.serial_to_parallel_tester import tester_serial_to_parallel, tester_noncontinuous
+from serial.serial_to_parallel_tester import (
+    tester_serial_to_parallel,
+    tester_noncontinuous,
+)
 
 # OUTPUT_SIZE must be divisible by INPUT_SIZE
 INPUT_SIZE = 8
@@ -33,8 +36,7 @@ async def test_serial_to_parallel(dut: Serialtoparallel):
         dut, TEST_DATA, INPUT_SIZE, OUTPUT_SIZE, CLOCK_PERIOD
     )
 
+
 @cocotb.test()
 async def test_noncontinous_serial_to_parallel(dut: Serialtoparallel):
-    await tester_noncontinuous(
-        dut, TEST_DATA, INPUT_SIZE, OUTPUT_SIZE, CLOCK_PERIOD
-    )
+    await tester_noncontinuous(dut, TEST_DATA, INPUT_SIZE, OUTPUT_SIZE, CLOCK_PERIOD)
