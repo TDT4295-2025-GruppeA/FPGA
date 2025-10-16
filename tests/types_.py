@@ -31,21 +31,21 @@ class Vertex(LogicObject):
 
 
 class Triangle(LogicObject):
-    a: Vertex = LogicField(Vertex)  # type: ignore
-    b: Vertex = LogicField(Vertex)  # type: ignore
-    c: Vertex = LogicField(Vertex)  # type: ignore
+    v0: Vertex = LogicField(Vertex)  # type: ignore
+    v1: Vertex = LogicField(Vertex)  # type: ignore
+    v2: Vertex = LogicField(Vertex)  # type: ignore
 
 
 class RotationMatrix(LogicObject):
-    rot_xx: int = LogicField(Int(32))  # type: ignore
-    rot_xy: int = LogicField(Int(32))  # type: ignore
-    rot_xz: int = LogicField(Int(32))  # type: ignore
-    rot_yx: int = LogicField(Int(32))  # type: ignore
-    rot_yy: int = LogicField(Int(32))  # type: ignore
-    rot_yz: int = LogicField(Int(32))  # type: ignore
-    rot_zx: int = LogicField(Int(32))  # type: ignore
-    rot_zy: int = LogicField(Int(32))  # type: ignore
-    rot_zz: int = LogicField(Int(32))  # type: ignore
+    m00: int = LogicField(Int(32))  # type: ignore
+    m01: int = LogicField(Int(32))  # type: ignore
+    m02: int = LogicField(Int(32))  # type: ignore
+    m10: int = LogicField(Int(32))  # type: ignore
+    m11: int = LogicField(Int(32))  # type: ignore
+    m12: int = LogicField(Int(32))  # type: ignore
+    m20: int = LogicField(Int(32))  # type: ignore
+    m21: int = LogicField(Int(32))  # type: ignore
+    m22: int = LogicField(Int(32))  # type: ignore
 
 
 class Transform(LogicObject):
