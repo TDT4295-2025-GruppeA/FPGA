@@ -8,26 +8,39 @@ set part_long $::env(FPGA_PART_LONG)
 set target $::env(FPGA_TARGET)
 set board $::env(FPGA_BOARD)
 
-# Load configuration and code
+#########
+# Setup #
+#########
+
+# Create temporary project
+# This is required to generate and synthesize ip cores.
+create_project -in_memory -part $part_long
+
+# Load ip cores
+# TODO: Make it so that the ip config file is not dependent on the target part.
+read_ip [ fileutil::findByPattern ip *.*xci ]
+
+# Generate ip cores
+generate_target all [get_ips]
+
+# Load source files
 read_verilog [ fileutil::findByPattern src *.*v ]
 
-# Synthesize
+#############
+# Synthesis #
+#############
 
-# Basys 3
-#read_xdc verilog/vivado/constraints/basys3_cpu.xdc
-# synth_design -top Top -part xc7a35tcpg236-1
-
-# Nexys A7
-# read_xdc verilog/vivado/constraints/nexysa7_cpu.xdc
-# synth_design -top Top -part xc7a100tcsg324-1
-
-# Arty A7
+# Load constratins for Arty A7
 read_xdc constraints/${board}.xdc
-synth_design -top Top -part $part_long
+
+synth_design -top Top
 
 write_checkpoint -force $rpt_dir/post_synth_checkpoint
 
-# Implement
+#################
+# Place & Route #
+#################
+
 opt_design
 place_design
 route_design
@@ -39,7 +52,11 @@ report_power -file $rpt_dir/post_route_power.rpt
 report_utilization -file $rpt_dir/post_route_utilization.rpt
 report_timing -delay_type min_max -max_paths 1 -file $rpt_dir/post_route_timing.rpt
 
+#############
+# Bitstream #
+#############
 
-# Write bitstream result
+# Ensure build directory exists
 exec mkdir -p build
+
 write_bitstream -force build/top_${target}.bit

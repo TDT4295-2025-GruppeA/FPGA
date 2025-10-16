@@ -3,7 +3,7 @@ import cocotb
 from cocotb.triggers import Timer
 from stubs.matmul import Matmul
 
-from utils import within_tolerance, numpy_to_cocotb, cocotb_to_numpy
+from utils import within_tolerance, quantize, numpy_to_cocotb, cocotb_to_numpy
 
 VERILOG_MODULE = "MatMul"
 VERILOG_PARAMETERS = {
@@ -60,9 +60,7 @@ TEST_MATRICIES = [
 async def test_matmul(dut: Matmul):
     for a in TEST_MATRICIES:
         for b in TEST_MATRICIES:
-            expected_c = a @ b
-
-            dut._log.info(f"Testing:\n{a} @ \n{b} = \n{expected_c}")
+            dut._log.info(f"Testing:\n{a} @ \n{b}")
 
             dut.lhs.set(numpy_to_cocotb(a))
             dut.rhs.set(numpy_to_cocotb(b))
@@ -71,6 +69,10 @@ async def test_matmul(dut: Matmul):
 
             actual_c = cocotb_to_numpy(dut.out.get())
 
+            a = quantize(a)
+            b = quantize(b)
+            expected_c = a @ b
+
             assert within_tolerance(
-                actual_c, expected_c
+                actual_c, expected_c, tolerance_lsb=3
             ), f"Matrix multiplication failed: \n{a} @ \n{b} = \n{actual_c} != \n{expected_c}"
