@@ -245,49 +245,26 @@ module Top (
     // SPI //
     /////////
 
-    // SpiSub spi_controller (
-    //     // SPI interface
-    //     .ssn(spi_ssn),
-    //     .sclk(spi_sclk),
-    //     .mosi(spi_mosi),
-    //     .miso(spi_miso),
+    SpiSub spi_controller (
+        // SPI interface
+        .ssn(spi_ssn),
+        .sclk(spi_sclk),
+        .mosi(spi_mosi),
+        .miso(spi_miso),
 
-    //     // System interface
-    //     .sys_clk(clk_ext),
-    //     .sys_rstn(~reset),
+        // System interface
+        .sys_clk(clk_ext),
+        .sys_rstn(~reset),
 
-    //     // User data interface
-    //     .tx_data_en(1'b1), // Never sending anything.
-    //     .rx_data_en(1'b1), // Always reading.
-    //     .tx_data(seg), // Sending back received data.
-    //     .rx_data(seg), // Word to receive.
-    //     .tx_ready(), // Ignored.
-    //     .rx_ready(), // Ignored.
-    //     .active() // Ignored.
-    // );
-
-    logic valid;
-    fixed data;
-
-    FixedDivider f_div (
-        .clk(clk_system),
-        .operands_valid(1'b1),
-        .dividend(itof(btn)),
-        .divisor(itof(sw) >> 1),
-        .ready(), // ignored
-        .result_valid(valid),
-        .result(data)
+        // User data interface
+        .tx_data_en(1'b1), // Never sending anything.
+        .rx_data_en(1'b1), // Always reading.
+        .tx_data(seg), // Sending back received data.
+        .rx_data(seg), // Word to receive.
+        .tx_ready(), // Ignored.
+        .rx_ready(), // Ignored.
+        .active() // Ignored.
     );
-
-    always_ff @(posedge clk_system or negedge rstn_system) begin
-        if (!rstn_system) begin
-            led <= 4'b1111;
-        end else begin
-            if (valid) begin
-                led <= ftoi(data);
-            end
-        end
-    end
 
     ///////////////////////////////////////
     ////////////// BUFFER ROUTING /////////
