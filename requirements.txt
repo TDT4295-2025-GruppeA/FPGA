@@ -1,6 +1,6 @@
 black==25.1.0
 click==8.2.1
-cocotb==2.0.0
+cocotb
 cocotb-test==0.2.6
 find_libpython==0.4.1
 iniconfig==2.1.0

@@ -1,9 +1,11 @@
 import video_modes_pkg::*;
 import buffer_config_pkg::*;
 import clock_modes_pkg::*;
+import fixed_pkg::*;
 
 module Top (
     // Fun stuff
+    input logic [2:0] sw,
     input logic [2:0] btn,
     output logic [3:0] led,
     output logic [7:0] seg,
@@ -263,7 +265,6 @@ module Top (
         .rx_ready(), // Ignored.
         .active() // Ignored.
     );
-
 
     ///////////////////////////////////////
     ////////////// BUFFER ROUTING /////////
