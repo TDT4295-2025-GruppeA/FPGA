@@ -10,8 +10,8 @@ DECIMAL_WIDHT = 16
 # The smallest representable interval in the fixed point format.
 RESOLUTION = 2**-DECIMAL_WIDHT
 
-# How many decimals bits are used in the fixed point format.
-# IMPORTANT: This needs to match the fixed point format used in the Verilog code
+# Tolerance for comparisons, in least significant bits (LSBs).
+# Used to determine if two fixed point values are "close enough" to be considered equal.
 TOLERANCE_LSB = 1
 
 
