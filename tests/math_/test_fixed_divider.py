@@ -54,6 +54,6 @@ async def test_fixed_divider(dut: Fixeddivider):
 
             dut._log.info(f"{a:.6f} / {b:.6f} = {result:.6f}")
 
-            assert within_tolerance(result, expected_result), (
-                f"Expected {expected_result}, got {result}."
-            )
+            assert within_tolerance(
+                result, expected_result
+            ), f"Expected {expected_result}, got {result}."

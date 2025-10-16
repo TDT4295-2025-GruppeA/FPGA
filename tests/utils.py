@@ -70,7 +70,7 @@ def within_tolerance(
     tolerance_lsb: float = TOLERANCE_LSB,
 ) -> bool:
     """Check if two values are within a certain tolerance. The values may be scalars or numpy arrays."""
-    return bool(np.allclose(a, b, atol=tolerance_lsb*RESOLUTION, rtol=0))
+    return bool(np.allclose(a, b, atol=tolerance_lsb * RESOLUTION, rtol=0))
 
 
 def cocotb_to_numpy(cocotb_matrix: Array | LogicArray) -> np.ndarray:

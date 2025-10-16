@@ -26,6 +26,6 @@ async def test_cross(dut: Veccross):
             rhs = quantize(rhs)
             expected_out = np.cross(lhs, rhs)
 
-            assert within_tolerance(actual_out, expected_out, tolerance_lsb=2), (
-                f"Cross product failed: {lhs} x {rhs} = {actual_out} != {expected_out}"
-            )
+            assert within_tolerance(
+                actual_out, expected_out, tolerance_lsb=2
+            ), f"Cross product failed: {lhs} x {rhs} = {actual_out} != {expected_out}"

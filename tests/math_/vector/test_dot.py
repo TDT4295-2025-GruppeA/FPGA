@@ -29,6 +29,6 @@ async def test_dot(dut: Vecdot):
             rhs = quantize(rhs)
             expected_out = np.dot(lhs, rhs)
 
-            assert within_tolerance(actual_out, expected_out, tolerance_lsb=2), (
-                f"Dot product failed: {lhs} · {rhs} = {actual_out} != {expected_out}"
-            )
+            assert within_tolerance(
+                actual_out, expected_out, tolerance_lsb=2
+            ), f"Dot product failed: {lhs} · {rhs} = {actual_out} != {expected_out}"

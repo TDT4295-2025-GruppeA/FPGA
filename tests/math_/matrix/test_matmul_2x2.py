@@ -58,12 +58,11 @@ async def test_matmul(dut: Matmul):
             await Timer(1)
 
             actual_c = cocotb_to_numpy(dut.out.get())
-            
+
             a = quantize(a)
             b = quantize(b)
             expected_c = a @ b
 
-            assert within_tolerance(actual_c, expected_c, tolerance_lsb=1), (
-                f"Matrix multiplication failed: \n{a} @ \n{b} = \n{actual_c} != \n{expected_c}"
-            )
-
+            assert within_tolerance(
+                actual_c, expected_c, tolerance_lsb=1
+            ), f"Matrix multiplication failed: \n{a} @ \n{b} = \n{actual_c} != \n{expected_c}"

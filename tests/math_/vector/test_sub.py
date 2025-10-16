@@ -24,11 +24,11 @@ async def test_dot(dut: Vecsub):
             await Timer(1)
 
             actual_out = cocotb_to_numpy(dut.out.get())
-        
+
             lhs = quantize(lhs)
             rhs = quantize(rhs)
             expected_out = lhs - rhs
 
-            assert within_tolerance(actual_out, expected_out), (
-                f"Subtraction failed: {lhs} - {rhs} = {actual_out} != {expected_out}"
-            )
+            assert within_tolerance(
+                actual_out, expected_out
+            ), f"Subtraction failed: {lhs} - {rhs} = {actual_out} != {expected_out}"

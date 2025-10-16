@@ -29,6 +29,6 @@ async def test_dot(dut: Vecadd):
             rhs = quantize(rhs)
             expected_out = lhs + rhs
 
-            assert within_tolerance(actual_out, expected_out), (
-                f"Addition failed: {lhs} + {rhs} = {actual_out} != {expected_out}"
-            )
+            assert within_tolerance(
+                actual_out, expected_out
+            ), f"Addition failed: {lhs} + {rhs} = {actual_out} != {expected_out}"
