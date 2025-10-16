@@ -49,9 +49,8 @@ package fixed_pkg;
 
     function automatic fixed mul(fixed lhs, fixed rhs);
         // Store intermediate result in wider type to avoid overflow.
-        localparam DOUBLE_WIDTH = TOTAL_WIDTH * 2;
-        logic signed [DOUBLE_WIDTH-1:0] wide_result;
-        wide_result = (DOUBLE_WIDTH)'(lhs) * (DOUBLE_WIDTH)'(rhs);
+        typedef logic signed [(TOTAL_WIDTH*2)-1:0] double;
+        double wide_result = double'(lhs) * double'(rhs);
         return fixed'(wide_result >>> DECIMAL_WIDTH);
     endfunction
 
@@ -60,11 +59,12 @@ package fixed_pkg;
     // algortihm than what SystemVerilog synthesizes.
     function automatic fixed div(fixed lhs, fixed rhs);
         // Store numerator in wider type to avoid overflow.
-        logic signed [TOTAL_WIDTH+DECIMAL_WIDTH-1:0] numerator;
         // Denominator must match the width of numerator.
-        logic signed [TOTAL_WIDTH+DECIMAL_WIDTH-1:0] denominator;
-        numerator = {lhs, {DECIMAL_WIDTH{1'b0}}};
-        denominator = (DECIMAL_WIDTH+TOTAL_WIDTH)'(rhs);
+        typedef logic signed [TOTAL_WIDTH+DECIMAL_WIDTH-1:0] extended;
+        
+        extended numerator = {lhs, {DECIMAL_WIDTH{1'b0}}};
+        extended denominator = (DECIMAL_WIDTH+TOTAL_WIDTH)'(rhs);
+
         return fixed'(numerator / denominator);
     endfunction
 endpackage

@@ -1,9 +1,11 @@
 import video_modes_pkg::*;
 import buffer_config_pkg::*;
 import clock_modes_pkg::*;
+import fixed_pkg::*;
 
 module Top (
     // Fun stuff
+    input logic [2:0] sw,
     input logic [2:0] btn,
     output logic [3:0] led,
     output logic [7:0] seg,
@@ -243,27 +245,49 @@ module Top (
     // SPI //
     /////////
 
-    SpiSub spi_controller (
-        // SPI interface
-        .ssn(spi_ssn),
-        .sclk(spi_sclk),
-        .mosi(spi_mosi),
-        .miso(spi_miso),
+    // SpiSub spi_controller (
+    //     // SPI interface
+    //     .ssn(spi_ssn),
+    //     .sclk(spi_sclk),
+    //     .mosi(spi_mosi),
+    //     .miso(spi_miso),
 
-        // System interface
-        .sys_clk(clk_ext),
-        .sys_rstn(~reset),
+    //     // System interface
+    //     .sys_clk(clk_ext),
+    //     .sys_rstn(~reset),
 
-        // User data interface
-        .tx_data_en(1'b1), // Never sending anything.
-        .rx_data_en(1'b1), // Always reading.
-        .tx_data(seg), // Sending back received data.
-        .rx_data(seg), // Word to receive.
-        .tx_ready(), // Ignored.
-        .rx_ready(), // Ignored.
-        .active() // Ignored.
+    //     // User data interface
+    //     .tx_data_en(1'b1), // Never sending anything.
+    //     .rx_data_en(1'b1), // Always reading.
+    //     .tx_data(seg), // Sending back received data.
+    //     .rx_data(seg), // Word to receive.
+    //     .tx_ready(), // Ignored.
+    //     .rx_ready(), // Ignored.
+    //     .active() // Ignored.
+    // );
+
+    logic valid;
+    fixed data;
+
+    FixedDivider f_div (
+        .clk(clk_system),
+        .operands_valid(1'b1),
+        .dividend(itof(btn)),
+        .divisor(itof(sw) >> 1),
+        .ready(), // ignored
+        .result_valid(valid),
+        .result(data)
     );
 
+    always_ff @(posedge clk_system or negedge rstn_system) begin
+        if (!rstn_system) begin
+            led <= 4'b1111;
+        end else begin
+            if (valid) begin
+                led <= ftoi(data);
+            end
+        end
+    end
 
     ///////////////////////////////////////
     ////////////// BUFFER ROUTING /////////

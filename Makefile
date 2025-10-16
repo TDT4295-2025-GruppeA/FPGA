@@ -64,6 +64,9 @@ clean:
 	make rmbuild
 	make rmgen
 	make rmlogs
+	make rmwaves
+	make rmxil
+	make rmtest
 
 rmbuild:
 	@echo "Removing build files"
@@ -71,11 +74,25 @@ rmbuild:
 
 rmgen:
 	@echo "Removing generated ip cores files"
-	rm -rf ip/**/gen
+	rm -rf .gen
 
 rmlogs:
 	@echo "Removing log files"
 	rm -rf build/logs
+
+rmwaves:
+	@echo "Removing simulation wave files"
+	rm -rf waveform
+
+rmxil:
+	@echo "Removing Xilinx project files"
+	rm -rf .Xil
+
+rmtest:
+	@echo "Removing test files"
+	rm -f testtools/stub_dummytests.py
+	rm -f testtools/testrunner.py
+	rm -rf tests/stubs
 
 shell:
 	vivado -mode tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"

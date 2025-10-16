@@ -1,25 +1,67 @@
+from typing import overload
+import math
 import numpy as np
 from cocotb.types import Array, LogicArray
 
-TOLERANCE = 0.001
-
-# This needs to match the fixed point format used in the Verilog code
+# How many decimals bits are used in the fixed point format.
+# IMPORTANT: This needs to match the fixed point format used in the Verilog code
 DECIMAL_WIDHT = 16
 
+# The smallest representable interval in the fixed point format.
+RESOLUTION = 2**-DECIMAL_WIDHT
 
-def to_fixed(value):
+# Default tolerance for checking fixed point operations.
+TOLERANCE = 1 * RESOLUTION
+
+
+# Taken from: https://stackoverflow.com/questions/51689594/how-to-round-away-from-0-in-python-3-x
+def round_away(x: float) -> float:
+    """Rounds a float away from zero."""
+    if x >= 0.0:
+        return math.floor(x + 0.5)
+    else:
+        return math.ceil(x - 0.5)
+
+
+#
+def np_round_away(x: np.ndarray) -> np.ndarray:
+    """Rounds a numpy array of floats away from zero."""
+    return np.where(x >= 0.0, np.floor(x + 0.5), np.ceil(x - 0.5))
+
+
+@overload
+def to_fixed(value: float) -> int: ...
+@overload
+def to_fixed(value: np.ndarray) -> np.ndarray: ...
+def to_fixed(value: float | np.ndarray) -> int | np.ndarray:
     """Convert a float to fixed point."""
     res = value * (1 << DECIMAL_WIDHT)
 
+    # It is important that we round away from zero here
+    # as that is what System Verilog does.
+
     if isinstance(res, np.ndarray):
-        return res.astype(int)
+        return np_round_away(res).astype(np.int32)
 
-    return int(res)
+    return int(round_away(res))
 
 
-def to_float(value):
+@overload
+def to_float(value: int) -> float: ...
+@overload
+def to_float(value: np.ndarray) -> np.ndarray: ...
+def to_float(value: int | np.ndarray) -> float | np.ndarray:
     """Convert a fixed point to float."""
     return value / (1 << DECIMAL_WIDHT)
+
+
+@overload
+def quantize(value: float) -> float: ...
+@overload
+def quantize(value: np.ndarray) -> np.ndarray: ...
+def quantize(value: float | np.ndarray) -> float | np.ndarray:
+    """Round a float or numpy array to the closest fixed point representation."""
+    return to_float(to_fixed(value))
 
 
 def within_tolerance(
@@ -28,7 +70,7 @@ def within_tolerance(
     tolerance: float = TOLERANCE,
 ) -> bool:
     """Check if two values are within a certain tolerance. The values may be scalars or numpy arrays."""
-    return bool(np.allclose(a, b, atol=TOLERANCE, rtol=0))
+    return bool(np.allclose(a, b, atol=tolerance, rtol=0))
 
 
 def cocotb_to_numpy(cocotb_matrix: Array | LogicArray) -> np.ndarray:
