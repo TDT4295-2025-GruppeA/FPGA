@@ -98,7 +98,9 @@ class LogicObject(metaclass=_Meta):
                     value = value.to_logicarray()
                     arr = LogicArray(value, arr_range)
                 else:
-                    raise TypeError(f"value is '{type(value)}', not LogicObject when field type is LogicObject.")
+                    raise TypeError(
+                        f"value is '{type(value)}', not LogicObject when field type is LogicObject."
+                    )
             else:
                 raise ValueError(f"Invalid field type '{field_type}'")
 
