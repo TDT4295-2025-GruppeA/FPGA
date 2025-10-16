@@ -79,11 +79,4 @@ package types_pkg;
         transform_t transform;
     } triangle_tf_t;
 
-    typedef struct packed {
-        fixed fx;
-        fixed fy;
-        fixed cx;
-        fixed cy;
-    } camera_intrinsics_t;
-
 endpackage
