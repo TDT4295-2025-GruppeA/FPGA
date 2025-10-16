@@ -105,10 +105,10 @@ class Producer(PipelineBase, Generic[_Data, _Metadata]):
             while not self._ready.value:
                 await RisingEdge(self._dut.clk)
 
-            # Set data as invalid
-            # Only required if we do not have more items to produce.
-            self._valid.value = 0
-            await RisingEdge(self._dut.clk)
+            # Set data as invalid if we do not have more items
+            if self._input_queue.empty():
+                self._valid.value = 0
+                await RisingEdge(self._dut.clk)
 
 
 class Consumer(PipelineBase, Generic[_Data, _Metadata]):
