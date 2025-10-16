@@ -49,9 +49,6 @@ module Divider #(
             end
         end else begin
             if (counter == count'(DELAY)) begin
-                // Reset "computation" counter once done.
-                counter <= 0;
-
                 // Put data on output once "computation" is done.
                 valid <= 1;
                 m_axis_dout_tdata <= result;
@@ -62,6 +59,7 @@ module Divider #(
 
             if (m_axis_dout_tready & valid) begin
                 // Reset state once output has been accepted.
+                counter <= 0;
                 busy <= 0;
                 valid <= 0;
             end
