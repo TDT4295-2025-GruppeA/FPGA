@@ -44,7 +44,7 @@ module Divider #(
                 busy <= 1;
 
                 // Store result of "computation" in internal register.
-                // It will be outputed once "computation" is done.
+                // It will be output once "computation" is done.
                 result <= signed'(s_axis_dividend_tdata) / 48'(signed'(s_axis_divisor_tdata));
             end
         end else begin
