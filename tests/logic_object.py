@@ -101,7 +101,7 @@ class LogicObject(metaclass=_Meta):
                 arr = LogicArray.from_unsigned(value, arr_range)
             elif issubclass(field_type, Bytes):
                 raise NotImplemented
-            elif isinstance(value, float):
+            elif issubclass(field_type, Fixed):
                 value = to_fixed(value)
                 arr = LogicArray.from_signed(value, arr_range)
             elif issubclass(field_type, LogicObject):
