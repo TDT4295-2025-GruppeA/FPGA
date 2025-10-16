@@ -4,10 +4,9 @@ from stubs.fixedtb import Fixedtb
 from cocotb.triggers import Timer
 
 from utils import quantize, to_fixed, within_tolerance
+from cases import TEST_VALUES
 
 VERILOG_MODULE = "FixedTB"
-
-TEST_VALUES = set(np.linspace(-1, 1, 101) + np.linspace(-10, 10, 101))
 
 
 @cocotb.test()

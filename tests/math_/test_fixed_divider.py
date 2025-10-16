@@ -5,10 +5,9 @@ from cocotb.triggers import RisingEdge, ReadOnly
 from cocotb.clock import Clock
 
 from utils import quantize, to_fixed, to_float, within_tolerance
+from cases import TEST_VALUES
 
 VERILOG_MODULE = "FixedDivider"
-
-TEST_VALUES = set(np.linspace(-1, 1, 101) + np.linspace(-10, 10, 101))
 
 
 @cocotb.test(timeout_time=1, timeout_unit="ms")
@@ -34,8 +33,8 @@ async def test_fixed_divider(dut: Fixeddivider):
             await ReadOnly()
             if not dut.dividend_s_ready.value:
                 await RisingEdge(dut.dividend_s_ready)
-            if not dut.dividend_s_ready.value:
-                await RisingEdge(dut.dividend_s_ready)
+            if not dut.divisor_s_ready.value:
+                await RisingEdge(dut.divisor_s_ready)
 
             # Wait until sample
             await RisingEdge(dut.clk)

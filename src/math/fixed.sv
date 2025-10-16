@@ -63,7 +63,7 @@ package fixed_pkg;
         typedef logic signed [TOTAL_WIDTH+DECIMAL_WIDTH-1:0] extended;
         
         extended numerator = {lhs, {DECIMAL_WIDTH{1'b0}}};
-        extended denominator = (DECIMAL_WIDTH+TOTAL_WIDTH)'(rhs);
+        extended denominator = extended'(rhs);
 
         return fixed'(numerator / denominator);
     endfunction

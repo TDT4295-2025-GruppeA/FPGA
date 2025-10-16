@@ -10,7 +10,8 @@ DECIMAL_WIDHT = 16
 # The smallest representable interval in the fixed point format.
 RESOLUTION = 2**-DECIMAL_WIDHT
 
-# Default tolerance for checking fixed point operations in terms of least significant bits (LSB).
+# How many decimals bits are used in the fixed point format.
+# IMPORTANT: This needs to match the fixed point format used in the Verilog code
 TOLERANCE_LSB = 1
 
 
@@ -23,7 +24,7 @@ def round_away(x: float) -> float:
         return math.ceil(x - 0.5)
 
 
-# Numpy version of aboce function
+# Numpy version of above function
 def np_round_away(x: np.ndarray) -> np.ndarray:
     """Rounds a numpy array of floats away from zero."""
     return np.where(x >= 0.0, np.floor(x + 0.5), np.ceil(x - 0.5))
