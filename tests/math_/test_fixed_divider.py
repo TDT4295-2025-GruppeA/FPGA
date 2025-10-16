@@ -1,7 +1,7 @@
 import cocotb
 import numpy as np
 from stubs.fixeddivider import Fixeddivider
-from cocotb.triggers import RisingEdge, Timer, ReadOnly
+from cocotb.triggers import RisingEdge, ReadOnly
 from cocotb.clock import Clock
 
 from utils import quantize, to_fixed, to_float, within_tolerance
@@ -17,7 +17,7 @@ async def test_fixed_divider(dut: Fixeddivider):
     cocotb.start_soon(clock.start())
 
     await clock.cycles(2)
-
+dw  
     for a in TEST_VALUES:
         for b in TEST_VALUES:
             dut._log.info(f"Testing dividend={a:.5f}, divider={b:.5f}")
@@ -47,6 +47,6 @@ async def test_fixed_divider(dut: Fixeddivider):
 
             dut._log.info(f"{a:.6f} / {b:.6f} = {result:.6f}")
 
-            assert within_tolerance(
-                result, expected_result
-            ), f"Expected {expected_result}, got {result}."
+            assert within_tolerance(result, expected_result), (
+                f"Expected {expected_result}, got {result}."
+            )

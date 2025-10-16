@@ -8,12 +8,16 @@ module Divider #(
     parameter int DELAY = 5
 ) (
     input logic aclk,
-    input logic s_axis_divisor_tvalid,
-    output logic s_axis_divisor_tready,
-    input logic [31:0] s_axis_divisor_tdata,
-    input logic s_axis_dividend_tvalid,
+
     output logic s_axis_dividend_tready,
+    input logic s_axis_dividend_tvalid,
     input logic [47:0] s_axis_dividend_tdata,
+    
+    output logic s_axis_divisor_tready,
+    input logic s_axis_divisor_tvalid,
+    input logic [31:0] s_axis_divisor_tdata,
+
+    input logic m_axis_dout_tready,
     output logic m_axis_dout_tvalid,
     output logic [47:0] m_axis_dout_tdata
 );
@@ -36,21 +40,30 @@ module Divider #(
     always_ff @(posedge aclk) begin
         if (!busy) begin
             if (s_axis_divisor_tvalid & s_axis_dividend_tvalid) begin
+                // Start "computation" once both inputs are valid.
                 busy <= 1;
-                result <= signed'(s_axis_dividend_tdata) / 48'(signed'(s_axis_divisor_tdata));
-            end
 
-            if (valid) begin
-                valid <= 0;
+                // Store result of "computation" in internal register.
+                // It will be outputed once "computation" is done.
+                result <= signed'(s_axis_dividend_tdata) / 48'(signed'(s_axis_divisor_tdata));
             end
         end else begin
             if (counter == count'(DELAY)) begin
+                // Reset "computation" counter once done.
                 counter <= 0;
-                busy <= 0;
+
+                // Put data on output once "computation" is done.
                 valid <= 1;
                 m_axis_dout_tdata <= result;
             end else begin
+                // Continue "computation" until done.
                 counter <= counter + 1;
+            end
+
+            if (m_axis_dout_tready & valid) begin
+                // Reset state once output has been accepted.
+                busy <= 0;
+                valid <= 0;
             end
         end
     end

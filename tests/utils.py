@@ -23,7 +23,7 @@ def round_away(x: float) -> float:
         return math.ceil(x - 0.5)
 
 
-#
+# Numpy version of aboce function
 def np_round_away(x: np.ndarray) -> np.ndarray:
     """Rounds a numpy array of floats away from zero."""
     return np.where(x >= 0.0, np.floor(x + 0.5), np.ceil(x - 0.5))
