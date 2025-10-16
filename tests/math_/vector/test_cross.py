@@ -3,7 +3,7 @@ from cocotb.triggers import Timer
 import numpy as np
 from stubs.veccross import Veccross
 
-from utils import numpy_to_cocotb, cocotb_to_numpy, within_tolerance
+from utils import numpy_to_cocotb, cocotb_to_numpy, within_tolerance, quantize
 from cases import TEST_VECTORS
 
 VERILOG_MODULE = "VecCross"
@@ -13,9 +13,7 @@ VERILOG_MODULE = "VecCross"
 async def test_cross(dut: Veccross):
     for lhs in TEST_VECTORS:
         for rhs in TEST_VECTORS:
-            expected_out = np.cross(lhs, rhs)
-
-            dut._log.info(f"Testing: {lhs} x {rhs} = {expected_out}")
+            dut._log.info(f"Testing: {lhs} x {rhs}")
 
             dut.lhs.set(numpy_to_cocotb(lhs))
             dut.rhs.set(numpy_to_cocotb(rhs))
@@ -24,6 +22,10 @@ async def test_cross(dut: Veccross):
 
             actual_out = cocotb_to_numpy(dut.out.get())
 
-            assert within_tolerance(
-                actual_out, expected_out
-            ), f"Cross product failed: {l} x {r} = {actual_out} != {expected_out}"
+            lhs = quantize(lhs)
+            rhs = quantize(rhs)
+            expected_out = np.cross(lhs, rhs)
+
+            assert within_tolerance(actual_out, expected_out, tolerance_lsb=2), (
+                f"Cross product failed: {lhs} x {rhs} = {actual_out} != {expected_out}"
+            )

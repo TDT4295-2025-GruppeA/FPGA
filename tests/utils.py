@@ -10,8 +10,8 @@ DECIMAL_WIDHT = 16
 # The smallest representable interval in the fixed point format.
 RESOLUTION = 2**-DECIMAL_WIDHT
 
-# Default tolerance for checking fixed point operations.
-TOLERANCE = 1 * RESOLUTION
+# Default tolerance for checking fixed point operations in terms of least significant bits (LSB).
+TOLERANCE_LSB = 1
 
 
 # Taken from: https://stackoverflow.com/questions/51689594/how-to-round-away-from-0-in-python-3-x
@@ -67,10 +67,10 @@ def quantize(value: float | np.ndarray) -> float | np.ndarray:
 def within_tolerance(
     a: int | float | np.ndarray,
     b: int | float | np.ndarray,
-    tolerance: float = TOLERANCE,
+    tolerance_lsb: float = TOLERANCE_LSB,
 ) -> bool:
     """Check if two values are within a certain tolerance. The values may be scalars or numpy arrays."""
-    return bool(np.allclose(a, b, atol=tolerance, rtol=0))
+    return bool(np.allclose(a, b, atol=tolerance_lsb*RESOLUTION, rtol=0))
 
 
 def cocotb_to_numpy(cocotb_matrix: Array | LogicArray) -> np.ndarray:
