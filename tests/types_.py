@@ -14,9 +14,9 @@ from logic_object import LogicObject, Int, UInt, LogicField
 
 
 class RGB(LogicObject):
-    r: int = LogicField(UInt(4))  # type: ignore
-    g: int = LogicField(UInt(4))  # type: ignore
-    b: int = LogicField(UInt(4))  # type: ignore
+    r: int = LogicField(UInt(5))  # type: ignore
+    g: int = LogicField(UInt(6))  # type: ignore
+    b: int = LogicField(UInt(5))  # type: ignore
 
 
 class Position(LogicObject):
