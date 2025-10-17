@@ -311,4 +311,3 @@ async def test_transform_metadata_passthrough(dut):
         assert (
             out_meta.bit == metadata_expected
         ), f"Metadata mismatch!\nExpected: {metadata_expected}\nGot: {out_meta.bit}"
-
