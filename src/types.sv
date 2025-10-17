@@ -1,11 +1,22 @@
 package types_pkg;
     import fixed_pkg::*;
-    
+
+    typedef logic[7:0] byte_t;
+    typedef logic[15:0] short_t;
+
     typedef struct packed {
-        logic [3:0] red;
-        logic [3:0] green;
-        logic [3:0] blue;
-        logic [3:0] reserved;
+        logic last;
+    } model_metadata_t;
+
+    typedef struct packed {
+        logic last;
+        model_metadata_t model_metadata;
+    } triangle_metadata_t;
+
+    typedef struct packed {
+        logic [4:0] red;
+        logic [5:0] green;
+        logic [4:0] blue;
     } color_t;
 
     typedef struct packed {
@@ -15,8 +26,8 @@ package types_pkg;
     } position_t;
 
     typedef struct packed {
-        position_t position;
         color_t color;
+        position_t position;
     } vertex_t;
 
     typedef struct packed {
@@ -47,7 +58,7 @@ package types_pkg;
     } transform_t;
 
     typedef struct packed {
-        logic [7:0] model_id;
+        byte_t model_id;
         transform_t transform;
     } modelinstance_t;
 
@@ -87,4 +98,12 @@ package types_pkg;
         transform_t transform;
     } triangle_tf_t;
 
+    typedef struct packed {
+        byte_t model_id;
+        triangle_t triangle;
+    } modelbuf_data_t;
+
+    typedef struct packed {
+        logic last;
+    } scenebuf_meta_t;
 endpackage
