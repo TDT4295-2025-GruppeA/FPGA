@@ -45,56 +45,57 @@ module Transform #(
         end
     end
 
+    task automatic transform_vertex(
+        input  rotmat_t   rotmat,
+        input  vertex_t   vin,
+        input  position_t     pos,
+        output vertex_t   vout
+    );
+    begin
+        // X coordinate
+        vout.position.x = add(
+            add(
+                mul(rotmat_reg.m00, vin.position.x),
+                mul(rotmat_reg.m01, vin.position.y)
+            ),
+            add(
+                mul(rotmat_reg.m02, vin.position.z),
+                pos.x
+            )
+        );
+
+        // Y coordinate
+        vout.position.y = add(
+            add(
+                mul(rotmat_reg.m10, vin.position.x),
+                mul(rotmat_reg.m11, vin.position.y)
+            ),
+            add(
+                mul(rotmat_reg.m12, vin.position.z),
+                pos.y
+            )
+        );
+
+        // Z coordinate
+        vout.position.z = add(
+            add(
+                mul(rotmat_reg.m20, vin.position.x),
+                mul(rotmat_reg.m21, vin.position.y)
+            ),
+            add(
+                mul(rotmat_reg.m22, vin.position.z),
+                pos.z
+            )
+        );
+    end
+    endtask
+
     always_comb begin
         t_transformed = '0;
 
-        // === Vertex 0 ===
-        t_transformed.v0.position.x = add(add(mul(rotmat_reg.m00, triangle_reg.v0.position.x),
-                                     mul(rotmat_reg.m01, triangle_reg.v0.position.y)),
-                                 add(mul(rotmat_reg.m02, triangle_reg.v0.position.z),
-                                     pos_reg.x));
-
-        t_transformed.v0.position.y = add(add(mul(rotmat_reg.m10, triangle_reg.v0.position.x),
-                                     mul(rotmat_reg.m11, triangle_reg.v0.position.y)),
-                                 add(mul(rotmat_reg.m12, triangle_reg.v0.position.z),
-                                     pos_reg.y));
-
-        t_transformed.v0.position.z = add(add(mul(rotmat_reg.m20, triangle_reg.v0.position.x),
-                                     mul(rotmat_reg.m21, triangle_reg.v0.position.y)),
-                                 add(mul(rotmat_reg.m22, triangle_reg.v0.position.z),
-                                     pos_reg.z));
-
-        // === Vertex 1 ===
-        t_transformed.v1.position.x = add(add(mul(rotmat_reg.m00, triangle_reg.v1.position.x),
-                                     mul(rotmat_reg.m01, triangle_reg.v1.position.y)),
-                                 add(mul(rotmat_reg.m02, triangle_reg.v1.position.z),
-                                     pos_reg.x));
-
-        t_transformed.v1.position.y = add(add(mul(rotmat_reg.m10, triangle_reg.v1.position.x),
-                                     mul(rotmat_reg.m11, triangle_reg.v1.position.y)),
-                                 add(mul(rotmat_reg.m12, triangle_reg.v1.position.z),
-                                     pos_reg.y));
-
-        t_transformed.v1.position.z = add(add(mul(rotmat_reg.m20, triangle_reg.v1.position.x),
-                                     mul(rotmat_reg.m21, triangle_reg.v1.position.y)),
-                                 add(mul(rotmat_reg.m22, triangle_reg.v1.position.z),
-                                     pos_reg.z));
-
-        // === Vertex 2 ===
-        t_transformed.v2.position.x = add(add(mul(rotmat_reg.m00, triangle_reg.v2.position.x),
-                                     mul(rotmat_reg.m01, triangle_reg.v2.position.y)),
-                                 add(mul(rotmat_reg.m02, triangle_reg.v2.position.z),
-                                     pos_reg.x));
-
-        t_transformed.v2.position.y = add(add(mul(rotmat_reg.m10, triangle_reg.v2.position.x),
-                                     mul(rotmat_reg.m11, triangle_reg.v2.position.y)),
-                                 add(mul(rotmat_reg.m12, triangle_reg.v2.position.z),
-                                     pos_reg.y));
-
-        t_transformed.v2.position.z = add(add(mul(rotmat_reg.m20, triangle_reg.v2.position.x),
-                                     mul(rotmat_reg.m21, triangle_reg.v2.position.y)),
-                                 add(mul(rotmat_reg.m22, triangle_reg.v2.position.z),
-                                     pos_reg.z));
+        transform_vertex(rotmat_reg, triangle_reg.v0, pos_reg, t_transformed.v0);
+        transform_vertex(rotmat_reg, triangle_reg.v1, pos_reg, t_transformed.v1);
+        transform_vertex(rotmat_reg, triangle_reg.v2, pos_reg, t_transformed.v2);
 
         t_transformed.v0.color = triangle_reg.v0.color;
         t_transformed.v1.color = triangle_reg.v1.color;
