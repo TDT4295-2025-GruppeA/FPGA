@@ -5,7 +5,7 @@ import fixed_pkg::*;
 
 module Top (
     // Fun stuff
-    input logic [2:0] sw,
+    input logic [3:0] sw,
     input logic [2:0] btn,
     output logic [3:0] led,
     output logic [7:0] seg,
@@ -129,6 +129,7 @@ module Top (
     ) drawing_manager_inst (
         .clk(clk_system),
         .rstn(rstn_system),
+        .sw(sw),
         .draw_start(draw_start),
         .draw_ack(draw_ack),
         .write_en(dm_write_en),
@@ -170,7 +171,6 @@ module Top (
 
     // Request a swap when VSync blanking interval starts and frame is done
     logic swap_req;
-    logic swap_rbuffer_select_regeq;
     assign swap_req = vga_vsync_blank_edge_start && dm_frame_done_sync;
 
     // Buffer swap logic in display domain

@@ -1,6 +1,6 @@
-import fixed_pkg::*;
-
 package types_pkg;
+    import fixed_pkg::*;
+    
     typedef struct packed {
         logic [3:0] red;
         logic [3:0] green;
@@ -45,4 +45,17 @@ package types_pkg;
         logic [7:0] model_id;
         transform_t transform;
     } modelinstance_t;
+
+    // TODO: Typedef for pixel coordinates based on buffer size.
+    typedef struct packed {
+        logic [9:0] x;
+        logic [9:0] y;
+    } pixel_coordinate_t;
+
+    typedef struct packed {
+        logic valid;
+        fixed depth;
+        color_t color;
+        pixel_coordinate_t coordinate;
+    } pixel_data_t;
 endpackage

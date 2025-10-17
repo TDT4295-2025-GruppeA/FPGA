@@ -8,6 +8,7 @@ module DrawingManager #(
     input logic rstn,
     input logic draw_start,
     input logic draw_ack,
+    input logic [3:0] sw,
     
     output logic write_en,
     output logic [BUFFER_ADDR_WIDTH-1:0] write_addr,
@@ -19,9 +20,11 @@ module DrawingManager #(
     typedef enum {
         IDLE,
         DRAWING_BACKGROUND,
-        DRAWING_SPRITES,
+        RASTERIZING,
         FRAME_DONE
     } pipeline_state_t;
+
+    logic [3:0] color;
 
     pipeline_state_t state, next_state;
     always_ff @(posedge clk or negedge rstn) begin
@@ -29,6 +32,8 @@ module DrawingManager #(
             state <= IDLE;
         end else begin
             state <= next_state;
+            if (state == FRAME_DONE) 
+                color <= sw;
         end
     end
 
@@ -57,7 +62,55 @@ module DrawingManager #(
         .write_data(bg_write_data),
         .buffer_select(buffer_select)
     );
-    
+
+    triangle_t triangle;
+    assign triangle = '{
+        a: '{
+            position: '{
+                x: rtof( 0.0),
+                y: rtof( 0.0),
+                z: rtof( 0.5)
+            },
+            color: '0
+        },
+        b: '{
+            position: '{
+                x: rtof( 0.0),
+                y: rtof( 1.0),
+                z: rtof( 0.0)
+            },
+            color: '0
+        },
+        c: '{
+            position: '{
+                x: rtof( 1.0),
+                y: rtof( 0.0),
+                z: rtof( 1.0)
+            },
+            color: '0
+        }
+    };
+
+    logic triangle_ready, triangle_valid, pixel_valid;
+    pixel_data_t pixel;
+
+    Rasterizer #(
+        .VIEWPORT_WIDTH(BUFFER_WIDTH),
+        .VIEWPORT_HEIGHT(BUFFER_HEIGHT)
+    ) rasterizer (
+        .clk(clk),
+        .rstn(rstn),
+        
+        .triangle_s_ready(triangle_ready),
+        .triangle_s_valid(triangle_valid),
+        .triangle_s_data(triangle),
+
+        .pixel_data_m_ready(1'b1), // We are alway ready.
+        .pixel_data_m_valid(pixel_valid),
+        .pixel_data_m_data(pixel)
+    );
+
+
     always_comb begin
         next_state = state;
         bg_draw_start = 1'b0;
@@ -68,6 +121,8 @@ module DrawingManager #(
         write_addr = '0;
         write_data = '0;
         
+        triangle_valid = 1'b0;
+
         case (state)
             IDLE: begin
                 if (draw_start) begin
@@ -80,6 +135,20 @@ module DrawingManager #(
                 write_addr = bg_write_addr;
                 write_data = bg_write_data;
                 if (bg_draw_done) begin
+                    next_state = RASTERIZING;
+                    triangle_valid = 1'b1;
+                end
+            end
+            RASTERIZING: begin
+                if (pixel_valid) begin
+                    write_en = 1'b1;
+                    write_addr = pixel.coordinate.x + pixel.coordinate.y * BUFFER_WIDTH;
+                    write_data = pixel.valid ? {4'h0, 4'(ftoi(mul(itof(color), pixel.depth))), 4'h0} : {4'h8, 4'h8, 4'h8};
+                end
+
+                // Check if rasterizer is done.
+                if (triangle_ready) begin
+                    // If so, go to next state.
                     next_state = FRAME_DONE;
                 end
             end

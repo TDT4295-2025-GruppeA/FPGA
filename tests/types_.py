@@ -56,3 +56,15 @@ class Transform(LogicObject):
 class ModelInstance(LogicObject):
     model_id: int = LogicField(UInt(8))  # type: ignore
     transform: Transform = LogicField(Transform)  # type: ignore
+
+
+class PixelCoordinate(LogicObject):
+    x: int = LogicField(UInt(10))  # type: ignore
+    y: int = LogicField(UInt(10))  # type: ignore
+
+class PixelData(LogicObject):
+    valid: int = LogicField(UInt(1)) # type: ignore
+    color: RGB = LogicField(RGB) # type: ignore
+    depth: int = LogicField(Int(32)) # type: ignore
+    coordinate: PixelCoordinate = LogicField(PixelCoordinate) # type: ignore
+
