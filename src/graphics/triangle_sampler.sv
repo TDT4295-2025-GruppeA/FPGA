@@ -1,13 +1,6 @@
 import types_pkg::*;
 import fixed_pkg::*;
 
-typedef enum logic[1:0] { 
-    TRIANGLE_SAMPLER_IDLE,        // Waiting for new data.
-    TRIANGLE_SAMPLER_INSIDE_TEST, // Check that the sample point is within the triangle.
-    TRIANGLE_SAMPLER_INTERPOLATE, // Calculate barycentric coordinates, interpolated color and depth.
-    TRIANGLE_SAMPLER_DONE         // Result ready to be read.
-} triangle_sampler_state;
-
 // Positive when to the right of line, negative when to the left.
 function automatic fixed edge_equation(position_t p0, position_t p1, fixed qx, fixed qy);
     // The formula from the book:
@@ -78,14 +71,21 @@ module TriangleSampler #(
     localparam fixed PIXEL_SCALE_X_FIXED = rtof(1 / real'(VIEWPORT_WIDTH - 1));
     localparam fixed PIXEL_SCALE_Y_FIXED = rtof(1 / real'(VIEWPORT_HEIGHT - 1));
 
+    typedef enum logic[1:0] { 
+        IDLE,        // Waiting for new data.
+        INSIDE_TEST, // Check that the sample point is within the triangle.
+        INTERPOLATE, // Calculate barycentric coordinates, interpolated color and depth.
+        DONE         // Result ready to be read.
+    } triangle_sampler_state;
+
     triangle_sampler_state state;
 
-    // We are ready to accept new data when we are TRIANGLE_SAMPLER_IDLE.
-    assign triangle_s_ready = (state == TRIANGLE_SAMPLER_IDLE);
-    assign pixel_coordinate_s_ready = (state == TRIANGLE_SAMPLER_IDLE);
+    // We are ready to accept new data when we are IDLE.
+    assign triangle_s_ready = (state == IDLE);
+    assign pixel_coordinate_s_ready = (state == IDLE);
 
-    // Result is ready to be read when we are TRIANGLE_SAMPLER_DONE.
-    assign pixel_data_m_valid = (state == TRIANGLE_SAMPLER_DONE);
+    // Result is ready to be read when we are DONE.
+    assign pixel_data_m_valid = (state == DONE);
 
     // Registers to store input data.
     triangle_t triangle;
@@ -103,19 +103,19 @@ module TriangleSampler #(
     assign pixel_data.coordinate = pixel_coordinate;
 
     // Edge functions for the three edges of the triangle.
-    fixed f01, f12, f20;
-    assign f01 = edge_equation(triangle.a.position, triangle.b.position, pixel_x, pixel_y);
-    assign f12 = edge_equation(triangle.b.position, triangle.c.position, pixel_x, pixel_y);
-    assign f20 = edge_equation(triangle.c.position, triangle.a.position, pixel_x, pixel_y);
+    fixed f01_c, f12_c, f20_c;
+    assign f01_c = edge_equation(triangle.a.position, triangle.b.position, pixel_x, pixel_y);
+    assign f12_c = edge_equation(triangle.b.position, triangle.c.position, pixel_x, pixel_y);
+    assign f20_c = edge_equation(triangle.c.position, triangle.a.position, pixel_x, pixel_y);
 
     // The sample point is within the triangle if it
     // is on the right side of all three edges.
-    assign pixel_data.valid = (f01 > 0) && (f12 > 0) && (f20 > 0);
+    assign pixel_data.valid = (f01_c > 0) && (f12_c > 0) && (f20_c > 0);
 
     // Twice the area of the triangle.
     // Used for calculating barycentric coordinates.
     fixed a;
-    assign a = add(f01, add(f12, f20));
+    assign a = add(f01_c, add(f12_c, f20_c));
 
     // Control signals for the divider.
     logic divisor_valid, divisor_ready, a_reciprocal_valid;
@@ -137,11 +137,38 @@ module TriangleSampler #(
         .result_m_data(a_reciprocal)
     );
 
+    // Latch the reciprocal result.
+    fixed a_reciprocal_r;
+    always_ff @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
+            a_reciprocal_r <= '0;
+        end else if (a_reciprocal_valid) begin
+            a_reciprocal_r <= a_reciprocal;
+        end
+    end
+
+    // The edge function results are registered to break up the timing requirements.
+    // This is physically not needed as the values are read only after the divider
+    // is done, giving plenty of cycles to settle. However, this makes the timing
+    // analysis happier. (NOTE: Alternativley, it could have been marked as multi cycle.)
+    fixed f01_r, f12_r, f20_r;
+    always_ff @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
+            f01_r <= '0;
+            f12_r <= '0;
+            f20_r <= '0;
+        end else begin
+            f01_r <= f01_c;
+            f12_r <= f12_c;
+            f20_r <= f20_c;
+        end
+    end
+
     // Calculate barycentric coordinates.
     fixed b0, b1, b2;
-    assign b0 = mul(f01, a_reciprocal);
-    assign b1 = mul(f12, a_reciprocal);
-    assign b2 = mul(f20, a_reciprocal);
+    assign b0 = mul(f01_r, a_reciprocal_r);
+    assign b1 = mul(f12_r, a_reciprocal_r);
+    assign b2 = mul(f20_r, a_reciprocal_r);
 
     // Calculate interpolated color and depth.
     // Only valid if the point is inside the triangle.
@@ -158,11 +185,11 @@ module TriangleSampler #(
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
-            state <= TRIANGLE_SAMPLER_IDLE;
+            state <= IDLE;
             pixel_data_m_data <= '0;
         end else begin
             case (state)
-                TRIANGLE_SAMPLER_IDLE: begin
+                IDLE: begin
                     // Load new triangle if available.
                     if (triangle_s_valid) begin
                         triangle <= triangle_s_data;
@@ -171,29 +198,29 @@ module TriangleSampler #(
                     // Load new sample point if available.
                     // Start inside test.
                     if (pixel_coordinate_s_valid) begin
-                        state <= TRIANGLE_SAMPLER_INSIDE_TEST;
+                        state <= INSIDE_TEST;
                         pixel_coordinate <= pixel_coordinate_s_data;
                     end
                 end
 
-                TRIANGLE_SAMPLER_INSIDE_TEST: begin
+                INSIDE_TEST: begin
                     // Check if the sample point is inside the triangle.
                     if (pixel_data.valid) begin
                         // And that the divider is ready to accept new data.
                         if (divisor_ready) begin
                             // If it is, proceed to interpolation.
                             divisor_valid <= 1'b1;
-                            state <= TRIANGLE_SAMPLER_INTERPOLATE;
+                            state <= INTERPOLATE;
                         end
                         // If not, we just wait.
                     end else begin
                         // Otherwise, we are done.
-                        state <= TRIANGLE_SAMPLER_DONE;
+                        state <= DONE;
                         pixel_data_m_data <= pixel_data;
                     end
                 end
                 
-                TRIANGLE_SAMPLER_INTERPOLATE: begin
+                INTERPOLATE: begin
                     // Disable the divisor input.
                     divisor_valid <= 1'b0;
 
@@ -201,15 +228,15 @@ module TriangleSampler #(
                     if (a_reciprocal_valid) begin
                         // Latch the interpolated color and depth.
                         pixel_data_m_data <= pixel_data;
-                        // And proceed to TRIANGLE_SAMPLER_DONE state.
-                        state <= TRIANGLE_SAMPLER_DONE;
+                        // And proceed to DONE state.
+                        state <= DONE;
                     end
                 end
                 
-                TRIANGLE_SAMPLER_DONE: begin
-                    // Return to TRIANGLE_SAMPLER_IDLE when result has been read.
+                DONE: begin
+                    // Return to IDLE when result has been read.
                     if (pixel_data_m_ready) begin
-                        state <= TRIANGLE_SAMPLER_IDLE;
+                        state <= IDLE;
                     end
                 end
             endcase
