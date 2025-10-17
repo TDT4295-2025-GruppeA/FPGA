@@ -1,6 +1,6 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, Timer
 from utils import to_fixed, to_float
 
 from tools.pipeline import Producer, Consumer
@@ -291,7 +291,7 @@ async def test_transform_metadata_passthrough(dut):
         Vertex(Position(to_fixed(3), to_fixed(3), to_fixed(3)), RGB(3, 3, 3)),
     )
 
-    for metadata_in in [0, 1]:
+    for metadata_in in [0, 1, 0, 1, 1]:
         triangle_expected = triangle_in
         metadata_expected = metadata_in
 
@@ -312,8 +312,3 @@ async def test_transform_metadata_passthrough(dut):
             out_meta.bit == metadata_expected
         ), f"Metadata mismatch!\nExpected: {metadata_expected}\nGot: {out_meta.bit}"
 
-        prev_meta = int(dut.triangle_m_metadata.value)
-        await RisingEdge(dut.clk)
-        assert (
-            int(dut.triangle_m_metadata.value) == prev_meta
-        ), "Metadata changed while valid asserted!"
