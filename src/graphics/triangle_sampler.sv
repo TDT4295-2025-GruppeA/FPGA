@@ -104,9 +104,9 @@ module TriangleSampler #(
 
     // Edge functions for the three edges of the triangle.
     fixed f01_c, f12_c, f20_c;
-    assign f01_c = edge_equation(triangle.a.position, triangle.b.position, pixel_x, pixel_y);
-    assign f12_c = edge_equation(triangle.b.position, triangle.c.position, pixel_x, pixel_y);
-    assign f20_c = edge_equation(triangle.c.position, triangle.a.position, pixel_x, pixel_y);
+    assign f01_c = edge_equation(triangle.v0.position, triangle.v1.position, pixel_x, pixel_y);
+    assign f12_c = edge_equation(triangle.v1.position, triangle.v2.position, pixel_x, pixel_y);
+    assign f20_c = edge_equation(triangle.v2.position, triangle.v0.position, pixel_x, pixel_y);
 
     // The sample point is within the triangle if it
     // is on the right side of all three edges.
@@ -173,9 +173,9 @@ module TriangleSampler #(
     // Calculate interpolated color and depth.
     // Only valid if the point is inside the triangle.
     assign pixel_data.depth = barycentric_weight(
-        b0, triangle.a.position.z,
-        b1, triangle.b.position.z,
-        b2, triangle.c.position.z
+        b0, triangle.v0.position.z,
+        b1, triangle.v1.position.z,
+        b2, triangle.v2.position.z
     );
 
     // Color TBD. For now just white.

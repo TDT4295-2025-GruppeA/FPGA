@@ -66,8 +66,10 @@ class Producer(PipelineBase, Generic[_Data, _Metadata]):
         dut: PipelineDut,
         name: str,
         has_metadata: bool = False,
+        signal_style: str = "inout",
     ):
-        super().__init__(dut, name, "in")
+        type = "in" if signal_style == "inout" else "s"
+        super().__init__(dut, name, type)
         self._has_metadata = has_metadata
         self._input_queue: Queue[tuple[_Data, _Metadata | None]] = Queue()
 
@@ -116,8 +118,10 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
         name: str,
         data_type: Type[_Data],
         metadata_type: Type[_Metadata] | None = None,
+        signal_style: str = "inout",
     ):
-        super().__init__(dut, name, "out")
+        type = "out" if signal_style == "inout" else "m"
+        super().__init__(dut, name, type)
 
         # Store the output type so we can use them to convert LogicArray
         # to the output type
