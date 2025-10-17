@@ -134,6 +134,12 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
         """Retrieve a transaction from the DUT."""
         return await self._output_queue.get()
 
+    async def consume_all(self) -> list[tuple[_Data, _Metadata | None]]:
+        items = []
+        while not self._output_queue.empty():
+            items.append(await self._output_queue.get())
+        return items
+
     async def _run_loop(self):
         # TODO: expose this to the user so they can control when to
         # consume?
