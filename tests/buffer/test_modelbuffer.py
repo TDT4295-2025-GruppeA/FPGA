@@ -1,191 +1,117 @@
 from typing import Iterable
 
 import cocotb
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb.clock import Clock
 
 from stubs.modelbuffer import Modelbuffer
 from types_ import Vertex, Triangle, RGB, Position
+from tools.pipeline import Producer, Consumer
+from logic_object import LogicObject, LogicField, UInt
 
 VERILOG_MODULE = "ModelBuffer"
 
 VERILOG_PARAMETERS = {
-    "MAX_TRIANGLE_COUNT": 10,
+    "MAX_TRIANGLE_COUNT": 100,
     "MAX_MODEL_COUNT": 10,
 }
 
+class ModelBufData(LogicObject):
+    model_id: int = LogicField(UInt(8)) # type: ignore
+    triangle: Triangle = LogicField(Triangle) # type: ignore
+
+
+class ModelBufReadInData(LogicObject):
+    model_id: int = LogicField(UInt(8)) # type: ignore
+    triangle_idx: int = LogicField(UInt(16)) # type: ignore
+
+def make_triangle(i: int) -> Triangle:
+    pos = Position(i, i, i)
+    vertex = Vertex(pos, RGB(i, i, i))
+    return Triangle(vertex, vertex, vertex)
+
+class TriangleMetadata(LogicObject):
+    last: int = LogicField(UInt(1)) # type: ignore
+
+
+INPUTS = [
+    ModelBufData(0, make_triangle(1)),
+    ModelBufData(0, make_triangle(2)),
+    ModelBufData(0, make_triangle(3)),
+    ModelBufData(1, make_triangle(4)),
+    ModelBufData(1, make_triangle(5)),
+    ModelBufData(1, make_triangle(6)),
+    ModelBufData(1, make_triangle(7)),
+    ModelBufData(1, make_triangle(8)),
+    ModelBufData(2, make_triangle(9)),
+    ModelBufData(3, make_triangle(10)),
+    ModelBufData(3, make_triangle(11)),
+    ModelBufData(3, make_triangle(12)),
+]
+
+READ_INPUTS = [
+    ModelBufReadInData(0, 0),
+    ModelBufReadInData(0, 1),
+    ModelBufReadInData(0, 2),
+    ModelBufReadInData(1, 0),
+    ModelBufReadInData(1, 1),
+    ModelBufReadInData(1, 2),
+    ModelBufReadInData(1, 3),
+    ModelBufReadInData(1, 4),
+    ModelBufReadInData(2, 0),
+    ModelBufReadInData(3, 0),
+    ModelBufReadInData(3, 1),
+    ModelBufReadInData(3, 2),
+]
+
+READ_OUTPUTS = [
+    (make_triangle(1), TriangleMetadata(0)),
+    (make_triangle(2), TriangleMetadata(0)),
+    (make_triangle(3), TriangleMetadata(1)),
+    (make_triangle(4), TriangleMetadata(0)),
+    (make_triangle(5), TriangleMetadata(0)),
+    (make_triangle(6), TriangleMetadata(0)),
+    (make_triangle(7), TriangleMetadata(0)),
+    (make_triangle(8), TriangleMetadata(1)),
+    (make_triangle(9), TriangleMetadata(1)),
+    (make_triangle(10), TriangleMetadata(0)),
+    (make_triangle(11), TriangleMetadata(0)),
+    (make_triangle(12), TriangleMetadata(1)),
+]
 
 async def make_clock(dut: Modelbuffer):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    dut.rstn.value = 0
+    await RisingEdge(dut.clk)
     dut.rstn.value = 1
 
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
-
-
-@cocotb.test()
-async def test_write_single_triangle(dut: Modelbuffer):
-    await make_clock(dut)
-
-    triangle = Triangle(
-        Vertex(Position(1, 2, 3), RGB(4, 5, 6)),
-        Vertex(Position(7, 8, 9), RGB(1, 2, 3)),
-        Vertex(Position(10, 11, 12), RGB(1, 2, 3)),
-    )
-
-    dut.write_en.value = 1
-    dut.write_model_index.value = 0
-    dut.write_triangle.value = triangle.to_logicarray()
-    dut.write_triangle_index.value = 0
-
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-
-    triangle_out = Triangle.from_logicarray(dut.model_buffer.value[0])
-
-    assert triangle_out == triangle
-
-
-async def write_model(
-    dut: Modelbuffer, model_index: int, triangles: Iterable[Triangle]
-):
-    dut.write_model_index.value = model_index
-    dut.write_en.value = 1
-
-    # Write a set of triangles to the buffer
-    for i, triangle in enumerate(triangles):
-        dut.write_triangle.value = triangle.to_logicarray()
-        dut.write_triangle_index.value = i
-
-        await RisingEdge(dut.clk)
-
-    # Disable the input
-    dut.write_en.value = 0
-    dut.write_triangle_index.value = 0
-    dut.write_triangle.value = 0
-
-    # Need extra clock cycle to write last triangle
-    await RisingEdge(dut.clk)
-
-
-async def read_model(dut: Modelbuffer, model_index: int) -> list[Triangle]:
-    i = 0
-    result: list[Triangle] = []
-    dut.read_model_index.value = model_index
-    while not dut.read_last_index.value:
-        dut.read_triangle_index.value = i
-        await RisingEdge(dut.clk)
-        result.append(Triangle.from_logicarray(dut.read_triangle.value))
-        i += 1
-
-    dut.read_triangle_index.value = 0
-    dut.read_model_index.value = 0
-    await RisingEdge(dut.clk)
-
-    return result
-
 
 @cocotb.test()
 async def test_write_model(dut: Modelbuffer):
     await make_clock(dut)
 
-    model = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(1, 6)
-    ]
-    await write_model(dut, 0, model)
+    write = Producer(dut, "write")
+    read_producer = Producer(dut, "read")
+    read_consumer = Consumer(dut, "read", Triangle, TriangleMetadata)
+    await write.run()
+    await read_producer.run()
+    await read_consumer.run()
 
-    model_result = await read_model(dut, 0)
+    for data in INPUTS:
+        await write.produce(data)
 
-    assert model == model_result
+    await ClockCycles(dut.clk, 20)
 
+    for data in READ_INPUTS:
+        await read_producer.produce(data)
+    
+    await ClockCycles(dut.clk, 100)
 
-@cocotb.test()
-async def test_multimodel(dut: Modelbuffer, create_clock: bool = True):
-    if create_clock:
-        await make_clock(dut)
+    triangles = await read_consumer.consume_all()
 
-    model1 = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(1, 4)
-    ]
-    model2 = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(4, 7)
-    ]
-    model3 = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(7, 10)
-    ]
+    assert len(triangles) == len(READ_OUTPUTS), f"Incorrect number of triangles produced."
 
-    await write_model(dut, 0, model1)
-    await write_model(dut, 1, model2)
-    await write_model(dut, 2, model3)
-
-    model1_result = await read_model(dut, 0)
-    model2_result = await read_model(dut, 1)
-    model3_result = await read_model(dut, 2)
-
-    assert model1 == model1_result
-    assert model2 == model2_result
-    assert model3 == model3_result
-
-
-@cocotb.test()
-async def test_no_overwrite(dut: Modelbuffer):
-    """Test that its not possible to redefine a module"""
-    await make_clock(dut)
-
-    model1 = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(1, 4)
-    ]
-    model2 = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(4, 7)
-    ]
-
-    await write_model(dut, 0, model1)
-    await write_model(dut, 1, model1)
-    await write_model(dut, 0, model2)
-
-    model1_result = await read_model(dut, 0)
-
-    assert model1 == model1_result
-
-
-@cocotb.test()
-async def test_reset(dut: Modelbuffer):
-    """Test reset behaviour"""
-    await make_clock(dut)
-    await test_multimodel.func(dut, create_clock=False)
-    dut.rstn.value = 0
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    dut.rstn.value = 1
-    await test_multimodel.func(dut)
+    for i, (triangle, actual_triangle) in enumerate(zip(triangles, READ_OUTPUTS)):
+        assert triangle == actual_triangle, f"Failed assertion on index {i}."

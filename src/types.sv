@@ -10,7 +10,6 @@ package types_pkg;
 
     typedef struct packed {
         logic last;
-        model_metadata_t model_metadata;
     } triangle_metadata_t;
 
     typedef struct packed {
@@ -106,4 +105,9 @@ package types_pkg;
     typedef struct packed {
         logic last;
     } scenebuf_meta_t;
+
+    typedef struct packed {
+        byte_t model_index;
+        short_t triangle_index;
+    } modelbuf_read_data_t;
 endpackage
