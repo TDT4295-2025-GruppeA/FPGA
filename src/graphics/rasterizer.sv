@@ -16,7 +16,8 @@ module Rasterizer #(
 
     input logic pixel_data_m_ready,
     output logic pixel_data_m_valid,
-    output pixel_data_t pixel_data_m_data
+    output pixel_data_t pixel_data_m_data,
+    output pixel_data_metadata_t pixel_data_m_metadata
 );
     typedef enum logic {
         IDLE,
@@ -25,47 +26,68 @@ module Rasterizer #(
 
     rasterizer_state state = IDLE;
 
-    // Which pixel we are currently sampling.
-    pixel_coordinate_t pixel_coordinate;
+    attributed_triangle_t attributed_triangle;
+    logic attributed_triangle_valid;
 
-    // Sample point is valid as long as we are in RUNNING state.
-    logic pixel_coordinate_valid;
-    assign pixel_coordinate_valid = state == RUNNING;
+    // We consider the rasterizer ready when it is IDLE and
+    // the interpolator is ready for a new triangle.
+    logic rasterizer_ready, interpolator_ready;
+    assign rasterizer_ready = (state == IDLE) && interpolator_ready;
 
-    // If the sampler is ready to receive a new sample point.
-    logic pixel_coordinate_ready;
-
-    // We are ready to accept a new triangle when we are IDLE
-    // and the sampler is ready to accept a new triangle.
-    logic sampler_triangle_ready, sampler_triangle_valid;
-    assign triangle_s_ready = (state == IDLE) && sampler_triangle_ready;
-    assign sampler_triangle_valid = triangle_s_valid && (state == IDLE);
-
-    TriangleSampler #(
-        .VIEWPORT_WIDTH(VIEWPORT_WIDTH),
-        .VIEWPORT_HEIGHT(VIEWPORT_HEIGHT)
-    ) sampler (
+    TrianglePreprocessor preprocessor (
         .clk(clk),
         .rstn(rstn),
 
-        .triangle_s_ready(sampler_triangle_ready),
-        .triangle_s_valid(sampler_triangle_valid),
+        .triangle_s_ready(triangle_s_ready),
+        .triangle_s_valid(triangle_s_valid),
         .triangle_s_data(triangle_s_data),
 
-        .pixel_coordinate_s_ready(pixel_coordinate_ready),
-        .pixel_coordinate_s_valid(pixel_coordinate_valid),
-        .pixel_coordinate_s_data(pixel_coordinate),
-
-        .pixel_data_m_ready(pixel_data_m_ready),
-        .pixel_data_m_valid(pixel_data_m_valid),
-        .pixel_data_m_data(pixel_data_m_data)
+        .attributed_triangle_m_ready(rasterizer_ready),
+        .attributed_triangle_m_valid(attributed_triangle_valid),
+        .attributed_triangle_m_data(attributed_triangle)
     );
+
+    // Which pixel we are currently sampling.
+    pixel_coordinate_t pixel_coordinate;
 
     // Flags to indicate if we are on the last pixel
     // of the row or the last row of the viewport.
     logic last_x, last_y;
     assign last_x = (pixel_coordinate.x == 10'(VIEWPORT_WIDTH - 1));
     assign last_y = (pixel_coordinate.y == 10'(VIEWPORT_HEIGHT - 1));
+
+    pixel_coordinate_metadata_t pixel_coordinate_metadata;
+    assign pixel_coordinate_metadata.last = last_x && last_y;
+
+    // Sample point is valid as long as we are in RUNNING state.
+    logic pixel_coordinate_valid;
+    assign pixel_coordinate_valid = state == RUNNING;
+
+    // If the interpolator is ready to receive a new sample point.
+    logic pixel_coordinate_ready;
+
+    TriangleInterpolator #(
+        .VIEWPORT_WIDTH(VIEWPORT_WIDTH),
+        .VIEWPORT_HEIGHT(VIEWPORT_HEIGHT)
+    ) interpolator (
+        .clk(clk),
+        .rstn(rstn),
+
+        // We consider the interpolator is ready when it can receive new triangle.
+        .attributed_triangle_s_ready(interpolator_ready),
+        .attributed_triangle_s_valid(attributed_triangle_valid),
+        .attributed_triangle_s_data(attributed_triangle),
+
+        .pixel_coordinate_s_ready(pixel_coordinate_ready),
+        .pixel_coordinate_s_valid(pixel_coordinate_valid),
+        .pixel_coordinate_s_data(pixel_coordinate),
+        .pixel_coordinate_s_metadata(pixel_coordinate_metadata),
+
+        .pixel_data_m_ready(pixel_data_m_ready),
+        .pixel_data_m_valid(pixel_data_m_valid),
+        .pixel_data_m_data(pixel_data_m_data),
+        .pixel_data_m_metadata(pixel_data_m_metadata)
+    );
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
@@ -76,7 +98,7 @@ module Rasterizer #(
             case (state)
                 IDLE: begin
                     // Check if a new triangle has been accepted.
-                    if (sampler_triangle_ready && sampler_triangle_valid) begin
+                    if (interpolator_ready && attributed_triangle_valid) begin
                         // Start rasterizing if so.
                         state <= RUNNING;
                     end

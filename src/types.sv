@@ -53,9 +53,22 @@ package types_pkg;
     } pixel_coordinate_t;
 
     typedef struct packed {
-        logic valid;
+        logic last;
+    } pixel_coordinate_metadata_t;
+
+    typedef struct packed {
+        logic covered;
         fixed depth;
         color_t color;
         pixel_coordinate_t coordinate;
     } pixel_data_t;
+
+    typedef struct packed {
+        logic last;
+    } pixel_data_metadata_t;
+
+    typedef struct packed {
+        triangle_t triangle;
+        fixed area_inv; // Actually 1 / (2 * area)
+    } attributed_triangle_t;
 endpackage

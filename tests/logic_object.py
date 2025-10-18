@@ -1,7 +1,10 @@
-from dataclasses import dataclass, Field, field
-from typing import dataclass_transform, Literal
+from dataclasses import dataclass, Field, field, fields
+from typing import Any, dataclass_transform, Literal
 
 from cocotb.types import LogicArray, Range
+from numpy import isin
+
+from utils import quantize, to_fixed, to_float
 
 
 class _LogicType:
@@ -17,6 +20,11 @@ class Int(_LogicType):
 class UInt(_LogicType):
     def __init__(self, size: int):
         super().__init__(size)
+
+
+class Fixed(_LogicType):
+    def __init__(self):
+        super().__init__(32)
 
 
 class Bytes(_LogicType):
@@ -66,6 +74,8 @@ class LogicObject(metaclass=_Meta):
                 values[key] = sliced.to_signed()
             elif issubclass(field_type, UInt):
                 values[key] = sliced.to_unsigned()
+            elif issubclass(field_type, Fixed):
+                values[key] = to_float(sliced.to_signed())
             elif issubclass(field_type, Bytes):
                 values[key] = sliced.to_bytes(byteorder="big")  # TODO: expose byteorder
             elif issubclass(field_type, LogicObject):
@@ -84,6 +94,9 @@ class LogicObject(metaclass=_Meta):
 
             if isinstance(value, LogicObject):
                 value = value.to_logicarray()
+            elif isinstance(value, float):
+                value = to_fixed(value)
+
             arr = LogicArray(value, Range(size - 1, 0))
             arrays.append(arr)
 
@@ -139,6 +152,22 @@ class LogicObject(metaclass=_Meta):
             total_size += field_size
 
         return total_size
+
+    def __post_init__(self):
+        for field in fields(self):
+            value = getattr(self, field.name)
+            logic_type = field.metadata.get("type")
+
+            print("ASDF", logic_type, value)
+
+            # Quantize float to fixed point representation.
+            if isinstance(logic_type, Fixed):
+                if not isinstance(value, (int, float)):
+                    raise TypeError(
+                        f"Field '{field.name}' must be of type 'int' or 'float', got '{type(value)}'"
+                    )
+
+                setattr(self, field.name, quantize(value))
 
 
 class LogicField(Field):

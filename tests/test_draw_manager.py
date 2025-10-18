@@ -1,17 +1,17 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge
-from stubs.drawingmanager import DrawingManager
+from stubs.drawingmanager import Drawingmanager
 
 
 VERILOG_MODULE = "DrawingManager"
 
 
 @cocotb.test()
-async def test_drawing_manager_states(dut: DrawingManager):
+async def test_drawing_manager_states(dut: Drawingmanager):
     """Step through each DrawingManager state transition"""
 
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.rstn.value = 0
     dut.draw_start.value = 0

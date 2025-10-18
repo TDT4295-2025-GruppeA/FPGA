@@ -1,3 +1,6 @@
+import types_pkg::*;
+import fixed_pkg::*;
+
 module DrawingManager #(
     parameter int BUFFER_WIDTH = 160,
     parameter int BUFFER_HEIGHT = 120,
@@ -93,6 +96,7 @@ module DrawingManager #(
 
     logic triangle_ready, triangle_valid, pixel_valid;
     pixel_data_t pixel;
+    pixel_data_metadata_t pixel_metadata;
 
     Rasterizer #(
         .VIEWPORT_WIDTH(BUFFER_WIDTH),
@@ -107,6 +111,7 @@ module DrawingManager #(
 
         .pixel_data_m_ready(1'b1), // We are alway ready.
         .pixel_data_m_valid(pixel_valid),
+        .pixel_data_m_metadata(pixel_metadata),
         .pixel_data_m_data(pixel)
     );
 
@@ -142,14 +147,14 @@ module DrawingManager #(
             RASTERIZING: begin
                 if (pixel_valid) begin
                     write_en = 1'b1;
-                    write_addr = pixel.coordinate.x + pixel.coordinate.y * BUFFER_WIDTH;
-                    write_data = pixel.valid ? {4'h0, 4'(ftoi(mul(itof(color), pixel.depth))), 4'h0} : {4'h8, 4'h8, 4'h8};
-                end
+                    write_addr = BUFFER_ADDR_WIDTH'(pixel.coordinate.x + pixel.coordinate.y * 10'(BUFFER_WIDTH));
+                    write_data = pixel.covered ? {4'h0, 4'(ftoi(mul(itof(32'(color)), pixel.depth))), 4'h0} : {4'h8, 4'h8, 4'h8};
 
-                // Check if rasterizer is done.
-                if (triangle_ready) begin
-                    // If so, go to next state.
-                    next_state = FRAME_DONE;
+                    // Check if rasterizer is done.
+                    if (pixel_metadata.last) begin
+                        // If so, go to next state.
+                        next_state = FRAME_DONE;
+                    end
                 end
             end
             FRAME_DONE: begin

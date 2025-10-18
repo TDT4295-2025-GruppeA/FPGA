@@ -1,6 +1,6 @@
 """Python-versions of types defined in src/types.sv"""
 
-from logic_object import LogicObject, Int, UInt, LogicField
+from logic_object import Fixed, LogicObject, Int, UInt, LogicField
 
 # static type checkers don't recognize that the field declarations here
 # are semantically equivalent to
@@ -20,9 +20,9 @@ class RGB(LogicObject):
 
 
 class Position(LogicObject):
-    x: int = LogicField(Int(32))  # type: ignore
-    y: int = LogicField(Int(32))  # type: ignore
-    z: int = LogicField(Int(32))  # type: ignore
+    x: float = LogicField(Fixed())  # type: ignore
+    y: float = LogicField(Fixed())  # type: ignore
+    z: float = LogicField(Fixed())  # type: ignore
 
 
 class Vertex(LogicObject):
@@ -37,15 +37,15 @@ class Triangle(LogicObject):
 
 
 class RotationMatrix(LogicObject):
-    rot_xx: int = LogicField(Int(32))  # type: ignore
-    rot_xy: int = LogicField(Int(32))  # type: ignore
-    rot_xz: int = LogicField(Int(32))  # type: ignore
-    rot_yx: int = LogicField(Int(32))  # type: ignore
-    rot_yy: int = LogicField(Int(32))  # type: ignore
-    rot_yz: int = LogicField(Int(32))  # type: ignore
-    rot_zx: int = LogicField(Int(32))  # type: ignore
-    rot_zy: int = LogicField(Int(32))  # type: ignore
-    rot_zz: int = LogicField(Int(32))  # type: ignore
+    rot_xx: float = LogicField(Fixed())  # type: ignore
+    rot_xy: float = LogicField(Fixed())  # type: ignore
+    rot_xz: float = LogicField(Fixed())  # type: ignore
+    rot_yx: float = LogicField(Fixed())  # type: ignore
+    rot_yy: float = LogicField(Fixed())  # type: ignore
+    rot_yz: float = LogicField(Fixed())  # type: ignore
+    rot_zx: float = LogicField(Fixed())  # type: ignore
+    rot_zy: float = LogicField(Fixed())  # type: ignore
+    rot_zz: float = LogicField(Fixed())  # type: ignore
 
 
 class Transform(LogicObject):
@@ -62,9 +62,13 @@ class PixelCoordinate(LogicObject):
     x: int = LogicField(UInt(10))  # type: ignore
     y: int = LogicField(UInt(10))  # type: ignore
 
-class PixelData(LogicObject):
-    valid: int = LogicField(UInt(1)) # type: ignore
-    color: RGB = LogicField(RGB) # type: ignore
-    depth: int = LogicField(Int(32)) # type: ignore
-    coordinate: PixelCoordinate = LogicField(PixelCoordinate) # type: ignore
 
+class PixelData(LogicObject):
+    covered: int = LogicField(UInt(1))  # type: ignore
+    depth: float = LogicField(Fixed())  # type: ignore
+    color: RGB = LogicField(RGB)  # type: ignore
+    coordinate: PixelCoordinate = LogicField(PixelCoordinate)  # type: ignore
+
+
+class PixelDataMetadata(LogicObject):
+    last: int = LogicField(UInt(1))  # type: ignore

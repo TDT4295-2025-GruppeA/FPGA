@@ -1,10 +1,8 @@
-from dataclasses import field
 from typing import Iterable
 
 import cocotb
 from cocotb.triggers import RisingEdge
 from cocotb.clock import Clock
-import cocotb.types
 
 from stubs.modelbuffer import Modelbuffer
 from types_ import Vertex, Triangle, RGB, Position
