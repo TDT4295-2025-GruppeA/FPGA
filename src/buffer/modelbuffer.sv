@@ -9,16 +9,16 @@ module ModelBuffer #(
 
     input logic write_in_valid,
     output logic write_in_ready,
-    input modelbuf_data_t write_in_data,
+    input modelbuf_write_t write_in_data,
 
     input logic read_in_valid,
     output logic read_in_ready,
-    input modelbuf_read_data_t read_in_data,
+    input modelbuf_read_t read_in_data,
 
     output logic read_out_valid,
     input logic read_out_ready,
     output triangle_t read_out_data,
-    output triangle_metadata_t read_out_metadata
+    output triangle_meta_t read_out_metadata
 );
 
     typedef enum logic [1:0] {

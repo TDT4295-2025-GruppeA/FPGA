@@ -3,48 +3,20 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, ClockCycles
 
 from cocotb.types import Range, LogicArray
-from logic_object import LogicField, UInt
 from types_ import (
-    LogicObject,
     Triangle,
     RGB,
     Transform,
     Position,
     Vertex,
     RotationMatrix,
+    Byte,
+    TriangleTransform,
+    TriangleTransformMeta,
 )
 from tools.pipeline import Producer, Consumer
 
 VERILOG_MODULE = "PipelineHead"
-
-
-class ModelBufData(LogicObject):
-    model_id: int = LogicField(UInt(8))  # type: ignore
-    triangle: Triangle = LogicField(Triangle)  # type: ignore
-
-
-class SceneBufData(LogicObject):
-    model_id: int = LogicField(UInt(8))  # type: ignore
-    transform: Transform = LogicField(Transform)  # type: ignore
-
-
-class SceneBufMetadata(LogicObject):
-    last: int = LogicField(UInt(1))  # type: ignore
-
-
-class Byte(LogicObject):
-    value: int = LogicField(UInt(8))  # type: ignore
-
-
-class PipelineEntry(LogicObject):
-    transform: Transform = LogicField(Transform)  # type: ignore
-    triangle: Triangle = LogicField(Triangle)  # type: ignore
-
-
-class PipelineEntryMeta(LogicObject):
-    model_last: int = LogicField(UInt(1))  # type: ignore
-    triangle_last: int = LogicField(UInt(1))  # type: ignore
-
 
 CMD_BEGIN_UPLOAD = 0xA0
 CMD_UPLOAD_TRIANGLE = 0xA1
@@ -91,37 +63,42 @@ def make_transform(i: int) -> Transform:
 
 OUTPUTS_CMD = []
 
+T1 = make_transform(1)
+T2 = make_transform(2)
+T3 = make_transform(3)
+T4 = make_transform(4)
+T5 = make_transform(5)
 OUTPUTS_PIPE = [
-    (PipelineEntry(make_transform(1), make_triangle(1)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(1), make_triangle(2)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(1), make_triangle(3)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(1), make_triangle(4)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(1), make_triangle(5)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(1), make_triangle(6)), PipelineEntryMeta(0, 1)),
-    (PipelineEntry(make_transform(2), make_triangle(1)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(2), make_triangle(2)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(2), make_triangle(3)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(2), make_triangle(4)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(2), make_triangle(5)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(2), make_triangle(6)), PipelineEntryMeta(0, 1)),
-    (PipelineEntry(make_transform(3), make_triangle(1)), PipelineEntryMeta(1, 0)),
-    (PipelineEntry(make_transform(3), make_triangle(2)), PipelineEntryMeta(1, 0)),
-    (PipelineEntry(make_transform(3), make_triangle(3)), PipelineEntryMeta(1, 0)),
-    (PipelineEntry(make_transform(3), make_triangle(4)), PipelineEntryMeta(1, 0)),
-    (PipelineEntry(make_transform(3), make_triangle(5)), PipelineEntryMeta(1, 0)),
-    (PipelineEntry(make_transform(3), make_triangle(6)), PipelineEntryMeta(1, 1)),
-    (PipelineEntry(make_transform(4), make_triangle(7)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(4), make_triangle(8)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(4), make_triangle(9)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(4), make_triangle(10)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(4), make_triangle(11)), PipelineEntryMeta(0, 0)),
-    (PipelineEntry(make_transform(4), make_triangle(12)), PipelineEntryMeta(0, 1)),
-    (PipelineEntry(make_transform(5), make_triangle(7)), PipelineEntryMeta(1, 0)),
-    (PipelineEntry(make_transform(5), make_triangle(8)), PipelineEntryMeta(1, 0)),
-    (PipelineEntry(make_transform(5), make_triangle(9)), PipelineEntryMeta(1, 0)),
-    (PipelineEntry(make_transform(5), make_triangle(10)), PipelineEntryMeta(1, 0)),
-    (PipelineEntry(make_transform(5), make_triangle(11)), PipelineEntryMeta(1, 0)),
-    (PipelineEntry(make_transform(5), make_triangle(12)), PipelineEntryMeta(1, 1)),
+    (TriangleTransform(T1, make_triangle(1)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T1, make_triangle(2)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T1, make_triangle(3)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T1, make_triangle(4)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T1, make_triangle(5)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T1, make_triangle(6)), TriangleTransformMeta(0, 1)),
+    (TriangleTransform(T2, make_triangle(1)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T2, make_triangle(2)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T2, make_triangle(3)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T2, make_triangle(4)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T2, make_triangle(5)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T2, make_triangle(6)), TriangleTransformMeta(0, 1)),
+    (TriangleTransform(T3, make_triangle(1)), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(T3, make_triangle(2)), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(T3, make_triangle(3)), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(T3, make_triangle(4)), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(T3, make_triangle(5)), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(T3, make_triangle(6)), TriangleTransformMeta(1, 1)),
+    (TriangleTransform(T4, make_triangle(7)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T4, make_triangle(8)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T4, make_triangle(9)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T4, make_triangle(10)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T4, make_triangle(11)), TriangleTransformMeta(0, 0)),
+    (TriangleTransform(T4, make_triangle(12)), TriangleTransformMeta(0, 1)),
+    (TriangleTransform(T5, make_triangle(7)), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(T5, make_triangle(8)), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(T5, make_triangle(9)), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(T5, make_triangle(10)), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(T5, make_triangle(11)), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(T5, make_triangle(12)), TriangleTransformMeta(1, 1)),
 ]
 
 
@@ -138,7 +115,7 @@ async def make_clock(dut):
 async def test_pipehead(dut):
     await make_clock(dut)
     producer = Producer(dut, "cmd")
-    consumer = Consumer(dut, "triangle_tf", PipelineEntry, PipelineEntryMeta)
+    consumer = Consumer(dut, "triangle_tf", TriangleTransform, TriangleTransformMeta)
 
     await producer.run()
     await consumer.run()

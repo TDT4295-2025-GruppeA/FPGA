@@ -3,10 +3,8 @@ from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb.clock import Clock
 from stubs.scenebuffer import Scenebuffer
 
-from types_ import Transform, ModelInstance, Position, RotationMatrix
+from types_ import Transform, ModelInstance, Position, RotationMatrix, ModelInstanceMeta
 from tools.pipeline import Producer, Consumer
-
-from logic_object import LogicObject, LogicField, UInt
 
 VERILOG_MODULE = "SceneBuffer"
 
@@ -16,14 +14,10 @@ VERILOG_PARAMETERS = {
 }
 
 
-class SceneBufMetadata(LogicObject):
-    last: int = LogicField(UInt(1))  # type: ignore
-
-
 def make_scene(
     size: int, offset: int = 0
-) -> list[tuple[ModelInstance, SceneBufMetadata]]:
-    scene: list[tuple[ModelInstance, SceneBufMetadata]] = []
+) -> list[tuple[ModelInstance, ModelInstanceMeta]]:
+    scene: list[tuple[ModelInstance, ModelInstanceMeta]] = []
     for i in range(1, size + 1):
         x = float(i + offset)
 
@@ -33,9 +27,9 @@ def make_scene(
 
         instance = ModelInstance(1, transform)
         if i == size:
-            meta = SceneBufMetadata(1)
+            meta = ModelInstanceMeta(1)
         else:
-            meta = SceneBufMetadata(0)
+            meta = ModelInstanceMeta(0)
         scene.append((instance, meta))
     return scene
 
@@ -68,7 +62,7 @@ async def make_clock(dut: Scenebuffer):
 async def test_scenebuffer(dut):
     await make_clock(dut)
     producer = Producer(dut, "write", True)
-    consumer = Consumer(dut, "read", ModelInstance, SceneBufMetadata)
+    consumer = Consumer(dut, "read", ModelInstance, ModelInstanceMeta)
 
     await producer.run()
     for item in INPUTS:

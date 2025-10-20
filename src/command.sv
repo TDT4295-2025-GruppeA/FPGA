@@ -17,13 +17,13 @@ module CommandInput(
     // ModelBuffer comms
     output logic            model_out_valid,
     input  logic            model_out_ready,
-    output modelbuf_data_t  model_out_data,
+    output modelbuf_write_t  model_out_data,
 
     // SceneBuffer comms
     output logic            scene_out_valid,
     input  logic            scene_out_ready,
     output modelinstance_t  scene_out_data,
-    output scenebuf_meta_t  scene_out_metadata
+    output modelinstance_meta_t  scene_out_metadata
 );
     // The states we can be in
     typedef enum logic [1:0] {

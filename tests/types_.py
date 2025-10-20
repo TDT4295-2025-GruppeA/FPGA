@@ -13,8 +13,12 @@ from logic_object import Fixed, LogicObject, UInt, LogicField
 # type-ignored.
 
 
-class Bit(LogicObject):
-    bit: int = LogicField(UInt(1))  # type: ignore
+class Byte(LogicObject):
+    byte: int = LogicField(UInt(8))  # type: ignore
+
+
+class Short(LogicObject):
+    short: int = LogicField(UInt(16))  # type: ignore
 
 
 class RGB(LogicObject):
@@ -71,6 +75,7 @@ class ModelInstance(LogicObject):
     transform: Transform = LogicField(Transform)  # type: ignore
 
 
+<<<<<<< HEAD
 class PixelCoordinate(LogicObject):
     x: int = LogicField(UInt(10))  # type: ignore
     y: int = LogicField(UInt(10))  # type: ignore
@@ -85,3 +90,32 @@ class PixelData(LogicObject):
 
 class PixelDataMetadata(LogicObject):
     last: int = LogicField(UInt(1))  # type: ignore
+=======
+# Types in pipeline head
+class ModelBufferWrite(LogicObject):
+    model_id: int = LogicField(UInt(8))  # type: ignore
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+
+
+class ModelBufferRead(LogicObject):
+    model_index: int = LogicField(UInt(8))  # type: ignore
+    triangle_index: int = LogicField(UInt(16))  # type: ignore
+
+
+class TriangleMeta(LogicObject):
+    last: int = LogicField(UInt(1))  # type: ignore
+
+
+class ModelInstanceMeta(LogicObject):
+    last: int = LogicField(UInt(1))  # type: ignore
+
+
+class TriangleTransform(LogicObject):
+    transform: Transform = LogicField(Transform)  # type: ignore
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+
+
+class TriangleTransformMeta(LogicObject):
+    model_last: int = LogicField(UInt(1))  # type: ignore
+    triangle_last: int = LogicField(UInt(1))  # type: ignore
+>>>>>>> 254c21e (refactor: rename structs for consistency)

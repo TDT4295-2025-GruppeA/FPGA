@@ -1,17 +1,14 @@
 package types_pkg;
+<<<<<<< HEAD
     import fixed_pkg::*;
 
+=======
+    // Generic types
+>>>>>>> 254c21e (refactor: rename structs for consistency)
     typedef logic[7:0] byte_t;
     typedef logic[15:0] short_t;
 
-    typedef struct packed {
-        logic last;
-    } model_metadata_t;
-
-    typedef struct packed {
-        logic last;
-    } triangle_metadata_t;
-
+    // Core types
     typedef struct packed {
         logic [4:0] red;
         logic [5:0] green;
@@ -93,31 +90,33 @@ package types_pkg;
     } attributed_triangle_t;
 
     typedef struct packed {
-        triangle_t triangle;
-        transform_t transform;
-    } triangle_tf_t;
-
-    typedef struct packed {
         byte_t model_id;
         triangle_t triangle;
-    } modelbuf_data_t;
-
-    typedef struct packed {
-        logic last;
-    } scenebuf_meta_t;
+    } modelbuf_write_t; // Write-interface ModelBuffer
 
     typedef struct packed {
         byte_t model_index;
         short_t triangle_index;
-    } modelbuf_read_data_t;
+    } modelbuf_read_t; // Read-interface ModelBuffer
 
+    typedef struct packed {
+        logic last;
+    } triangle_meta_t; // Metadata for a triangle
+
+    typedef struct packed {
+        logic last;
+    } modelinstance_meta_t; // Metadata for a modelinstance
+
+    // Interface from PipelineHead to rest of pipeline
     typedef struct packed {
         transform_t transform;
         triangle_t triangle;
-    } triangle_tf_t;
+    } triangle_tf_t; // Triangle transform pair fed into pipeline
 
     typedef struct packed {
         logic model_last;
         logic triangle_last;
-    } triangle_tf_meta_t;
+    } triangle_tf_meta_t; // Metadata for a triangle transform pair
+
+    // Main pipeline
 endpackage
