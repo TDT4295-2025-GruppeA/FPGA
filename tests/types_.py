@@ -65,17 +65,11 @@ class Transform(LogicObject):
     rotation: RotationMatrix = LogicField(RotationMatrix)  # type: ignore
 
 
-class TriangleTransform(LogicObject):
-    triangle: Triangle = LogicField(Triangle)  # type: ignore
-    transform: Transform = LogicField(Transform)  # type: ignore
-
-
 class ModelInstance(LogicObject):
     model_id: int = LogicField(UInt(8))  # type: ignore
     transform: Transform = LogicField(Transform)  # type: ignore
 
 
-<<<<<<< HEAD
 class PixelCoordinate(LogicObject):
     x: int = LogicField(UInt(10))  # type: ignore
     y: int = LogicField(UInt(10))  # type: ignore
@@ -90,7 +84,7 @@ class PixelData(LogicObject):
 
 class PixelDataMetadata(LogicObject):
     last: int = LogicField(UInt(1))  # type: ignore
-=======
+
 # Types in pipeline head
 class ModelBufferWrite(LogicObject):
     model_id: int = LogicField(UInt(8))  # type: ignore
@@ -118,4 +112,3 @@ class TriangleTransform(LogicObject):
 class TriangleTransformMeta(LogicObject):
     model_last: int = LogicField(UInt(1))  # type: ignore
     triangle_last: int = LogicField(UInt(1))  # type: ignore
->>>>>>> 254c21e (refactor: rename structs for consistency)

@@ -1,10 +1,10 @@
 import cocotb
-from cocotb.triggers import RisingEdge, ClockCycles
-from cocotb.clock import Clock
-from stubs.scenebuffer import Scenebuffer
+from cocotb.triggers import ClockCycles
 
-from types_ import Transform, ModelInstance, Position, RotationMatrix, ModelInstanceMeta
+from stubs.scenebuffer import Scenebuffer
+from types_ import ModelInstance, ModelInstanceMeta
 from tools.pipeline import Producer, Consumer
+from utilities.constructors import make_clock, make_scene
 
 VERILOG_MODULE = "SceneBuffer"
 
@@ -12,27 +12,6 @@ VERILOG_PARAMETERS = {
     "SCENE_COUNT": 2,
     "TRANSFORM_COUNT": 10,
 }
-
-
-def make_scene(
-    size: int, offset: int = 0
-) -> list[tuple[ModelInstance, ModelInstanceMeta]]:
-    scene: list[tuple[ModelInstance, ModelInstanceMeta]] = []
-    for i in range(1, size + 1):
-        x = float(i + offset)
-
-        position = Position(x, x, x)
-        rotation = RotationMatrix(*([x] * 9))
-        transform = Transform(position=position, rotation=rotation)
-
-        instance = ModelInstance(1, transform)
-        if i == size:
-            meta = ModelInstanceMeta(1)
-        else:
-            meta = ModelInstanceMeta(0)
-        scene.append((instance, meta))
-    return scene
-
 
 INPUTS = [
     *make_scene(4, 0),
@@ -49,17 +28,8 @@ OUTPUTS = [
 ]
 
 
-async def make_clock(dut: Scenebuffer):
-    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
-    dut.rstn.value = 0
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    dut.rstn.value = 1
-    await RisingEdge(dut.clk)
-
-
 @cocotb.test()
-async def test_scenebuffer(dut):
+async def test_scenebuffer(dut: Scenebuffer):
     await make_clock(dut)
     producer = Producer(dut, "write", True)
     consumer = Consumer(dut, "read", ModelInstance, ModelInstanceMeta)

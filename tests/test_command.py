@@ -1,21 +1,15 @@
 import cocotb
-from tools.pipeline import Producer, Consumer
+from cocotb.triggers import ClockCycles
 
-from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ClockCycles
+from tools.pipeline import Producer, Consumer
 from types_ import (
-    Triangle,
-    Transform,
-    Vertex,
-    Position,
-    RGB,
-    RotationMatrix,
     ModelBufferWrite,
     ModelInstance,
     ModelInstanceMeta,
     Byte,
 )
-from cocotb.types import Range, LogicArray
+from utilities.constructors import make_transform, make_triangle, make_clock
+from stubs.commandinput import Commandinput
 
 
 VERILOG_MODULE = "CommandInput"
@@ -50,20 +44,6 @@ INPUTS = [
 # fmt: on
 
 
-def make_triangle(i: int) -> Triangle:
-    pos = (i << 24) | (i << 16) | (i << 8) | i
-    color = (i << 8) | i
-    rgb = RGB.from_logicarray(LogicArray(color, Range(15, "downto", 0)))
-    vertex = Vertex(Position(pos, pos, pos), rgb)
-    return Triangle(vertex, vertex, vertex)
-
-
-def make_transform(i: int) -> Transform:
-    pos = (i << 24) | (i << 16) | (i << 8) | i
-
-    return Transform(Position(pos, pos, pos), RotationMatrix(*([pos] * 9)))
-
-
 OUTPUTS_MODEL = [
     (ModelBufferWrite(0, make_triangle(1)), None),
     (ModelBufferWrite(0, make_triangle(2)), None),
@@ -88,17 +68,8 @@ OUTPUTS_SCENE = [
 ]
 
 
-async def make_clock(dut):
-    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
-    dut.rstn.value = 0
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    dut.rstn.value = 1
-    await RisingEdge(dut.clk)
-
-
 @cocotb.test()
-async def test_command(dut):
+async def test_command(dut: Commandinput):
     await make_clock(dut)
     cmd_in = Producer(dut, "cmd")
     cmd_out = Consumer(dut, "cmd", Byte)
