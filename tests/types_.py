@@ -31,23 +31,23 @@ class Vertex(LogicObject):
 
 
 class Triangle(LogicObject):
-    a: Vertex = LogicField(Vertex)  # type: ignore
-    b: Vertex = LogicField(Vertex)  # type: ignore
-    c: Vertex = LogicField(Vertex)  # type: ignore
+    v0: Vertex = LogicField(Vertex)  # type: ignore
+    v1: Vertex = LogicField(Vertex)  # type: ignore
+    v2: Vertex = LogicField(Vertex)  # type: ignore
 
 class TriangleMetadata(LogicObject):
     last: int = LogicField(UInt(1)) # type: ignore
 
 class RotationMatrix(LogicObject):
-    rot_xx: float = LogicField(Fixed())  # type: ignore
-    rot_xy: float = LogicField(Fixed())  # type: ignore
-    rot_xz: float = LogicField(Fixed())  # type: ignore
-    rot_yx: float = LogicField(Fixed())  # type: ignore
-    rot_yy: float = LogicField(Fixed())  # type: ignore
-    rot_yz: float = LogicField(Fixed())  # type: ignore
-    rot_zx: float = LogicField(Fixed())  # type: ignore
-    rot_zy: float = LogicField(Fixed())  # type: ignore
-    rot_zz: float = LogicField(Fixed())  # type: ignore
+    m00: float = LogicField(Fixed())  # type: ignore
+    m01: float = LogicField(Fixed())  # type: ignore
+    m02: float = LogicField(Fixed())  # type: ignore
+    m10: float = LogicField(Fixed())  # type: ignore
+    m11: float = LogicField(Fixed())  # type: ignore
+    m12: float = LogicField(Fixed())  # type: ignore
+    m20: float = LogicField(Fixed())  # type: ignore
+    m21: float = LogicField(Fixed())  # type: ignore
+    m22: float = LogicField(Fixed())  # type: ignore
 
 
 class Transform(LogicObject):

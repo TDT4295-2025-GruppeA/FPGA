@@ -19,9 +19,9 @@ package types_pkg;
     } vertex_t;
 
     typedef struct packed {
-        vertex_t a;
-        vertex_t b;
-        vertex_t c;
+        vertex_t v0;
+        vertex_t v1;
+        vertex_t v2;
     } triangle_t;
 
     typedef struct packed {
@@ -29,15 +29,15 @@ package types_pkg;
     } triangle_metadata_t;
 
     typedef struct packed {
-        fixed xx;
-        fixed xy;
-        fixed xz;
-        fixed yx;
-        fixed yy;
-        fixed yz;
-        fixed zx;
-        fixed zy;
-        fixed zz;
+        fixed m00;
+        fixed m01;
+        fixed m02;
+        fixed m10;
+        fixed m11;
+        fixed m12;
+        fixed m20;
+        fixed m21;
+        fixed m22;
     } rotmat_t;
 
     typedef struct packed {
@@ -71,4 +71,10 @@ package types_pkg;
         triangle_t triangle;
         fixed area_inv; // Actually 1 / (2 * area)
     } attributed_triangle_t;
+    
+    typedef struct packed {
+        triangle_t triangle;
+        transform_t transform;
+    } triangle_tf_t;
+
 endpackage

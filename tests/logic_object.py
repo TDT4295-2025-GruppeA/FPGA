@@ -1,10 +1,8 @@
 from dataclasses import dataclass, Field, field, fields
-from typing import Any, dataclass_transform, Literal
-
-from cocotb.types import LogicArray, Range
-from numpy import isin
+from typing import dataclass_transform, Literal
 
 from utils import quantize, to_fixed, to_float
+from cocotb.types import LogicArray, Logic, Range
 
 
 class _LogicType:
@@ -61,6 +59,8 @@ class _Meta(type):
 class LogicObject(metaclass=_Meta):
     @classmethod
     def from_logicarray(cls, logic_array: LogicArray):
+        if isinstance(logic_array, Logic):
+            logic_array = LogicArray(int(logic_array), Range(0, 0))
         values = {}
         index = 0
         for key in reversed(cls.__dataclass_fields__.keys()):
@@ -92,12 +92,29 @@ class LogicObject(metaclass=_Meta):
             value = getattr(self, key)
             size = self._get_field_size(key)
 
-            if isinstance(value, LogicObject):
-                value = value.to_logicarray()
+            field_type = self._get_field_type(key)
+            arr_range = Range(size - 1, "downto", 0)
+
+            if issubclass(field_type, Int):
+                arr = LogicArray.from_signed(value, arr_range)
+            elif issubclass(field_type, UInt):
+                arr = LogicArray.from_unsigned(value, arr_range)
+            elif issubclass(field_type, Bytes):
+                raise NotImplemented
             elif isinstance(value, float):
                 value = to_fixed(value)
+                arr = LogicArray(value, arr_range)
+            elif issubclass(field_type, LogicObject):
+                if isinstance(value, LogicObject):
+                    value = value.to_logicarray()
+                    arr = LogicArray(value, arr_range)
+                else:
+                    raise TypeError(
+                        f"value is '{type(value)}', not LogicObject when field type is LogicObject."
+                    )
+            else:
+                raise ValueError(f"Invalid field type '{field_type}'")
 
-            arr = LogicArray(value, Range(size - 1, 0))
             arrays.append(arr)
 
         if len(arrays) == 0:

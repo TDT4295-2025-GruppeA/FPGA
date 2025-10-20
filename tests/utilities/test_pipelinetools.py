@@ -34,7 +34,7 @@ async def make_clock(dut):
     await RisingEdge(dut.clk)
 
 
-@cocotb.test()
+@cocotb.test(timeout_time=10 * 1000, timeout_unit="ns")
 async def test_producer_consumer(dut: Pipelinetoolstester):
     await make_clock(dut)
     producer = Producer(dut, "stage", True)
