@@ -114,10 +114,10 @@ package types_pkg;
     typedef struct packed {
         transform_t transform;
         triangle_t triangle;
-    } pipe_entry_t;
+    } triangle_tf_t;
 
     typedef struct packed {
         logic model_last;
         logic triangle_last;
-    } pipe_entry_meta_t;
+    } triangle_tf_meta_t;
 endpackage

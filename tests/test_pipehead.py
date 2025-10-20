@@ -138,7 +138,7 @@ async def make_clock(dut):
 async def test_pipehead(dut):
     await make_clock(dut)
     producer = Producer(dut, "cmd")
-    consumer = Consumer(dut, "pipe", PipelineEntry, PipelineEntryMeta)
+    consumer = Consumer(dut, "triangle_tf", PipelineEntry, PipelineEntryMeta)
 
     await producer.run()
     await consumer.run()

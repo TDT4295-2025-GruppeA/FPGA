@@ -15,10 +15,10 @@ module PipelineHead(
     output byte_t cmd_out_data,
 
     // To graphics pipeline
-    output logic                pipe_out_valid,
-    input  logic                pipe_out_ready,
-    output pipe_entry_t         pipe_out_data,
-    output pipe_entry_meta_t    pipe_out_metadata
+    output logic                triangle_tf_out_valid,
+    input  logic                triangle_tf_out_ready,
+    output triangle_tf_t        triangle_tf_out_data,
+    output triangle_tf_meta_t   triangle_tf_out_metadata
 );
     localparam MAX_MODEL_COUNT = 10;
     localparam MAX_TRIANGLE_COUNT = 100;
@@ -128,9 +128,9 @@ module PipelineHead(
         .model_in_data(model_read_data),
         .model_in_metadata(model_read_metadata),
 
-        .pipe_out_valid(pipe_out_valid),
-        .pipe_out_ready(pipe_out_ready),
-        .pipe_out_data(pipe_out_data),
-        .pipe_out_metadata(pipe_out_metadata)
+        .triangle_tf_out_valid(triangle_tf_out_valid),
+        .triangle_tf_out_ready(triangle_tf_out_ready),
+        .triangle_tf_out_data(triangle_tf_out_data),
+        .triangle_tf_out_metadata(triangle_tf_out_metadata)
     );
 endmodule

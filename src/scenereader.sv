@@ -23,10 +23,10 @@ module SceneReader #(
     input triangle_t model_in_data,
     input triangle_metadata_t model_in_metadata,
 
-    output logic pipe_out_valid,
-    input logic pipe_out_ready,
-    output pipe_entry_t pipe_out_data,
-    output pipe_entry_meta_t pipe_out_metadata
+    output logic triangle_tf_out_valid,
+    input logic triangle_tf_out_ready,
+    output triangle_tf_t triangle_tf_out_data,
+    output triangle_tf_meta_t triangle_tf_out_metadata
 );
 
     typedef enum logic [1:0] {
@@ -42,12 +42,12 @@ module SceneReader #(
     assign model_out_data.model_index = current_model.model_id;
     assign model_out_data.triangle_index = triangle_index;
 
-    assign pipe_out_data.transform = current_model.transform;
-    assign pipe_out_data.triangle = model_in_data;
-    assign pipe_out_metadata.triangle_last = model_in_metadata.last;
-    assign pipe_out_metadata.model_last = current_model_metadata;
-    assign pipe_out_valid = model_in_valid;
-    assign model_in_ready = pipe_out_ready;
+    assign triangle_tf_out_data.transform = current_model.transform;
+    assign triangle_tf_out_data.triangle = model_in_data;
+    assign triangle_tf_out_metadata.triangle_last = model_in_metadata.last;
+    assign triangle_tf_out_metadata.model_last = current_model_metadata;
+    assign triangle_tf_out_valid = model_in_valid;
+    assign model_in_ready = triangle_tf_out_ready;
 
 
     always_ff @(posedge clk or negedge rstn) begin
