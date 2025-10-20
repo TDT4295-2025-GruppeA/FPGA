@@ -12,7 +12,7 @@ async def test_single_bit_sync(dut):
     dut.rst_dst_n.value = 0  # Assert reset
     dut.data_in_src.value = 0
 
-    cocotb.start_soon(Clock(dut.clk_dst, 13, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk_dst, 13, "ns").start())
 
     # Wait for a few clock cycles with reset asserted
     await ClockCycles(dut.clk_dst, 5)
@@ -28,7 +28,7 @@ async def test_single_bit_sync(dut):
 
     await RisingEdge(dut.clk_dst)
 
-    await Timer(1, units="ns")  # Small delay to ensure value is stable
+    await Timer(1, "ns")  # Small delay to ensure value is stable
 
     assert (
         int(dut.data_out_dst.value) == 1
@@ -41,7 +41,7 @@ async def test_single_bit_sync(dut):
 
     await RisingEdge(dut.clk_dst)
 
-    await Timer(1, units="ns")  # Small delay to ensure value is stable
+    await Timer(1, "ns")  # Small delay to ensure value is stable
 
     assert (
         int(dut.data_out_dst.value) == 0

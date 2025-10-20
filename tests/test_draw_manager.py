@@ -56,7 +56,7 @@ async def test_drawing_manager_states(dut: Drawingmanager):
 
     assert dut.frame_done.value == 0
     assert dut.bg_draw_start.value == 1
-    cocotb.log.info(" FSM returned to BACKGROUND successfully")
+    cocotb.log.info("FSM returned to BACKGROUND successfully")
 
     # For waveform visualization
     for i in range(100):
