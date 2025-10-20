@@ -64,7 +64,7 @@ async def feed_triangles(clock: Clock, dut: Rasterizer):
         await clock.cycles(1)
         dut.triangle_s_valid.value = 0
 
-@cocotb.test(timeout_time=1000, timeout_unit="us")
+@cocotb.test(timeout_time=100, timeout_unit="us")
 async def test_rasterizer(dut: Rasterizer):
     # Setup clock which will be used to drive the simulation
     clock = Clock(dut.clk, CLOCK_PERIOD, unit="ns")
