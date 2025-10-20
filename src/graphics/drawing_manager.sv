@@ -36,15 +36,19 @@ module DrawingManager #(
 
     pipeline_state_t state, next_state;
     triangle_index_t triangle_index, triangle_index_next;
+    logic framerate_indicator;
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             state <= IDLE;
             triangle_index <= '0;
+            framerate_indicator <= 1'b0;
         end else begin
             state <= next_state;
             triangle_index <= triangle_index_next;
-            if (state == FRAME_DONE) 
+            if (state == FRAME_DONE) begin
                 color <= sw;
+                framerate_indicator <= ~framerate_indicator;
+            end
         end
     end
 
@@ -75,7 +79,7 @@ module DrawingManager #(
     );
 
     triangle_t triangles[TRIANGLE_COUNT];
-    assign triangles[1] = '{
+    assign triangles[0] = '{
         a: '{
             position: '{
                 x: rtof( 0.2),
@@ -99,6 +103,32 @@ module DrawingManager #(
                 z: rtof( 1.0)
             },
             color: 'h00F
+        }
+    };
+    assign triangles[1] = '{
+        a: '{
+            position: '{
+                x: rtof( 0.5),
+                y: rtof( 0.5),
+                z: rtof( 1.0)
+            },
+            color: 'h00F
+        },
+        b: '{
+            position: '{
+                x: rtof( 0.6),
+                y: rtof( 0.9),
+                z: rtof( 0.0)
+            },
+            color: 'h0F0
+        },
+        c: '{
+            position: '{
+                x: rtof( 0.2),
+                y: rtof( 0.2),
+                z: rtof( 0.0)
+            },
+            color: 'hF00
         }
     };
     assign triangles[2] = '{
@@ -108,33 +138,7 @@ module DrawingManager #(
                 y: rtof( 0.5),
                 z: rtof( 1.0)
             },
-            color: 'hF00
-        },
-        b: '{
-            position: '{
-                x: rtof( 0.6),
-                y: rtof( 0.9),
-                z: rtof( 0.0)
-            },
-            color: 'h0F0
-        },
-        c: '{
-            position: '{
-                x: rtof( 0.2),
-                y: rtof( 0.2),
-                z: rtof( 0.0)
-            },
             color: 'h00F
-        }
-    };
-    assign triangles[0] = '{
-        a: '{
-            position: '{
-                x: rtof( 0.5),
-                y: rtof( 0.5),
-                z: rtof( 1.0)
-            },
-            color: 'hF00
         },
         b: '{
             position: '{
@@ -150,7 +154,7 @@ module DrawingManager #(
                 y: rtof( 0.9),
                 z: rtof( 0.0)
             },
-            color: 'h00F
+            color: 'hF00
         }
     };
 
@@ -223,7 +227,17 @@ module DrawingManager #(
                     // Write the received pixel to the buffer.
                     write_en = pixel.covered;
                     write_addr = BUFFER_ADDR_WIDTH'(pixel.coordinate.x + pixel.coordinate.y * 10'(BUFFER_WIDTH));
-                    write_data = {4'h0, 4'(ftoi(mul(itof(32'(color)), pixel.depth))), 4'h0};
+
+                    if (write_addr == 0) begin
+                        // Toggle first pixel to be able to see framerate.
+                        write_data = framerate_indicator ? 12'hFFF : 12'h000;
+                    end else if (sw[0]) begin
+                        // If switch zero is set display the depth map.
+                        write_data = {4'h0, 4'(ftoi(mul(itof(32'(color)), pixel.depth))), 4'h0};
+                    end else begin
+                        // Otherwise, write the actual pixel color.
+                        write_data = pixel.color;
+                    end
 
                     if (pixel_metadata.last) begin
                         // Move to the next state if the rasterizer is done.
