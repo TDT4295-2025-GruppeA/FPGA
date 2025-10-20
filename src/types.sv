@@ -110,4 +110,14 @@ package types_pkg;
         byte_t model_index;
         short_t triangle_index;
     } modelbuf_read_data_t;
+
+    typedef struct packed {
+        transform_t transform;
+        triangle_t triangle;
+    } pipe_entry_t;
+
+    typedef struct packed {
+        logic model_last;
+        logic triangle_last;
+    } pipe_entry_meta_t;
 endpackage
