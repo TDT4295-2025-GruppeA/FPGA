@@ -4,58 +4,77 @@ from cocotb.triggers import RisingEdge, ClockCycles
 
 from cocotb.types import Range, LogicArray
 from logic_object import LogicField, UInt
-from types_ import LogicObject, Triangle, RGB, Transform, Position, Vertex, RotationMatrix
+from types_ import (
+    LogicObject,
+    Triangle,
+    RGB,
+    Transform,
+    Position,
+    Vertex,
+    RotationMatrix,
+)
 from tools.pipeline import Producer, Consumer
 
 VERILOG_MODULE = "PipelineHead"
 
+
 class ModelBufData(LogicObject):
-    model_id: int = LogicField(UInt(8)) # type: ignore
-    triangle: Triangle = LogicField(Triangle) # type: ignore
+    model_id: int = LogicField(UInt(8))  # type: ignore
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+
 
 class SceneBufData(LogicObject):
-    model_id: int = LogicField(UInt(8)) # type: ignore
-    transform: Transform = LogicField(Transform) # type: ignore
+    model_id: int = LogicField(UInt(8))  # type: ignore
+    transform: Transform = LogicField(Transform)  # type: ignore
+
 
 class SceneBufMetadata(LogicObject):
-    last: int = LogicField(UInt(1)) # type: ignore
+    last: int = LogicField(UInt(1))  # type: ignore
+
 
 class Byte(LogicObject):
-    value: int = LogicField(UInt(8)) # type: ignore
+    value: int = LogicField(UInt(8))  # type: ignore
+
 
 class PipelineEntry(LogicObject):
-    transform: Transform = LogicField(Transform) # type: ignore
-    triangle: Triangle = LogicField(Triangle) # type: ignore
+    transform: Transform = LogicField(Transform)  # type: ignore
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+
 
 class PipelineEntryMeta(LogicObject):
-    model_last: int = LogicField(UInt(1)) # type: ignore
-    triangle_last: int = LogicField(UInt(1)) # type: ignore
+    model_last: int = LogicField(UInt(1))  # type: ignore
+    triangle_last: int = LogicField(UInt(1))  # type: ignore
+
 
 CMD_BEGIN_UPLOAD = 0xA0
 CMD_UPLOAD_TRIANGLE = 0xA1
 CMD_ADD_MODEL_INSTANCE = 0xB0
 
+# fmt: off
 INPUTS = [
-    CMD_BEGIN_UPLOAD, 0x00, # Start upload model 0
-    CMD_UPLOAD_TRIANGLE, *([1]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([2]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([3]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([4]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([5]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([6]*14*3), # Upload a triangle
-    CMD_BEGIN_UPLOAD, 0x01, # Start upload model 1
-    CMD_UPLOAD_TRIANGLE, *([7]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([8]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([9]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([10]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([11]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([12]*14*3), # Upload a triangle
-    CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([1]*48), # Add transform
-    CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([2]*48), # Add transform
-    CMD_ADD_MODEL_INSTANCE, 0x01, 0x00, *([3]*48), # Add transform, last in scene
-    CMD_ADD_MODEL_INSTANCE, 0x00, 0x01, *([4]*48), # Add transform
-    CMD_ADD_MODEL_INSTANCE, 0x01, 0x01, *([5]*48), # Add transform, last in scene
+    CMD_BEGIN_UPLOAD, 0x00,  # Start upload model 0
+    CMD_UPLOAD_TRIANGLE, *([1] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([2] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([3] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([4] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([5] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([6] * 14 * 3),  # Upload a triangle
+    CMD_BEGIN_UPLOAD, 0x01,  # Start upload model 1
+    CMD_UPLOAD_TRIANGLE, *([7] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([8] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([9] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([10] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([11] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([12] * 14 * 3),  # Upload a triangle
+    CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([1] * 48),  # Add transform
+    CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([2] * 48),  # Add transform
+    CMD_ADD_MODEL_INSTANCE, 0x01, 0x00, *([3] * 48),  # Add transform, last in scene
+    CMD_ADD_MODEL_INSTANCE, 0x00, 0x01, *([4] * 48),  # Add transform
+    CMD_ADD_MODEL_INSTANCE, 0x01, 0x01, *([5] * 48),  # Add transform, last in scene
 ]
+# fmt: on
+
+
 def make_triangle(i: int) -> Triangle:
     pos = (i << 24) | (i << 16) | (i << 8) | i
     color = (i << 8) | i
@@ -63,37 +82,13 @@ def make_triangle(i: int) -> Triangle:
     vertex = Vertex(Position(pos, pos, pos), rgb)
     return Triangle(vertex, vertex, vertex)
 
+
 def make_transform(i: int) -> Transform:
     pos = (i << 24) | (i << 16) | (i << 8) | i
 
-    return Transform(Position(pos, pos, pos), RotationMatrix(*([pos]*9)))
+    return Transform(Position(pos, pos, pos), RotationMatrix(*([pos] * 9)))
 
-# MODELS = {
-#     0: [
-#         make_triangle(1),
-#         make_triangle(2),
-#         make_triangle(3),
-#         make_triangle(4),
-#         make_triangle(5),
-#         make_triangle(6),
-#     ],
-#     1: [
-#         make_triangle(7),
-#         make_triangle(8),
-#         make_triangle(9),
-#         make_triangle(10),
-#         make_triangle(11),
-#         make_triangle(12),
-#     ]
-# }
 
-# OUTPUTS_SCENE = [
-#     (SceneBufData(0, make_transform(1)), SceneBufMetadata(0)),
-#     (SceneBufData(0, make_transform(2)), SceneBufMetadata(0)),
-#     (SceneBufData(0, make_transform(3)), SceneBufMetadata(1)),
-#     (SceneBufData(1, make_transform(4)), SceneBufMetadata(0)),
-#     (SceneBufData(1, make_transform(5)), SceneBufMetadata(1)),
-# ]
 OUTPUTS_CMD = []
 
 OUTPUTS_PIPE = [
@@ -155,7 +150,8 @@ async def test_pipehead(dut):
 
     outputs = await consumer.consume_all()
 
-    assert len(outputs) == len(OUTPUTS_PIPE), f"Incorrect number of elements: {len(outputs)} vs {len(OUTPUTS_PIPE)}"
+    assert len(outputs) == len(
+        OUTPUTS_PIPE
+    ), f"Incorrect number of elements: {len(outputs)} vs {len(OUTPUTS_PIPE)}"
     for output, actual_output in zip(outputs, OUTPUTS_PIPE):
         assert output == actual_output
-    
