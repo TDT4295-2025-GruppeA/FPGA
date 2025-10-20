@@ -80,7 +80,7 @@ module DrawingManager #(
 
     triangle_t triangles[TRIANGLE_COUNT];
     assign triangles[0] = '{
-        a: '{
+        v0: '{
             position: '{
                 x: rtof( 0.2),
                 y: rtof( 0.2),
@@ -88,7 +88,7 @@ module DrawingManager #(
             },
             color: 'hF00
         },
-        b: '{
+        v1: '{
             position: '{
                 x: rtof( 0.7),
                 y: rtof( 0.1),
@@ -96,33 +96,33 @@ module DrawingManager #(
             },
             color: 'h0F0
         },
-        c: '{
+        v2: '{
             position: '{
                 x: rtof( 0.5),
                 y: rtof( 0.5),
                 z: rtof( 1.0)
             },
-            color: 'h00F
+            color: 'hFFF
         }
     };
     assign triangles[1] = '{
-        a: '{
+        v0: '{
             position: '{
                 x: rtof( 0.5),
                 y: rtof( 0.5),
                 z: rtof( 1.0)
             },
-            color: 'h00F
+            color: 'hFFF
         },
-        b: '{
+        v1: '{
             position: '{
                 x: rtof( 0.6),
                 y: rtof( 0.9),
                 z: rtof( 0.0)
             },
-            color: 'h0F0
+            color: 'h00F
         },
-        c: '{
+        v2: '{
             position: '{
                 x: rtof( 0.2),
                 y: rtof( 0.2),
@@ -132,15 +132,15 @@ module DrawingManager #(
         }
     };
     assign triangles[2] = '{
-        a: '{
+        v0: '{
             position: '{
                 x: rtof( 0.5),
                 y: rtof( 0.5),
                 z: rtof( 1.0)
             },
-            color: 'h00F
+            color: 'hFFF
         },
-        b: '{
+        v1: '{
             position: '{
                 x: rtof( 0.7),
                 y: rtof( 0.1),
@@ -148,13 +148,13 @@ module DrawingManager #(
             },
             color: 'h0F0
         },
-        c: '{
+        v2: '{
             position: '{
                 x: rtof( 0.6),
                 y: rtof( 0.9),
                 z: rtof( 0.0)
             },
-            color: 'hF00
+            color: 'h00F
         }
     };
 

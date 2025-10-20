@@ -1,10 +1,9 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer
-from utils import to_fixed, to_float
+from cocotb.triggers import RisingEdge
 
 from tools.pipeline import Producer, Consumer
-from logic_object import LogicObject, UInt, LogicField
+from logic_object import LogicObject, LogicField, UInt
 from types_ import (
     Vertex,
     Triangle,
@@ -18,16 +17,16 @@ VERILOG_MODULE = "Transform"
 
 
 class InputData(LogicObject):
-    triangle: Triangle = LogicField(Triangle)
-    transform: TransformStruct = LogicField(TransformStruct)
+    triangle: Triangle = LogicField(Triangle) # type: ignore
+    transform: TransformStruct = LogicField(TransformStruct) # type: ignore
 
 
 class OutputData(LogicObject):
-    triangle: Triangle = LogicField(Triangle)
+    triangle: Triangle = LogicField(Triangle) # type: ignore
 
 
 async def make_clock(dut):
-    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, "ns").start())
     dut.rstn.value = 0
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
@@ -46,14 +45,14 @@ async def test_transform_identity(dut):
     await consumer.run()
 
     transform = TransformStruct(
-        Position(to_fixed(0), to_fixed(0), to_fixed(0)),
-        RotationMatrix(to_fixed(1), 0, 0, 0, to_fixed(1), 0, 0, 0, to_fixed(1)),
+        Position(0, 0, 0),
+        RotationMatrix(1, 0, 0, 0, 1, 0, 0, 0, 1),
     )
 
     triangle_in = Triangle(
-        Vertex(Position(to_fixed(1), to_fixed(2), to_fixed(3)), RGB(1, 2, 3)),
-        Vertex(Position(to_fixed(4), to_fixed(5), to_fixed(6)), RGB(4, 5, 6)),
-        Vertex(Position(to_fixed(7), to_fixed(8), to_fixed(9)), RGB(7, 8, 9)),
+        Vertex(Position(1, 2, 3), RGB(1, 2, 3)),
+        Vertex(Position(4, 5, 6), RGB(4, 5, 6)),
+        Vertex(Position(7, 8, 9), RGB(7, 8, 9)),
     )
 
     input_data = [(InputData(triangle=triangle_in, transform=transform), None)]
@@ -80,22 +79,22 @@ async def test_transform_translation(dut):
     await consumer.run()
 
     transform = TransformStruct(
-        Position(to_fixed(1), to_fixed(2), to_fixed(3)),
-        RotationMatrix(to_fixed(1), 0, 0, 0, to_fixed(1), 0, 0, 0, to_fixed(1)),
+        Position(1, 2, 3),
+        RotationMatrix(1, 0, 0, 0, 1, 0, 0, 0, 1),
     )
 
     triangle_in = Triangle(
-        Vertex(Position(to_fixed(1), to_fixed(1), to_fixed(1)), RGB(1, 1, 1)),
-        Vertex(Position(to_fixed(2), to_fixed(2), to_fixed(2)), RGB(1, 1, 1)),
-        Vertex(Position(to_fixed(3), to_fixed(3), to_fixed(3)), RGB(1, 1, 1)),
+        Vertex(Position(1, 1, 1), RGB(1, 1, 1)),
+        Vertex(Position(2, 2, 2), RGB(1, 1, 1)),
+        Vertex(Position(3, 3, 3), RGB(1, 1, 1)),
     )
 
     input_data = [(InputData(triangle=triangle_in, transform=transform), None)]
 
     triangle_expected = Triangle(
-        Vertex(Position(to_fixed(2), to_fixed(3), to_fixed(4)), RGB(1, 1, 1)),
-        Vertex(Position(to_fixed(3), to_fixed(4), to_fixed(5)), RGB(1, 1, 1)),
-        Vertex(Position(to_fixed(4), to_fixed(5), to_fixed(6)), RGB(1, 1, 1)),
+        Vertex(Position(2, 3, 4), RGB(1, 1, 1)),
+        Vertex(Position(3, 4, 5), RGB(1, 1, 1)),
+        Vertex(Position(4, 5, 6), RGB(1, 1, 1)),
     )
 
     for data, meta in input_data:
@@ -132,24 +131,24 @@ async def test_transform_rotation_z_90(dut):
     # [ 1  0  0 ]
     # [ 0  0  1 ]
     transform = TransformStruct(
-        Position(to_fixed(0), to_fixed(0), to_fixed(0)),
+        Position(0, 0, 0),
         RotationMatrix(
-            to_fixed(0),
-            to_fixed(-1),
-            to_fixed(0),
-            to_fixed(1),
-            to_fixed(0),
-            to_fixed(0),
-            to_fixed(0),
-            to_fixed(0),
-            to_fixed(1),
+            0,
+            (-1),
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
         ),
     )
 
     triangle_in = Triangle(
-        Vertex(Position(to_fixed(1), to_fixed(0), to_fixed(0)), RGB(1, 0, 0)),
-        Vertex(Position(to_fixed(0), to_fixed(1), to_fixed(0)), RGB(0, 1, 0)),
-        Vertex(Position(to_fixed(-1), to_fixed(0), to_fixed(0)), RGB(0, 0, 1)),
+        Vertex(Position(1, 0, 0), RGB(1, 0, 0)),
+        Vertex(Position(0, 1, 0), RGB(0, 1, 0)),
+        Vertex(Position((-1), 0, 0), RGB(0, 0, 1)),
     )
 
     input_data = [(InputData(triangle=triangle_in, transform=transform), None)]
@@ -159,9 +158,9 @@ async def test_transform_rotation_z_90(dut):
     # (0,1,0) -> (-1,0,0)
     # (-1,0,0) -> (0,-1,0)
     triangle_expected = Triangle(
-        Vertex(Position(to_fixed(0), to_fixed(1), to_fixed(0)), RGB(1, 0, 0)),
-        Vertex(Position(to_fixed(-1), to_fixed(0), to_fixed(0)), RGB(0, 1, 0)),
-        Vertex(Position(to_fixed(0), to_fixed(-1), to_fixed(0)), RGB(0, 0, 1)),
+        Vertex(Position(0, 1, 0), RGB(1, 0, 0)),
+        Vertex(Position((-1), 0, 0), RGB(0, 1, 0)),
+        Vertex(Position(0, (-1), 0), RGB(0, 0, 1)),
     )
 
     for data, meta in input_data:
@@ -216,14 +215,14 @@ async def test_transform_rotation_translation(dut):
 
     # 180° rotation about Z axis: (x,y) → (-x,-y)
     transform = TransformStruct(
-        Position(to_fixed(1), to_fixed(2), to_fixed(3)),
-        RotationMatrix(to_fixed(-1), 0, 0, 0, to_fixed(-1), 0, 0, 0, to_fixed(1)),
+        Position(1, 2, 3),
+        RotationMatrix((-1), 0, 0, 0, (-1), 0, 0, 0, 1),
     )
 
     triangle_in = Triangle(
-        Vertex(Position(to_fixed(1), to_fixed(1), to_fixed(1)), RGB(5, 5, 5)),
-        Vertex(Position(to_fixed(2), to_fixed(2), to_fixed(2)), RGB(10, 10, 10)),
-        Vertex(Position(to_fixed(3), to_fixed(3), to_fixed(3)), RGB(15, 15, 15)),
+        Vertex(Position(1, 1, 1), RGB(5, 5, 5)),
+        Vertex(Position(2, 2, 2), RGB(10, 10, 10)),
+        Vertex(Position(3, 3, 3), RGB(15, 15, 15)),
     )
 
     # Expected: rotate 180° around Z (negate x,y), then translate (+1,+2,+3)
@@ -231,9 +230,9 @@ async def test_transform_rotation_translation(dut):
     # (2,2,2) → (-2,-2,2) + (1,2,3) = (-1,0,5)
     # (3,3,3) → (-3,-3,3) + (1,2,3) = (-2,-1,6)
     triangle_expected = Triangle(
-        Vertex(Position(to_fixed(0), to_fixed(1), to_fixed(4)), RGB(5, 5, 5)),
-        Vertex(Position(to_fixed(-1), to_fixed(0), to_fixed(5)), RGB(10, 10, 10)),
-        Vertex(Position(to_fixed(-2), to_fixed(-1), to_fixed(6)), RGB(15, 15, 15)),
+        Vertex(Position(0, 1, 4), RGB(5, 5, 5)),
+        Vertex(Position(-1, 0, 5), RGB(10, 10, 10)),
+        Vertex(Position(-2, -1, 6), RGB(15, 15, 15)),
     )
 
     await producer.produce(InputData(triangle=triangle_in, transform=transform), None)
@@ -271,24 +270,18 @@ async def test_transform_metadata_passthrough(dut):
     await consumer.run()
 
     transform = TransformStruct(
-        Position(to_fixed(0), to_fixed(0), to_fixed(0)),
+        Position(0, 0, 0),
         RotationMatrix(
-            to_fixed(1),
-            to_fixed(0),
-            to_fixed(0),
-            to_fixed(0),
-            to_fixed(1),
-            to_fixed(0),
-            to_fixed(0),
-            to_fixed(0),
-            to_fixed(1),
+            1, 0, 0,
+            0, 1, 0,
+            0, 0, 1,
         ),
     )
 
     triangle_in = Triangle(
-        Vertex(Position(to_fixed(1), to_fixed(1), to_fixed(1)), RGB(1, 1, 1)),
-        Vertex(Position(to_fixed(2), to_fixed(2), to_fixed(2)), RGB(2, 2, 2)),
-        Vertex(Position(to_fixed(3), to_fixed(3), to_fixed(3)), RGB(3, 3, 3)),
+        Vertex(Position(1, 1, 1), RGB(1, 1, 1)),
+        Vertex(Position(2, 2, 2), RGB(2, 2, 2)),
+        Vertex(Position(3, 3, 3), RGB(3, 3, 3)),
     )
 
     for metadata_in in [0, 1, 0, 1, 1]:

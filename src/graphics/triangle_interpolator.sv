@@ -144,9 +144,9 @@ module TriangleInterpolator #(
 
     // Edge functions for the three edges of the triangle.
     fixed f01_1_c, f12_1_c, f20_1_c;
-    assign f01_1_c = edge_equation(triangle_1_r.a.position, triangle_1_r.b.position, pixel_x_1_c, pixel_y_1_c);
-    assign f12_1_c = edge_equation(triangle_1_r.b.position, triangle_1_r.c.position, pixel_x_1_c, pixel_y_1_c);
-    assign f20_1_c = edge_equation(triangle_1_r.c.position, triangle_1_r.a.position, pixel_x_1_c, pixel_y_1_c);
+    assign f01_1_c = edge_equation(triangle_1_r.v0.position, triangle_1_r.v1.position, pixel_x_1_c, pixel_y_1_c);
+    assign f12_1_c = edge_equation(triangle_1_r.v1.position, triangle_1_r.v2.position, pixel_x_1_c, pixel_y_1_c);
+    assign f20_1_c = edge_equation(triangle_1_r.v2.position, triangle_1_r.v0.position, pixel_x_1_c, pixel_y_1_c);
 
     /////////////
     // Stage 2 //
@@ -248,25 +248,25 @@ module TriangleInterpolator #(
     // Calculate interpolated color and depth.
     // Only valid if the point is inside the triangle.
     assign pixel_data_3_c.depth = barycentric_weight(
-        b0_3_r, triangle_3_r.a.position.z,
-        b1_3_r, triangle_3_r.b.position.z,
-        b2_3_r, triangle_3_r.c.position.z
+        b0_3_r, triangle_3_r.v0.position.z,
+        b1_3_r, triangle_3_r.v1.position.z,
+        b2_3_r, triangle_3_r.v2.position.z
     );
 
     assign pixel_data_3_c.color.red = barycentric_weight_color(
-        b0_3_r, triangle_3_r.a.color.red,
-        b1_3_r, triangle_3_r.b.color.red,
-        b2_3_r, triangle_3_r.c.color.red
+        b0_3_r, triangle_3_r.v0.color.red,
+        b1_3_r, triangle_3_r.v1.color.red,
+        b2_3_r, triangle_3_r.v2.color.red
     );
     assign pixel_data_3_c.color.green = barycentric_weight_color(
-        b0_3_r, triangle_3_r.a.color.green,
-        b1_3_r, triangle_3_r.b.color.green,
-        b2_3_r, triangle_3_r.c.color.green
+        b0_3_r, triangle_3_r.v0.color.green,
+        b1_3_r, triangle_3_r.v1.color.green,
+        b2_3_r, triangle_3_r.v2.color.green
     );
     assign pixel_data_3_c.color.blue = barycentric_weight_color(
-        b0_3_r, triangle_3_r.a.color.blue,
-        b1_3_r, triangle_3_r.b.color.blue,
-        b2_3_r, triangle_3_r.c.color.blue
+        b0_3_r, triangle_3_r.v0.color.blue,
+        b1_3_r, triangle_3_r.v1.color.blue,
+        b2_3_r, triangle_3_r.v2.color.blue
     );
 
     /////////////

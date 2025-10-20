@@ -99,9 +99,9 @@ module TrianglePreprocessor (
     end
 
     assign area = triangle_area(
-        triangle.a.position,
-        triangle.b.position,
-        triangle.c.position
+        triangle.v0.position,
+        triangle.v1.position,
+        triangle.v2.position
     );
 
     FixedDivider divider (

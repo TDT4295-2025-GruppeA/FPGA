@@ -103,7 +103,7 @@ class LogicObject(metaclass=_Meta):
                 raise NotImplemented
             elif isinstance(value, float):
                 value = to_fixed(value)
-                arr = LogicArray(value, arr_range)
+                arr = LogicArray.from_signed(value, arr_range)
             elif issubclass(field_type, LogicObject):
                 if isinstance(value, LogicObject):
                     value = value.to_logicarray()
