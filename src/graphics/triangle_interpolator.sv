@@ -271,7 +271,7 @@ module TriangleInterpolator #(
 
     /////////////
     // Stage 4 //
-    ////////////
+    /////////////
 
     // Latch onto data from stage 3.
     pixel_data_t pixel_data_4_r;

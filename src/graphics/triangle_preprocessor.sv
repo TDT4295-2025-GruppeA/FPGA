@@ -3,17 +3,17 @@ function automatic fixed triangle_area(position_t p0, position_t p1, position_t 
     return add(
         add(
             mul(
-                sub(p0.y, p1.y),
-                p2.x
+                sub(p1.y, p2.y),
+                p0.x
             ),
             mul(
-                sub(p1.x, p0.x),
-                p2.y
+                sub(p2.y, p0.y),
+                p1.x
             )
         ),
-        sub(
-            mul(p0.x, p1.y),
-            mul(p0.y, p1.x)
+        mul(
+            sub(p0.y, p1.y),
+            p2.x
         )
     );
 endfunction
@@ -32,9 +32,10 @@ module TrianglePreprocessor (
     output attributed_triangle_t attributed_triangle_m_data,
     output triangle_metadata_t attributed_triangle_m_metadata
 );
-    typedef enum logic[1:0] {
+    typedef enum {
         IDLE,                 // Waiting for a new triangle.
-        CALCULATE_AREA,       // Calculating the area.
+        CALCULATE_AREA,       // Calculating the area by summing the three terms.
+        LATCH_AREA,           // Latching the area result.
         CALCULATE_INVERSE,    // Calculating the inverse of the area.
         DONE                  // Waiting for input to be read.
     } preprocessor_state_t;
@@ -46,7 +47,7 @@ module TrianglePreprocessor (
 
     triangle_t triangle;
     triangle_metadata_t triangle_metadata;
-    fixed area, area_inv;
+    fixed area_c, area_r, area_inv;
     logic area_inv_valid;
 
     always_ff @(posedge clk or negedge rstn) begin
@@ -56,8 +57,10 @@ module TrianglePreprocessor (
             triangle_metadata <= '0;
             attributed_triangle_m_data <= '0;
             attributed_triangle_m_metadata <= '0;
+            area_r <= '0;
         end else begin
             state <= state_next;
+            area_r <= area_c;
 
             if (triangle_s_valid && triangle_s_ready) begin
                 triangle <= triangle_s_data;
@@ -82,7 +85,11 @@ module TrianglePreprocessor (
                 end
             end
             CALCULATE_AREA: begin
-                // This just takes one cycle.
+                // This also just takes one cycle.
+                state_next = LATCH_AREA;
+            end
+            LATCH_AREA: begin
+                // Latch the area result.
                 state_next = CALCULATE_INVERSE;
             end
             CALCULATE_INVERSE: begin
@@ -98,7 +105,7 @@ module TrianglePreprocessor (
         endcase
     end
 
-    assign area = triangle_area(
+    assign area_c = triangle_area(
         triangle.v0.position,
         triangle.v1.position,
         triangle.v2.position
@@ -112,8 +119,8 @@ module TrianglePreprocessor (
         .dividend_s_data(itof(1)), // We want 1 / area.
 
         .divisor_s_ready(), // Ignored
-        .divisor_s_valid(state == CALCULATE_AREA),
-        .divisor_s_data(area),
+        .divisor_s_valid(state == LATCH_AREA),
+        .divisor_s_data(area_r),
 
         .result_m_ready(1'b1), // Always ready.
         .result_m_valid(area_inv_valid),
