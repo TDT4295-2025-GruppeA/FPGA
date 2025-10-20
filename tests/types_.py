@@ -35,6 +35,8 @@ class Triangle(LogicObject):
     b: Vertex = LogicField(Vertex)  # type: ignore
     c: Vertex = LogicField(Vertex)  # type: ignore
 
+class TriangleMetadata(LogicObject):
+    last: int = LogicField(UInt(1)) # type: ignore
 
 class RotationMatrix(LogicObject):
     rot_xx: float = LogicField(Fixed())  # type: ignore

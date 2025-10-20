@@ -158,8 +158,6 @@ class LogicObject(metaclass=_Meta):
             value = getattr(self, field.name)
             logic_type = field.metadata.get("type")
 
-            print("ASDF", logic_type, value)
-
             # Quantize float to fixed point representation.
             if isinstance(logic_type, Fixed):
                 if not isinstance(value, (int, float)):
