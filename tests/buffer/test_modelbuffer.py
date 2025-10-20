@@ -1,18 +1,15 @@
 import cocotb
-from cocotb.triggers import RisingEdge, ClockCycles
-from cocotb.clock import Clock
+from cocotb.triggers import ClockCycles
 
 from stubs.modelbuffer import Modelbuffer
 from types_ import (
-    Vertex,
     Triangle,
-    RGB,
-    Position,
     ModelBufferWrite,
     ModelBufferRead,
     TriangleMeta,
 )
 from tools.pipeline import Producer, Consumer
+from utilities.constructors import make_triangle, make_clock
 
 VERILOG_MODULE = "ModelBuffer"
 
@@ -20,12 +17,6 @@ VERILOG_PARAMETERS = {
     "MAX_TRIANGLE_COUNT": 100,
     "MAX_MODEL_COUNT": 10,
 }
-
-
-def make_triangle(i: int) -> Triangle:
-    pos = Position(i, i, i)
-    vertex = Vertex(pos, RGB(i, i, i))
-    return Triangle(vertex, vertex, vertex)
 
 
 INPUTS = [
@@ -72,16 +63,6 @@ READ_OUTPUTS = [
     (make_triangle(11), TriangleMeta(0)),
     (make_triangle(12), TriangleMeta(1)),
 ]
-
-
-async def make_clock(dut: Modelbuffer):
-    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
-    dut.rstn.value = 0
-    await RisingEdge(dut.clk)
-    dut.rstn.value = 1
-
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
 
 
 @cocotb.test()
