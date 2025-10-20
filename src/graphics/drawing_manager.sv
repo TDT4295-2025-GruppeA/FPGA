@@ -27,14 +27,20 @@ module DrawingManager #(
         FRAME_DONE
     } pipeline_state_t;
 
+    localparam int TRIANGLE_COUNT = 3;
+    typedef logic [$clog2(TRIANGLE_COUNT)-1:0] triangle_index_t;
+
     logic [3:0] color;
 
     pipeline_state_t state, next_state;
+    triangle_index_t triangle_index, triangle_index_next;
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             state <= IDLE;
+            triangle_index <= '0;
         end else begin
             state <= next_state;
+            triangle_index <= triangle_index_next;
             if (state == FRAME_DONE) 
                 color <= sw;
         end
@@ -66,37 +72,92 @@ module DrawingManager #(
         .buffer_select(buffer_select)
     );
 
-    triangle_t triangle;
-    assign triangle = '{
+    triangle_t triangles[TRIANGLE_COUNT];
+    assign triangles[1] = '{
         a: '{
             position: '{
-                x: rtof( 0.0),
-                y: rtof( 0.0),
-                z: rtof( 0.5)
+                x: rtof( 0.2),
+                y: rtof( 0.2),
+                z: rtof( 0.0)
             },
             color: '0
         },
         b: '{
             position: '{
-                x: rtof( 0.0),
-                y: rtof( 1.0),
+                x: rtof( 0.7),
+                y: rtof( 0.1),
                 z: rtof( 0.0)
             },
             color: '0
         },
         c: '{
             position: '{
-                x: rtof( 1.0),
-                y: rtof( 0.0),
+                x: rtof( 0.5),
+                y: rtof( 0.5),
                 z: rtof( 1.0)
             },
             color: '0
         }
     };
+    assign triangles[2] = '{
+        a: '{
+            position: '{
+                x: rtof( 0.5),
+                y: rtof( 0.5),
+                z: rtof( 1.0)
+            },
+            color: '0
+        },
+        b: '{
+            position: '{
+                x: rtof( 0.6),
+                y: rtof( 0.9),
+                z: rtof( 0.0)
+            },
+            color: '0
+        },
+        c: '{
+            position: '{
+                x: rtof( 0.2),
+                y: rtof( 0.2),
+                z: rtof( 0.0)
+            },
+            color: '0
+        }
+    };
+    assign triangles[0] = '{
+        a: '{
+            position: '{
+                x: rtof( 0.5),
+                y: rtof( 0.5),
+                z: rtof( 1.0)
+            },
+            color: '0
+        },
+        b: '{
+            position: '{
+                x: rtof( 0.7),
+                y: rtof( 0.1),
+                z: rtof( 0.0)
+            },
+            color: '0
+        },
+        c: '{
+            position: '{
+                x: rtof( 0.6),
+                y: rtof( 0.9),
+                z: rtof( 0.0)
+            },
+            color: '0
+        }
+    };
 
+    triangle_t triangle;
     logic triangle_ready, triangle_valid, pixel_valid;
     pixel_data_t pixel;
-    pixel_data_metadata_t pixel_metadata;
+    pixel_metadata_t pixel_metadata;
+
+    assign triangle = triangles[triangle_index];
 
     Rasterizer #(
         .VIEWPORT_WIDTH(BUFFER_WIDTH),
@@ -127,6 +188,7 @@ module DrawingManager #(
         write_data = '0;
         
         triangle_valid = 1'b0;
+        triangle_index_next = triangle_index;
 
         case (state)
             IDLE: begin
@@ -146,14 +208,21 @@ module DrawingManager #(
             end
             RASTERIZING: begin
                 if (pixel_valid) begin
-                    write_en = 1'b1;
+                    write_en = pixel.covered;
                     write_addr = BUFFER_ADDR_WIDTH'(pixel.coordinate.x + pixel.coordinate.y * 10'(BUFFER_WIDTH));
-                    write_data = pixel.covered ? {4'h0, 4'(ftoi(mul(itof(32'(color)), pixel.depth))), 4'h0} : {4'h8, 4'h8, 4'h8};
+                    write_data = {4'h0, 4'(ftoi(mul(itof(32'(color)), pixel.depth))), 4'h0};
 
                     // Check if rasterizer is done.
                     if (pixel_metadata.last) begin
-                        // If so, go to next state.
-                        next_state = FRAME_DONE;
+                        if (triangle_index == triangle_index_t'(TRIANGLE_COUNT - 1)) begin
+                            // If this was the last triangle, go to next state.
+                            triangle_index_next = 0;
+                            next_state = FRAME_DONE;
+                        end else if (triangle_ready) begin
+                            // Otherwise, start rasterizing next triangle.
+                            triangle_index_next = triangle_index + 1;
+                            triangle_valid = 1'b1;
+                        end
                     end
                 end
             end

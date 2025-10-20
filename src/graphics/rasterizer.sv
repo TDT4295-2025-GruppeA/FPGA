@@ -13,11 +13,12 @@ module Rasterizer #(
     output logic triangle_s_ready,
     input logic triangle_s_valid,
     input triangle_t triangle_s_data,
+    input triangle_metadata_t triangle_s_metadata,
 
     input logic pixel_data_m_ready,
     output logic pixel_data_m_valid,
     output pixel_data_t pixel_data_m_data,
-    output pixel_data_metadata_t pixel_data_m_metadata
+    output pixel_metadata_t pixel_data_m_metadata
 );
     typedef enum logic {
         IDLE,
@@ -27,6 +28,7 @@ module Rasterizer #(
     rasterizer_state state = IDLE;
 
     attributed_triangle_t attributed_triangle;
+    triangle_metadata_t attributed_triangle_metadata;
     logic attributed_triangle_valid;
 
     // We consider the rasterizer ready when it is IDLE and
@@ -41,10 +43,12 @@ module Rasterizer #(
         .triangle_s_ready(triangle_s_ready),
         .triangle_s_valid(triangle_s_valid),
         .triangle_s_data(triangle_s_data),
+        .triangle_s_metadata(triangle_s_metadata),
 
         .attributed_triangle_m_ready(rasterizer_ready),
         .attributed_triangle_m_valid(attributed_triangle_valid),
-        .attributed_triangle_m_data(attributed_triangle)
+        .attributed_triangle_m_data(attributed_triangle),
+        .attributed_triangle_m_metadata(attributed_triangle_metadata)
     );
 
     // Which pixel we are currently sampling.
@@ -56,7 +60,7 @@ module Rasterizer #(
     assign last_x = (pixel_coordinate.x == 10'(VIEWPORT_WIDTH - 1));
     assign last_y = (pixel_coordinate.y == 10'(VIEWPORT_HEIGHT - 1));
 
-    pixel_coordinate_metadata_t pixel_coordinate_metadata;
+    pixel_metadata_t pixel_coordinate_metadata;
     assign pixel_coordinate_metadata.last = last_x && last_y;
 
     // Sample point is valid as long as we are in RUNNING state.
@@ -75,8 +79,9 @@ module Rasterizer #(
 
         // We consider the interpolator is ready when it can receive new triangle.
         .attributed_triangle_s_ready(interpolator_ready),
-        .attributed_triangle_s_valid(attributed_triangle_valid),
+        .attributed_triangle_s_valid(attributed_triangle_valid && rasterizer_ready),
         .attributed_triangle_s_data(attributed_triangle),
+        .attributed_triangle_s_metadata(attributed_triangle_metadata),
 
         .pixel_coordinate_s_ready(pixel_coordinate_ready),
         .pixel_coordinate_s_valid(pixel_coordinate_valid),
@@ -98,7 +103,7 @@ module Rasterizer #(
             case (state)
                 IDLE: begin
                     // Check if a new triangle has been accepted.
-                    if (interpolator_ready && attributed_triangle_valid) begin
+                    if (attributed_triangle_valid && rasterizer_ready) begin
                         // Start rasterizing if so.
                         state <= RUNNING;
                     end
@@ -110,7 +115,7 @@ module Rasterizer #(
                         // If it is the last reset to IDLE.
                         if (last_y && last_x) begin
                             pixel_coordinate.x <= 0;
-                            pixel_coordinate.y <= 0;
+                            pixel_coordinate.y <= 0;    
                             state <= IDLE;
                         end else if (last_x) begin
                             pixel_coordinate.x <= 0;

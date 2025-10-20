@@ -25,10 +25,12 @@ module TrianglePreprocessor (
     output logic triangle_s_ready,
     input logic triangle_s_valid,
     input triangle_t triangle_s_data,
+    input triangle_metadata_t triangle_s_metadata,
 
     input logic attributed_triangle_m_ready,
     output logic attributed_triangle_m_valid,
-    output attributed_triangle_t attributed_triangle_m_data
+    output attributed_triangle_t attributed_triangle_m_data,
+    output triangle_metadata_t attributed_triangle_m_metadata
 );
     typedef enum logic[1:0] {
         IDLE,                 // Waiting for a new triangle.
@@ -43,22 +45,29 @@ module TrianglePreprocessor (
     assign attributed_triangle_m_valid = (state == DONE);
 
     triangle_t triangle;
+    triangle_metadata_t triangle_metadata;
     fixed area, area_inv;
     logic area_inv_valid;
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             state <= IDLE;
+            triangle <= '0;
+            triangle_metadata <= '0;
+            attributed_triangle_m_data <= '0;
+            attributed_triangle_m_metadata <= '0;
         end else begin
             state <= state_next;
 
-            if (triangle_s_valid) begin
+            if (triangle_s_valid && triangle_s_ready) begin
                 triangle <= triangle_s_data;
+                triangle_metadata <= triangle_s_metadata;
             end
 
             if (area_inv_valid) begin
                 attributed_triangle_m_data.triangle <= triangle;
                 attributed_triangle_m_data.area_inv <= area_inv;
+                attributed_triangle_m_metadata <= triangle_metadata;
             end
         end
     end
@@ -68,7 +77,7 @@ module TrianglePreprocessor (
 
         case (state)
             IDLE: begin
-                if (triangle_s_valid) begin
+                if (triangle_s_valid && triangle_s_ready) begin
                     state_next = CALCULATE_AREA;
                 end
             end
@@ -82,7 +91,7 @@ module TrianglePreprocessor (
                 end
             end
             DONE: begin
-                if (attributed_triangle_m_ready) begin
+                if (attributed_triangle_m_valid && attributed_triangle_m_ready) begin
                     state_next = IDLE;
                 end
             end

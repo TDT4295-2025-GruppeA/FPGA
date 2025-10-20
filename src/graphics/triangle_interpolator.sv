@@ -39,6 +39,15 @@ function automatic fixed barycentric_weight(fixed b0, fixed value0, fixed b1, fi
     );
 endfunction
 
+function automatic logic [3:0] barycentric_weight_color(fixed b0, logic [3:0] color0, fixed b1, logic [3:0] color1, fixed b2, logic [3:0] color2);
+    return 4'(ftoi(barycentric_weight(
+        b0, itof(32'(color0)),
+        b1, itof(32'(color1)),
+        b2, itof(32'(color2))
+    )));
+endfunction
+
+
 // Steps:
 // 1. Evaluate edge functions.
 // 2. Calculate barycentric coordinates.
@@ -54,16 +63,17 @@ module TriangleInterpolator #(
     output logic attributed_triangle_s_ready,
     input logic attributed_triangle_s_valid,
     input attributed_triangle_t attributed_triangle_s_data,
+    input triangle_metadata_t attributed_triangle_s_metadata,
 
     output logic pixel_coordinate_s_ready,
     input logic pixel_coordinate_s_valid,
     input pixel_coordinate_t pixel_coordinate_s_data,
-    input pixel_coordinate_metadata_t pixel_coordinate_s_metadata,
+    input pixel_metadata_t pixel_coordinate_s_metadata,
 
     input logic pixel_data_m_ready,
     output logic pixel_data_m_valid,
     output pixel_data_t pixel_data_m_data,
-    output pixel_data_metadata_t pixel_data_m_metadata
+    output pixel_metadata_t pixel_data_m_metadata
 
 );
     // Precompute how many fixed point units a pixel represents.
@@ -88,9 +98,10 @@ module TriangleInterpolator #(
 
     // Registers to store input data.
     triangle_t triangle_1_r;
+    triangle_metadata_t triangle_metadata_1_r;
     fixed a_reciprocal_1_r;
     pixel_coordinate_t pixel_coordinate_1_r;
-    pixel_coordinate_metadata_t pixel_coordinate_metadata_1_r;
+    pixel_metadata_t pixel_coordinate_metadata_1_r;
 
     // If data in stage 1 is valid.
     logic valid_1_r;
@@ -99,16 +110,18 @@ module TriangleInterpolator #(
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             triangle_1_r <= '0;
+            triangle_metadata_1_r <= '0;
             a_reciprocal_1_r <= '0;
             pixel_coordinate_1_r <= '0;
             pixel_coordinate_metadata_1_r <= '0;
             valid_1_r <= '0;
         end else if (!stall) begin
-            if (attributed_triangle_s_valid) begin
+            if (attributed_triangle_s_valid && attributed_triangle_s_ready) begin
                 triangle_1_r <= attributed_triangle_s_data.triangle;
+                triangle_metadata_1_r <= attributed_triangle_s_metadata;
                 a_reciprocal_1_r <= attributed_triangle_s_data.area_inv;
             end
-            if (pixel_coordinate_s_valid) begin
+            if (pixel_coordinate_s_valid && pixel_coordinate_s_ready) begin
                 pixel_coordinate_1_r <= pixel_coordinate_s_data;
                 pixel_coordinate_metadata_1_r <= pixel_coordinate_s_metadata;
             end
@@ -120,6 +133,9 @@ module TriangleInterpolator #(
             valid_1_r <= pixel_coordinate_s_valid;
         end
     end
+
+    pixel_metadata_t pixel_metadata_1_c;
+    assign pixel_metadata_1_c.last = triangle_metadata_1_r.last && pixel_coordinate_metadata_1_r.last;
 
     // Convert pixel coordinates to fixed point.
     fixed pixel_x_1_c, pixel_y_1_c;
@@ -140,7 +156,7 @@ module TriangleInterpolator #(
     triangle_t triangle_2_r;
     fixed a_reciprocal_2_r;
     pixel_coordinate_t pixel_coordinate_2_r;
-    pixel_coordinate_metadata_t pixel_coordinate_metadata_2_r;
+    pixel_metadata_t pixel_metadata_2_r;
     fixed f01_2_r, f12_2_r, f20_2_r;
     fixed pixel_x_2_r, pixel_y_2_r;
 
@@ -152,7 +168,7 @@ module TriangleInterpolator #(
             triangle_2_r <= '0;
             a_reciprocal_2_r <= '0;
             pixel_coordinate_2_r <= '0;
-            pixel_coordinate_metadata_2_r <= '0;
+            pixel_metadata_2_r <= '0;
             f01_2_r <= '0;
             f12_2_r <= '0;
             f20_2_r <= '0;
@@ -163,7 +179,7 @@ module TriangleInterpolator #(
             triangle_2_r <= triangle_1_r;
             a_reciprocal_2_r <= a_reciprocal_1_r;
             pixel_coordinate_2_r <= pixel_coordinate_1_r;
-            pixel_coordinate_metadata_2_r <= pixel_coordinate_metadata_1_r;
+            pixel_metadata_2_r <= pixel_metadata_1_c;
             f01_2_r <= f01_1_c;
             f12_2_r <= f12_1_c;
             f20_2_r <= f20_1_c;
@@ -181,9 +197,9 @@ module TriangleInterpolator #(
 
     // Calculate barycentric coordinates.
     fixed b0_2_c, b1_2_c, b2_2_c;
-    assign b0_2_c = mul(f01_2_r, a_reciprocal_2_r);
-    assign b1_2_c = mul(f12_2_r, a_reciprocal_2_r);
-    assign b2_2_c = mul(f20_2_r, a_reciprocal_2_r);
+    assign b0_2_c = mul(f12_2_r, a_reciprocal_2_r);
+    assign b1_2_c = mul(f20_2_r, a_reciprocal_2_r);
+    assign b2_2_c = mul(f01_2_r, a_reciprocal_2_r);
 
     /////////////
     // Stage 3 //
@@ -192,7 +208,7 @@ module TriangleInterpolator #(
     // Latch onto data from stage 2.
     triangle_t triangle_3_r;
     pixel_coordinate_t pixel_coordinate_3_r;
-    pixel_coordinate_metadata_t pixel_coordinate_metadata_3_r;
+    pixel_metadata_t pixel_metadata_3_r;
     logic covered_3_r;
     fixed b0_3_r, b1_3_r, b2_3_r;
     fixed pixel_x_3_r, pixel_y_3_r;
@@ -203,7 +219,7 @@ module TriangleInterpolator #(
         if (!rstn) begin
             triangle_3_r <= '0;
             pixel_coordinate_3_r <= '0;
-            pixel_coordinate_metadata_3_r <= '0;
+            pixel_metadata_3_r <= '0;
             covered_3_r <= '0;
             b0_3_r <= '0;
             b1_3_r <= '0;
@@ -214,7 +230,7 @@ module TriangleInterpolator #(
         end else if (!stall) begin
             triangle_3_r <= triangle_2_r;
             pixel_coordinate_3_r <= pixel_coordinate_2_r;
-            pixel_coordinate_metadata_3_r <= pixel_coordinate_metadata_2_r;
+            pixel_metadata_3_r <= pixel_metadata_2_r;
             covered_3_r <= covered_2_c;
             b0_3_r <= b0_2_c;
             b1_3_r <= b1_2_c;
@@ -225,13 +241,32 @@ module TriangleInterpolator #(
         end
     end
 
+    pixel_data_t pixel_data_3_c;
+    assign pixel_data_3_c.coordinate = pixel_coordinate_3_r;
+    assign pixel_data_3_c.covered = covered_3_r;
+
     // Calculate interpolated color and depth.
     // Only valid if the point is inside the triangle.
-    fixed depth_3_c;
-    assign depth_3_c = barycentric_weight(
+    assign pixel_data_3_c.depth = barycentric_weight(
         b0_3_r, triangle_3_r.a.position.z,
         b1_3_r, triangle_3_r.b.position.z,
         b2_3_r, triangle_3_r.c.position.z
+    );
+
+    assign pixel_data_3_c.color.red = barycentric_weight_color(
+        b0_3_r, triangle_3_r.a.color.red,
+        b1_3_r, triangle_3_r.b.color.red,
+        b2_3_r, triangle_3_r.c.color.red
+    );
+    assign pixel_data_3_c.color.green = barycentric_weight_color(
+        b0_3_r, triangle_3_r.a.color.green,
+        b1_3_r, triangle_3_r.b.color.green,
+        b2_3_r, triangle_3_r.c.color.green
+    );
+    assign pixel_data_3_c.color.blue = barycentric_weight_color(
+        b0_3_r, triangle_3_r.a.color.blue,
+        b1_3_r, triangle_3_r.b.color.blue,
+        b2_3_r, triangle_3_r.c.color.blue
     );
 
     /////////////
@@ -239,42 +274,25 @@ module TriangleInterpolator #(
     ////////////
 
     // Latch onto data from stage 3.
-    pixel_coordinate_t pixel_coordinate_4_r;
-    pixel_coordinate_metadata_t pixel_coordinate_metadata_4_r;
-    logic covered_4_r;
-    fixed depth_4_r;
+    pixel_data_t pixel_data_4_r;
+    pixel_metadata_t pixel_metadata_4_r;
 
     logic valid_4_r;
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
-            pixel_coordinate_4_r <= '0;
-            pixel_coordinate_metadata_4_r <= '0;
-            covered_4_r <= '0;
-            depth_4_r <= '0;
+            pixel_data_4_r <= '0;
+            pixel_metadata_4_r <= '0;
             valid_4_r <= '0;
         end else if (!stall) begin
-            pixel_coordinate_4_r <= pixel_coordinate_3_r;
-            pixel_coordinate_metadata_4_r <= pixel_coordinate_metadata_3_r;
-            covered_4_r <= covered_3_r;
-            depth_4_r <= depth_3_c;
+            pixel_data_4_r <= pixel_data_3_c;
+            pixel_metadata_4_r <= pixel_metadata_3_r;
             valid_4_r <= valid_3_r;
         end
     end
 
-    assign pixel_data_m_metadata.last = pixel_coordinate_metadata_4_r.last;
+    assign pixel_data_m_metadata = pixel_metadata_4_r;
+    assign pixel_data_m_data = pixel_data_4_r;
 
     assign pixel_data_m_valid = valid_4_r;
-
-    assign pixel_data_m_data.coordinate = pixel_coordinate_4_r;
-    assign pixel_data_m_data.covered = covered_4_r;
-
-    assign pixel_data_m_data.depth = depth_4_r;
-
-    // TODO: Interpolate Color. 
-    // For now just white.
-    assign pixel_data_m_data.color.red   = 4'hF;
-    assign pixel_data_m_data.color.green = 4'hF;
-    assign pixel_data_m_data.color.blue  = 4'hF;
-
 endmodule

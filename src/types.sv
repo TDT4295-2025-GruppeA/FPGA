@@ -25,6 +25,10 @@ package types_pkg;
     } triangle_t;
 
     typedef struct packed {
+        logic last;
+    } triangle_metadata_t;
+
+    typedef struct packed {
         fixed xx;
         fixed xy;
         fixed xz;
@@ -53,10 +57,6 @@ package types_pkg;
     } pixel_coordinate_t;
 
     typedef struct packed {
-        logic last;
-    } pixel_coordinate_metadata_t;
-
-    typedef struct packed {
         logic covered;
         fixed depth;
         color_t color;
@@ -65,7 +65,7 @@ package types_pkg;
 
     typedef struct packed {
         logic last;
-    } pixel_data_metadata_t;
+    } pixel_metadata_t;
 
     typedef struct packed {
         triangle_t triangle;
