@@ -69,9 +69,85 @@ module DrawingManager #(
         .buffer_select(buffer_select)
     );
 
-    ///////////////
-    // Model ROM //
-    ///////////////
+    triangle_t triangles[TRIANGLE_COUNT];
+    assign triangles[0] = '{
+        v0: '{
+            position: '{
+                x: rtof( 0.2),
+                y: rtof( 0.2),
+                z: rtof( 0.0)
+            },
+            color: 'hF00
+        },
+        v1: '{
+            position: '{
+                x: rtof( 0.7),
+                y: rtof( 0.1),
+                z: rtof( 0.0)
+            },
+            color: 'h0F0
+        },
+        v2: '{
+            position: '{
+                x: rtof( 0.5),
+                y: rtof( 0.5),
+                z: rtof( 1.0)
+            },
+            color: 'hFFF
+        }
+    };
+    assign triangles[1] = '{
+        v0: '{
+            position: '{
+                x: rtof( 0.5),
+                y: rtof( 0.5),
+                z: rtof( 1.0)
+            },
+            color: 'hFFF
+        },
+        v1: '{
+            position: '{
+                x: rtof( 0.6),
+                y: rtof( 0.9),
+                z: rtof( 0.0)
+            },
+            color: 'h00F
+        },
+        v2: '{
+            position: '{
+                x: rtof( 0.2),
+                y: rtof( 0.2),
+                z: rtof( 0.0)
+            },
+            color: 'hF00
+        }
+    };
+    assign triangles[2] = '{
+        v0: '{
+            position: '{
+                x: rtof( 0.5),
+                y: rtof( 0.5),
+                z: rtof( 1.0)
+            },
+            color: 'hFFF
+        },
+        v1: '{
+            position: '{
+                x: rtof( 0.7),
+                y: rtof( 0.1),
+                z: rtof( 0.0)
+            },
+            color: 'h0F0
+        },
+        v2: '{
+            position: '{
+                x: rtof( 0.6),
+                y: rtof( 0.9),
+                z: rtof( 0.0)
+            },
+            color: 'h00F
+        }
+    };
 
     // Which triangle to send next.
     triangle_index_t triangle_index;
