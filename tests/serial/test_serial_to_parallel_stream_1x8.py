@@ -15,9 +15,8 @@ VERILOG_PARAMETERS = {
     "OUTPUT_SIZE": OUTPUT_SIZE,
 }
 
-TESTS = [
-    0x00, 0xff, 0xfe, 0x7f, 0xab, 0xdd, 0x01, 0x80
-]
+TESTS = [0x00, 0xFF, 0xFE, 0x7F, 0xAB, 0xDD, 0x01, 0x80]
+
 
 class InputData(LogicObject):
     serial: int = LogicField(UInt(1))  # type: ignore
@@ -34,6 +33,7 @@ async def make_clock(dut):
     await RisingEdge(dut.clk)
     dut.rstn.value = 1
     await RisingEdge(dut.clk)
+
 
 @cocotb.test()
 async def test_serial_parallel_stream_1x8(dut: Serialtoparallelstream):
@@ -53,15 +53,17 @@ async def test_serial_parallel_stream_1x8(dut: Serialtoparallelstream):
             bit = (test >> i) & 1
             inputs.append(InputData(bit))
         outputs.append(OutputData(test))
-    
+
     for data in inputs:
         await producer.produce(data)
-    
+
     await ClockCycles(dut.clk, OUTPUT_SIZE * len(TESTS))
 
     for i in range(len(TESTS)):
         result = (await consumer.consume())[0]
-        assert result == outputs[i], f"Failed with data: '{result.parallel:0{OUTPUT_SIZE}b}'. Expected '{outputs[i].parallel:0{OUTPUT_SIZE}b}'"
+        assert (
+            result == outputs[i]
+        ), f"Failed with data: '{result.parallel:0{OUTPUT_SIZE}b}'. Expected '{outputs[i].parallel:0{OUTPUT_SIZE}b}'"
 
 
 @cocotb.test()
@@ -84,10 +86,12 @@ async def test_noncontinous_serial_parallel_stream_1x8(dut: Serialtoparallelstre
         outputs.append(OutputData(test))
 
     for i in range(0, len(inputs), 4):
-        for data in inputs[i:i+4]:
+        for data in inputs[i : i + 4]:
             await producer.produce(data)
         await ClockCycles(dut.clk, 10)
 
     for i in range(len(TESTS)):
         result = (await consumer.consume())[0]
-        assert result == outputs[i], f"Failed with data: '{result.parallel:0{OUTPUT_SIZE}b}'. Expected '{outputs[i].parallel:0{OUTPUT_SIZE}b}'"
+        assert (
+            result == outputs[i]
+        ), f"Failed with data: '{result.parallel:0{OUTPUT_SIZE}b}'. Expected '{outputs[i].parallel:0{OUTPUT_SIZE}b}'"

@@ -26,6 +26,7 @@ TESTS = [
     0x427751BD99,
 ]
 
+
 class InputData(LogicObject):
     serial: int = LogicField(UInt(8))  # type: ignore
 
@@ -41,6 +42,7 @@ async def make_clock(dut):
     await RisingEdge(dut.clk)
     dut.rstn.value = 1
     await RisingEdge(dut.clk)
+
 
 @cocotb.test()
 async def test_serial_parallel_stream_8x40(dut: Serialtoparallelstream):
@@ -60,15 +62,17 @@ async def test_serial_parallel_stream_8x40(dut: Serialtoparallelstream):
             element = (test >> i) & ((1 << INPUT_SIZE) - 1)
             inputs.append(InputData(element))
         outputs.append(OutputData(test))
-    
+
     for data in inputs:
         await producer.produce(data)
-    
+
     await ClockCycles(dut.clk, OUTPUT_SIZE * len(TESTS))
 
     for i in range(len(TESTS)):
         result = (await consumer.consume())[0]
-        assert result == outputs[i], f"Failed with data: '{result.parallel:0{OUTPUT_SIZE}b}'. Expected '{outputs[i].parallel:0{OUTPUT_SIZE}b}'"
+        assert (
+            result == outputs[i]
+        ), f"Failed with data: '{result.parallel:0{OUTPUT_SIZE}b}'. Expected '{outputs[i].parallel:0{OUTPUT_SIZE}b}'"
 
 
 @cocotb.test()
@@ -91,10 +95,12 @@ async def test_noncontinous_serial_parallel_stream_8x40(dut: Serialtoparallelstr
         outputs.append(OutputData(test))
 
     for i in range(0, len(inputs), 3):
-        for data in inputs[i:i+3]:
+        for data in inputs[i : i + 3]:
             await producer.produce(data)
         await ClockCycles(dut.clk, 10)
 
     for i in range(len(TESTS)):
         result = (await consumer.consume())[0]
-        assert result == outputs[i], f"Failed with data: '{result.parallel:0{OUTPUT_SIZE}b}'. Expected '{outputs[i].parallel:0{OUTPUT_SIZE}b}'"
+        assert (
+            result == outputs[i]
+        ), f"Failed with data: '{result.parallel:0{OUTPUT_SIZE}b}'. Expected '{outputs[i].parallel:0{OUTPUT_SIZE}b}'"

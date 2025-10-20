@@ -16,22 +16,25 @@ VERILOG_PARAMETERS = {
     "MAX_MODEL_COUNT": 10,
 }
 
+
 class ModelBufData(LogicObject):
-    model_id: int = LogicField(UInt(8)) # type: ignore
-    triangle: Triangle = LogicField(Triangle) # type: ignore
+    model_id: int = LogicField(UInt(8))  # type: ignore
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
 
 
 class ModelBufReadInData(LogicObject):
-    model_id: int = LogicField(UInt(8)) # type: ignore
-    triangle_idx: int = LogicField(UInt(16)) # type: ignore
+    model_id: int = LogicField(UInt(8))  # type: ignore
+    triangle_idx: int = LogicField(UInt(16))  # type: ignore
+
 
 def make_triangle(i: int) -> Triangle:
     pos = Position(i, i, i)
     vertex = Vertex(pos, RGB(i, i, i))
     return Triangle(vertex, vertex, vertex)
 
+
 class TriangleMetadata(LogicObject):
-    last: int = LogicField(UInt(1)) # type: ignore
+    last: int = LogicField(UInt(1))  # type: ignore
 
 
 INPUTS = [
@@ -79,6 +82,7 @@ READ_OUTPUTS = [
     (make_triangle(12), TriangleMetadata(1)),
 ]
 
+
 async def make_clock(dut: Modelbuffer):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
     dut.rstn.value = 0
@@ -87,6 +91,7 @@ async def make_clock(dut: Modelbuffer):
 
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
+
 
 @cocotb.test()
 async def test_write_model(dut: Modelbuffer):
@@ -106,12 +111,14 @@ async def test_write_model(dut: Modelbuffer):
 
     for data in READ_INPUTS:
         await read_producer.produce(data)
-    
+
     await ClockCycles(dut.clk, 100)
 
     triangles = await read_consumer.consume_all()
 
-    assert len(triangles) == len(READ_OUTPUTS), f"Incorrect number of triangles produced."
+    assert len(triangles) == len(
+        READ_OUTPUTS
+    ), f"Incorrect number of triangles produced."
 
     for i, (triangle, actual_triangle) in enumerate(zip(triangles, READ_OUTPUTS)):
         assert triangle == actual_triangle, f"Failed assertion on index {i}."

@@ -10,45 +10,81 @@ from cocotb.types import Range, LogicArray
 
 VERILOG_MODULE = "CommandInput"
 
+
 class ModelBufData(LogicObject):
-    model_id: int = LogicField(UInt(8)) # type: ignore
-    triangle: Triangle = LogicField(Triangle) # type: ignore
+    model_id: int = LogicField(UInt(8))  # type: ignore
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+
 
 class SceneBufData(LogicObject):
-    model_id: int = LogicField(UInt(8)) # type: ignore
-    transform: Transform = LogicField(Transform) # type: ignore
+    model_id: int = LogicField(UInt(8))  # type: ignore
+    transform: Transform = LogicField(Transform)  # type: ignore
+
 
 class SceneBufMetadata(LogicObject):
-    last: int = LogicField(UInt(1)) # type: ignore
+    last: int = LogicField(UInt(1))  # type: ignore
+
 
 class Byte(LogicObject):
-    value: int = LogicField(UInt(8)) # type: ignore
+    value: int = LogicField(UInt(8))  # type: ignore
+
 
 CMD_BEGIN_UPLOAD = 0xA0
 CMD_UPLOAD_TRIANGLE = 0xA1
 CMD_ADD_MODEL_INSTANCE = 0xB0
 
 INPUTS = [
-    CMD_BEGIN_UPLOAD, 0x00, # Start upload model 0
-    CMD_UPLOAD_TRIANGLE, *([1]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([2]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([3]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([4]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([5]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([6]*14*3), # Upload a triangle
-    CMD_BEGIN_UPLOAD, 0x01, # Start upload model 1
-    CMD_UPLOAD_TRIANGLE, *([7]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([8]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([9]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([10]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([11]*14*3), # Upload a triangle
-    CMD_UPLOAD_TRIANGLE, *([12]*14*3), # Upload a triangle
-    CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([1]*48), # Add transform
-    CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([2]*48), # Add transform
-    CMD_ADD_MODEL_INSTANCE, 0x01, 0x00, *([3]*48), # Add transform, last in scene
-    CMD_ADD_MODEL_INSTANCE, 0x00, 0x01, *([4]*48), # Add transform
-    CMD_ADD_MODEL_INSTANCE, 0x01, 0x01, *([5]*48), # Add transform, last in scene
+    CMD_BEGIN_UPLOAD,
+    0x00,  # Start upload model 0
+    CMD_UPLOAD_TRIANGLE,
+    *([1] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE,
+    *([2] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE,
+    *([3] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE,
+    *([4] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE,
+    *([5] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE,
+    *([6] * 14 * 3),  # Upload a triangle
+    CMD_BEGIN_UPLOAD,
+    0x01,  # Start upload model 1
+    CMD_UPLOAD_TRIANGLE,
+    *([7] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE,
+    *([8] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE,
+    *([9] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE,
+    *([10] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE,
+    *([11] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE,
+    *([12] * 14 * 3),  # Upload a triangle
+    CMD_ADD_MODEL_INSTANCE,
+    0x00,
+    0x00,
+    *([1] * 48),  # Add transform
+    CMD_ADD_MODEL_INSTANCE,
+    0x00,
+    0x00,
+    *([2] * 48),  # Add transform
+    CMD_ADD_MODEL_INSTANCE,
+    0x01,
+    0x00,
+    *([3] * 48),  # Add transform, last in scene
+    CMD_ADD_MODEL_INSTANCE,
+    0x00,
+    0x01,
+    *([4] * 48),  # Add transform
+    CMD_ADD_MODEL_INSTANCE,
+    0x01,
+    0x01,
+    *([5] * 48),  # Add transform, last in scene
 ]
+
+
 def make_triangle(i: int) -> Triangle:
     pos = (i << 24) | (i << 16) | (i << 8) | i
     color = (i << 8) | i
@@ -56,10 +92,12 @@ def make_triangle(i: int) -> Triangle:
     vertex = Vertex(Position(pos, pos, pos), rgb)
     return Triangle(vertex, vertex, vertex)
 
+
 def make_transform(i: int) -> Transform:
     pos = (i << 24) | (i << 16) | (i << 8) | i
 
-    return Transform(Position(pos, pos, pos), RotationMatrix(*([pos]*9)))
+    return Transform(Position(pos, pos, pos), RotationMatrix(*([pos] * 9)))
+
 
 OUTPUTS_MODEL = [
     (ModelBufData(0, make_triangle(1)), None),
@@ -114,7 +152,7 @@ async def test_command(dut):
     for byte in INPUTS:
         await cmd_in.produce(Byte(byte))
 
-    await ClockCycles(dut.clk, 1000) # wait plenty cycles
+    await ClockCycles(dut.clk, 1000)  # wait plenty cycles
 
     output_commands = await cmd_out.consume_all()
     output_models = await model_out.consume_all()
@@ -130,7 +168,15 @@ async def test_command(dut):
         assert model.triangle.b == model_actual.triangle.b
         assert model.triangle.c == model_actual.triangle.c
 
-    for idx, ((scene, _), (scene_actual, _)) in enumerate(zip(output_scenes, OUTPUTS_SCENE)):
-        assert scene.model_id == scene_actual.model_id, f"Model ID did not match in index {idx}"
-        assert scene.transform.position == scene_actual.transform.position, f"Transform did not match in index {idx}"
-        assert scene.transform.rotation == scene_actual.transform.rotation, f"Rotation did not match in index {idx}"
+    for idx, ((scene, _), (scene_actual, _)) in enumerate(
+        zip(output_scenes, OUTPUTS_SCENE)
+    ):
+        assert (
+            scene.model_id == scene_actual.model_id
+        ), f"Model ID did not match in index {idx}"
+        assert (
+            scene.transform.position == scene_actual.transform.position
+        ), f"Transform did not match in index {idx}"
+        assert (
+            scene.transform.rotation == scene_actual.transform.rotation
+        ), f"Rotation did not match in index {idx}"

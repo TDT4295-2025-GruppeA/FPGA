@@ -15,11 +15,14 @@ VERILOG_PARAMETERS = {
     "TRANSFORM_COUNT": 10,
 }
 
+
 class SceneBufMetadata(LogicObject):
-    last: int = LogicField(UInt(1)) # type: ignore
+    last: int = LogicField(UInt(1))  # type: ignore
 
 
-def make_scene(size: int, offset: int = 0) -> list[tuple[ModelInstance, SceneBufMetadata]]:
+def make_scene(
+    size: int, offset: int = 0
+) -> list[tuple[ModelInstance, SceneBufMetadata]]:
     scene: list[tuple[ModelInstance, SceneBufMetadata]] = []
     for i in range(1, size + 1):
         x = float(i + offset)
@@ -35,6 +38,7 @@ def make_scene(size: int, offset: int = 0) -> list[tuple[ModelInstance, SceneBuf
             meta = SceneBufMetadata(0)
         scene.append((instance, meta))
     return scene
+
 
 INPUTS = [
     *make_scene(4, 0),
@@ -75,7 +79,8 @@ async def test_scenebuffer(dut):
     await ClockCycles(dut.clk, 50)
     outputs = await consumer.consume_all()
 
-    assert len(outputs) == len(OUTPUTS), f"Incorrect number of elements: {len(outputs)} vs {len(OUTPUTS)}"
+    assert len(outputs) == len(
+        OUTPUTS
+    ), f"Incorrect number of elements: {len(outputs)} vs {len(OUTPUTS)}"
     for output, actual_output in zip(outputs, OUTPUTS):
         assert output == actual_output
-    

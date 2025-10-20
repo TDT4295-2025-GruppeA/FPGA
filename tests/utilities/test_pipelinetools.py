@@ -46,12 +46,13 @@ async def test_producer_consumer(dut: Pipelinetoolstester):
 
     for data, metadata in input_data:
         await producer.produce(data, metadata)
-    
+
     await ClockCycles(dut.clk, 20)
 
     output_data = await consumer.consume_all()
 
     assert len(output_data) == 10
+
 
 @cocotb.test(timeout_time=10 * 1000, timeout_unit="ns")
 async def test_no_metadata(dut: Pipelinetoolstester):
