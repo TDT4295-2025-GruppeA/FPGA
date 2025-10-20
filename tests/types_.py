@@ -13,6 +13,14 @@ from logic_object import LogicObject, Int, UInt, LogicField
 # type-ignored.
 
 
+class Byte(LogicObject):
+    byte: int = LogicField(UInt(8))  # type: ignore
+
+
+class Short(LogicObject):
+    short: int = LogicField(UInt(16))  # type: ignore
+
+
 class RGB(LogicObject):
     r: int = LogicField(UInt(5))  # type: ignore
     g: int = LogicField(UInt(6))  # type: ignore
@@ -56,3 +64,32 @@ class Transform(LogicObject):
 class ModelInstance(LogicObject):
     model_id: int = LogicField(UInt(8))  # type: ignore
     transform: Transform = LogicField(Transform)  # type: ignore
+
+
+# Types in pipeline head
+class ModelBufferWrite(LogicObject):
+    model_id: int = LogicField(UInt(8))  # type: ignore
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+
+
+class ModelBufferRead(LogicObject):
+    model_index: int = LogicField(UInt(8))  # type: ignore
+    triangle_index: int = LogicField(UInt(16))  # type: ignore
+
+
+class TriangleMeta(LogicObject):
+    last: int = LogicField(UInt(1))  # type: ignore
+
+
+class ModelInstanceMeta(LogicObject):
+    last: int = LogicField(UInt(1))  # type: ignore
+
+
+class TriangleTransform(LogicObject):
+    transform: Transform = LogicField(Transform)  # type: ignore
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+
+
+class TriangleTransformMeta(LogicObject):
+    model_last: int = LogicField(UInt(1))  # type: ignore
+    triangle_last: int = LogicField(UInt(1))  # type: ignore

@@ -3,86 +3,51 @@ from tools.pipeline import Producer, Consumer
 
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, ClockCycles
-from logic_object import LogicObject, UInt, LogicField
-from types_ import Triangle, Transform, Vertex, Position, RGB, RotationMatrix
+from types_ import (
+    Triangle,
+    Transform,
+    Vertex,
+    Position,
+    RGB,
+    RotationMatrix,
+    ModelBufferWrite,
+    ModelInstance,
+    ModelInstanceMeta,
+    Byte,
+)
 from cocotb.types import Range, LogicArray
 
 
 VERILOG_MODULE = "CommandInput"
 
 
-class ModelBufData(LogicObject):
-    model_id: int = LogicField(UInt(8))  # type: ignore
-    triangle: Triangle = LogicField(Triangle)  # type: ignore
-
-
-class SceneBufData(LogicObject):
-    model_id: int = LogicField(UInt(8))  # type: ignore
-    transform: Transform = LogicField(Transform)  # type: ignore
-
-
-class SceneBufMetadata(LogicObject):
-    last: int = LogicField(UInt(1))  # type: ignore
-
-
-class Byte(LogicObject):
-    value: int = LogicField(UInt(8))  # type: ignore
-
-
 CMD_BEGIN_UPLOAD = 0xA0
 CMD_UPLOAD_TRIANGLE = 0xA1
 CMD_ADD_MODEL_INSTANCE = 0xB0
 
+# fmt: off
 INPUTS = [
-    CMD_BEGIN_UPLOAD,
-    0x00,  # Start upload model 0
-    CMD_UPLOAD_TRIANGLE,
-    *([1] * 14 * 3),  # Upload a triangle
-    CMD_UPLOAD_TRIANGLE,
-    *([2] * 14 * 3),  # Upload a triangle
-    CMD_UPLOAD_TRIANGLE,
-    *([3] * 14 * 3),  # Upload a triangle
-    CMD_UPLOAD_TRIANGLE,
-    *([4] * 14 * 3),  # Upload a triangle
-    CMD_UPLOAD_TRIANGLE,
-    *([5] * 14 * 3),  # Upload a triangle
-    CMD_UPLOAD_TRIANGLE,
-    *([6] * 14 * 3),  # Upload a triangle
-    CMD_BEGIN_UPLOAD,
-    0x01,  # Start upload model 1
-    CMD_UPLOAD_TRIANGLE,
-    *([7] * 14 * 3),  # Upload a triangle
-    CMD_UPLOAD_TRIANGLE,
-    *([8] * 14 * 3),  # Upload a triangle
-    CMD_UPLOAD_TRIANGLE,
-    *([9] * 14 * 3),  # Upload a triangle
-    CMD_UPLOAD_TRIANGLE,
-    *([10] * 14 * 3),  # Upload a triangle
-    CMD_UPLOAD_TRIANGLE,
-    *([11] * 14 * 3),  # Upload a triangle
-    CMD_UPLOAD_TRIANGLE,
-    *([12] * 14 * 3),  # Upload a triangle
-    CMD_ADD_MODEL_INSTANCE,
-    0x00,
-    0x00,
-    *([1] * 48),  # Add transform
-    CMD_ADD_MODEL_INSTANCE,
-    0x00,
-    0x00,
-    *([2] * 48),  # Add transform
-    CMD_ADD_MODEL_INSTANCE,
-    0x01,
-    0x00,
-    *([3] * 48),  # Add transform, last in scene
-    CMD_ADD_MODEL_INSTANCE,
-    0x00,
-    0x01,
-    *([4] * 48),  # Add transform
-    CMD_ADD_MODEL_INSTANCE,
-    0x01,
-    0x01,
-    *([5] * 48),  # Add transform, last in scene
+    CMD_BEGIN_UPLOAD, 0x00,  # Start upload model 0
+    CMD_UPLOAD_TRIANGLE, *([1] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([2] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([3] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([4] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([5] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([6] * 14 * 3),  # Upload a triangle
+    CMD_BEGIN_UPLOAD, 0x01,  # Start upload model 1
+    CMD_UPLOAD_TRIANGLE, *([7] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([8] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([9] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([10] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([11] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([12] * 14 * 3),  # Upload a triangle
+    CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([1] * 48),  # Add transform
+    CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([2] * 48),  # Add transform
+    CMD_ADD_MODEL_INSTANCE, 0x01, 0x00, *([3] * 48),  # Add transform, last in scene
+    CMD_ADD_MODEL_INSTANCE, 0x00, 0x01, *([4] * 48),  # Add transform
+    CMD_ADD_MODEL_INSTANCE, 0x01, 0x01, *([5] * 48),  # Add transform, last in scene
 ]
+# fmt: on
 
 
 def make_triangle(i: int) -> Triangle:
@@ -100,31 +65,27 @@ def make_transform(i: int) -> Transform:
 
 
 OUTPUTS_MODEL = [
-    (ModelBufData(0, make_triangle(1)), None),
-    (ModelBufData(0, make_triangle(2)), None),
-    (ModelBufData(0, make_triangle(3)), None),
-    (ModelBufData(0, make_triangle(4)), None),
-    (ModelBufData(0, make_triangle(5)), None),
-    (ModelBufData(0, make_triangle(6)), None),
-    (ModelBufData(1, make_triangle(7)), None),
-    (ModelBufData(1, make_triangle(8)), None),
-    (ModelBufData(1, make_triangle(9)), None),
-    (ModelBufData(1, make_triangle(10)), None),
-    (ModelBufData(1, make_triangle(11)), None),
-    (ModelBufData(1, make_triangle(12)), None),
+    (ModelBufferWrite(0, make_triangle(1)), None),
+    (ModelBufferWrite(0, make_triangle(2)), None),
+    (ModelBufferWrite(0, make_triangle(3)), None),
+    (ModelBufferWrite(0, make_triangle(4)), None),
+    (ModelBufferWrite(0, make_triangle(5)), None),
+    (ModelBufferWrite(0, make_triangle(6)), None),
+    (ModelBufferWrite(1, make_triangle(7)), None),
+    (ModelBufferWrite(1, make_triangle(8)), None),
+    (ModelBufferWrite(1, make_triangle(9)), None),
+    (ModelBufferWrite(1, make_triangle(10)), None),
+    (ModelBufferWrite(1, make_triangle(11)), None),
+    (ModelBufferWrite(1, make_triangle(12)), None),
 ]
 OUTPUTS_CMD = []
 OUTPUTS_SCENE = [
-    (SceneBufData(0, make_transform(1)), SceneBufMetadata(0)),
-    (SceneBufData(0, make_transform(2)), SceneBufMetadata(0)),
-    (SceneBufData(0, make_transform(3)), SceneBufMetadata(1)),
-    (SceneBufData(1, make_transform(4)), SceneBufMetadata(0)),
-    (SceneBufData(1, make_transform(5)), SceneBufMetadata(1)),
+    (ModelInstance(0, make_transform(1)), ModelInstanceMeta(0)),
+    (ModelInstance(0, make_transform(2)), ModelInstanceMeta(0)),
+    (ModelInstance(0, make_transform(3)), ModelInstanceMeta(1)),
+    (ModelInstance(1, make_transform(4)), ModelInstanceMeta(0)),
+    (ModelInstance(1, make_transform(5)), ModelInstanceMeta(1)),
 ]
-
-
-class InputData(LogicObject):
-    test: int = LogicField(UInt(8))  # type: ignore
 
 
 async def make_clock(dut):
@@ -142,8 +103,8 @@ async def test_command(dut):
     cmd_in = Producer(dut, "cmd")
     cmd_out = Consumer(dut, "cmd", Byte)
 
-    model_out = Consumer(dut, "model", ModelBufData)
-    scene_out = Consumer(dut, "scene", SceneBufData, SceneBufMetadata)
+    model_out = Consumer(dut, "model", ModelBufferWrite)
+    scene_out = Consumer(dut, "scene", ModelInstance, ModelInstanceMeta)
     await cmd_in.run()
     await cmd_out.run()
     await model_out.run()

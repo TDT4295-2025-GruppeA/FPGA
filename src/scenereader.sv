@@ -12,16 +12,16 @@ module SceneReader #(
     input logic scene_in_valid,
     output logic scene_in_ready,
     input modelinstance_t scene_in_data,
-    input scenebuf_meta_t scene_in_metadata,
+    input modelinstance_meta_t scene_in_metadata,
 
     output logic model_out_valid,
     input logic model_out_ready,
-    output modelbuf_read_data_t model_out_data,
+    output modelbuf_read_t model_out_data,
 
     input logic model_in_valid,
     output logic model_in_ready,
     input triangle_t model_in_data,
-    input triangle_metadata_t model_in_metadata,
+    input triangle_meta_t model_in_metadata,
 
     output logic triangle_tf_out_valid,
     input logic triangle_tf_out_ready,
@@ -36,7 +36,7 @@ module SceneReader #(
     state_t state;
 
     modelinstance_t current_model;
-    model_metadata_t current_model_metadata;
+    modelinstance_meta_t current_model_metadata;
     short_t triangle_index;
     
     assign model_out_data.model_index = current_model.model_id;

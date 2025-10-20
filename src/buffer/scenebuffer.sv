@@ -11,13 +11,13 @@ module SceneBuffer #(
     input logic write_in_valid,
     output logic write_in_ready,
     input modelinstance_t write_in_data,
-    input scenebuf_meta_t write_in_metadata,
+    input modelinstance_meta_t write_in_metadata,
 
     // Read interface
     output logic read_out_valid,
     input logic read_out_ready,
     output modelinstance_t read_out_data,
-    output model_metadata_t read_out_metadata
+    output modelinstance_meta_t read_out_metadata
 );
     typedef logic [$clog2(TRANSFORM_COUNT)-1:0] transform_idx_t;
     typedef logic [$clog2(SCENE_COUNT)-1:0] scene_idx_t;

@@ -23,13 +23,12 @@ module PipelineHead(
     localparam MAX_MODEL_COUNT = 10;
     localparam MAX_TRIANGLE_COUNT = 100;
 
-
-    wire modelbuf_data_t cmd_model_data;
+    wire modelbuf_write_t cmd_model_data;
     wire logic cmd_model_valid;
     wire logic cmd_model_ready;
 
     wire modelinstance_t cmd_scene_data;
-    wire scenebuf_meta_t cmd_scene_metadata;
+    wire modelinstance_meta_t cmd_scene_metadata;
     wire logic cmd_scene_valid;
     wire logic cmd_scene_ready;
     CommandInput cmd_inst (
@@ -57,12 +56,12 @@ module PipelineHead(
     // Modelbuffer
     wire read_model_valid;
     wire read_model_ready;
-    wire modelbuf_read_data_t read_model_data;
+    wire modelbuf_read_t read_model_data;
 
     wire model_read_valid;
     wire model_read_ready;
     wire triangle_t model_read_data;
-    wire triangle_metadata_t model_read_metadata;
+    wire triangle_meta_t model_read_metadata;
 
     ModelBuffer #(
         .MAX_MODEL_COUNT(MAX_MODEL_COUNT),
@@ -88,7 +87,7 @@ module PipelineHead(
     wire scene_read_valid;
     wire scene_read_ready;
     wire modelinstance_t scene_read_data;
-    wire scenebuf_meta_t scene_read_metadata;
+    wire modelinstance_meta_t scene_read_metadata;
     SceneBuffer #(
         .SCENE_COUNT(2),
         .TRANSFORM_COUNT(50)
