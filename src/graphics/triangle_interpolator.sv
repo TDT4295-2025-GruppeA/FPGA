@@ -84,8 +84,8 @@ module TriangleInterpolator #(
     // measure lengths between pixels from their centers.
     // E.g. in a 2 pixel wide viewport the distance from the left
     // column to the right column is 1 pixel, not 2 pixels.
-    localparam fixed PIXEL_SCALE_X_FIXED = rtof(1 / real'(VIEWPORT_WIDTH - 1));
-    localparam fixed PIXEL_SCALE_Y_FIXED = rtof(1 / real'(VIEWPORT_HEIGHT - 1));
+    localparam fixed PIXEL_SCALE_X_FIXED = rtof(2 / real'(VIEWPORT_WIDTH - 1));
+    localparam fixed PIXEL_SCALE_Y_FIXED = rtof(2 / real'(VIEWPORT_HEIGHT - 1));
 
     // Stall pipline when downstream is not ready.
     logic stall;
@@ -142,8 +142,8 @@ module TriangleInterpolator #(
 
     // Convert pixel coordinates to fixed point.
     fixed pixel_x_1_c, pixel_y_1_c;
-    assign pixel_x_1_c = mul(itof(int'(pixel_coordinate_1_r.x)), PIXEL_SCALE_X_FIXED);
-    assign pixel_y_1_c = mul(itof(int'(pixel_coordinate_1_r.y)), PIXEL_SCALE_Y_FIXED);
+    assign pixel_x_1_c = sub(mul(itof(int'(pixel_coordinate_1_r.x)), PIXEL_SCALE_X_FIXED), itof(1));
+    assign pixel_y_1_c = sub(mul(itof(int'(pixel_coordinate_1_r.y)), PIXEL_SCALE_Y_FIXED), itof(1));
 
     // Edge functions for the three edges of the triangle.
     fixed f01_1_c, f12_1_c, f20_1_c;
