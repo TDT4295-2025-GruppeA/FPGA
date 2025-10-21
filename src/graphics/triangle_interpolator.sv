@@ -47,6 +47,9 @@ function automatic logic [3:0] barycentric_weight_color(fixed b0, logic [3:0] co
     )));
 endfunction
 
+function automatic logic is_top_left(position_t p0, position_t p1);
+    return ((p0.y == p1.y) && (p1.x > p0.x)) || (p0.y > p1.y);
+endfunction
 
 // Steps:
 // 1. Evaluate edge functions.
@@ -189,11 +192,28 @@ module TriangleInterpolator #(
         end
     end
 
+    // Top left rule. Whether to include pixels on the edge.
+    logic topleft01_2_c, topleft12_2_c, topleft20_2_c;
+    assign topleft01_2_c = is_top_left(triangle_2_r.v0.position, triangle_2_r.v1.position);
+    assign topleft12_2_c = is_top_left(triangle_2_r.v1.position, triangle_2_r.v2.position);
+    assign topleft20_2_c = is_top_left(triangle_2_r.v2.position, triangle_2_r.v0.position);
+
+    // When we check if a pixel is exactly on the edge we need to
+    // check if the edge function equals zero. However, due to
+    // numerical imprecision we need to allow for a small tolerance.
+    // NOTE: The value 4 here corresponds to 4 LSBs.
+    localparam fixed EDGE_TOLERANCE = -4;
+
     // The sample point is within the triangle if it
-    // is on the right side of all three edges.
-    // TODO: Add top left rule.
+    // is on the right side of all three edges or
+    // if the sample point is exactly on an edge and
+    // that edge is a top left edge.
     logic covered_2_c;
-    assign covered_2_c = (f01_2_r > 0) && (f12_2_r > 0) && (f20_2_r > 0);
+    assign covered_2_c = (
+        (f01_2_r > 0 || f01_2_r > EDGE_TOLERANCE && topleft01_2_c) &&
+        (f12_2_r > 0 || f12_2_r > EDGE_TOLERANCE && topleft12_2_c) &&
+        (f20_2_r > 0 || f20_2_r > EDGE_TOLERANCE && topleft20_2_c)
+    );
 
     // Calculate barycentric coordinates.
     fixed b0_2_c, b1_2_c, b2_2_c;

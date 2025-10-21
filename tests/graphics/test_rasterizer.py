@@ -34,14 +34,34 @@ TEST_TRIANGLES = [
         Vertex(Position(1.00, 0.90, 0.00), RGB(15, 0, 0)),
     ),
     Triangle(
-        Vertex(Position(0.00, 0.75, 0.00), RGB(15, 0, 0)),
+        Vertex(Position(0.00, 0.75, 0.50), RGB(15, 0, 0)),
         Vertex(Position(0.25, 1.00, 0.50), RGB(15, 0, 0)),
-        Vertex(Position(0.00, 1.00, 1.00), RGB(15, 0, 0)),
+        Vertex(Position(0.00, 1.00, 0.50), RGB(15, 0, 0)),
+    ),
+    Triangle(
+        Vertex(Position(0.00, 0.75, 1.00), RGB(15, 0, 0)),
+        Vertex(Position(0.25, 0.75, 1.00), RGB(15, 0, 0)),
+        Vertex(Position(0.25, 1.00, 1.00), RGB(15, 0, 0)),
     ),
     Triangle(
         Vertex(Position(0.00, 0.75, 0.00), RGB(15, 0, 0)),
-        Vertex(Position(0.25, 0.75, 1.00), RGB(15, 0, 0)),
-        Vertex(Position(0.25, 1.00, 0.50), RGB(15, 0, 0)),
+        Vertex(Position(0.25, 0.50, 0.00), RGB(15, 0, 0)),
+        Vertex(Position(0.25, 0.75, 0.00), RGB(15, 0, 0)),
+    ),
+    Triangle(
+        Vertex(Position(0.00, 0.00, 0.75), RGB(15, 0, 0)),
+        Vertex(Position(0.30, 0.00, 0.00), RGB(15, 0, 0)),
+        Vertex(Position(0.00, 0.30, 1.00), RGB(15, 0, 0)),
+    ),
+    Triangle(
+        Vertex(Position(1.00, 0.00, 1.00), RGB(15, 0, 0)),
+        Vertex(Position(1.00, 0.30, 1.00), RGB(15, 0, 0)),
+        Vertex(Position(0.70, 0.30, 1.00), RGB(15, 0, 0)),
+    ),
+    Triangle(
+        Vertex(Position(1.00, 0.00, 0.00), RGB(15, 0, 0)),
+        Vertex(Position(0.70, 0.30, 0.00), RGB(15, 0, 0)),
+        Vertex(Position(0.70, 0.00, 0.00), RGB(15, 0, 0)),
     ),
 ]
 
