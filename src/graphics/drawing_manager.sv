@@ -32,7 +32,7 @@ module DrawingManager #(
     } pipeline_state_t;
 
     localparam string FILE_PATH = "static/teapot";
-    localparam int TRIANGLE_COUNT = 900;
+    localparam int TRIANGLE_COUNT = 160;
 
     // Add one to triangle count to be able store when 
     // all triangles have been fed to the rasterizer.
@@ -261,7 +261,7 @@ module DrawingManager #(
 
                     if (sw_r[0]) begin
                         // If switch zero is set display the depth map.
-                        write_data = {4'h0, 4'(ftoi(mul(itof(15), pixel.depth))), 4'h0};
+                        write_data = {4'h0, 4'(ftoi(mul(itof(15), mul(pixel.depth, rtof(0.5))))), 4'h0};
                     end else begin
                         // Otherwise, write the actual pixel color.
                         write_data = pixel.color[15:4];
