@@ -2,6 +2,7 @@ import video_modes_pkg::*;
 import buffer_config_pkg::*;
 import clock_modes_pkg::*;
 import fixed_pkg::*;
+import types_pkg::*;
 
 module Top (
     // Fun stuff
@@ -121,6 +122,8 @@ module Top (
     logic draw_start;
     assign draw_start = rst_deassert_pulse | (buffer_select_sync_sys != buffer_select_sync_sys_d);
 
+    position_t position;
+
     DrawingManager #(
         .BUFFER_WIDTH(BUFFER_CONFIG.width),
         .BUFFER_HEIGHT(BUFFER_CONFIG.height),
@@ -136,7 +139,8 @@ module Top (
         .write_addr(dm_write_addr),
         .write_data(dm_write_data),
         .frame_done(dm_frame_done),
-        .buffer_select(buffer_select_sync_sys)
+        .buffer_select(buffer_select_sync_sys),
+        .position(position)
     );
 
     ///////////////////////////////////////
@@ -245,7 +249,13 @@ module Top (
     // SPI //
     /////////
 
-    SpiSub spi_controller (
+    position_t rx_position;
+
+    SpiSub #(
+        .WORD_SIZE($bits(position_t)),
+        .RX_QUEUE_LENGTH(2),
+        .TX_QUEUE_LENGTH(2)
+    ) spi_controller (
         // SPI interface
         .ssn(spi_ssn),
         .sclk(spi_sclk),
@@ -259,12 +269,20 @@ module Top (
         // User data interface
         .tx_data_en(1'b1), // Never sending anything.
         .rx_data_en(1'b1), // Always reading.
-        .tx_data(seg), // Sending back received data.
-        .rx_data(seg), // Word to receive.
+        .tx_data(position), // Sending back received data.
+        .rx_data(rx_position), // Word to receive.
         .tx_ready(), // Ignored.
         .rx_ready(), // Ignored.
         .active() // Ignored.
     );
+
+    always_ff @(posedge clk_system or negedge rstn_system) begin
+        if (!rstn_system) begin
+            position <= '0;
+        end else begin
+            position <= rx_position;
+        end
+    end
 
     ///////////////////////////////////////
     ////////////// BUFFER ROUTING /////////
@@ -272,17 +290,17 @@ module Top (
     
     // Display reads from the ACTIVE buffer
     // The Display module drives disp_read_addr
-    assign fb_a_read_addr = !buffer_select ? disp_read_addr : '0;
-    assign fb_b_read_addr = buffer_select ? disp_read_addr : '0;
-    assign disp_read_data = !buffer_select ? fb_a_read_data : fb_b_read_data;
+    assign fb_a_read_addr = disp_read_addr;
+    assign fb_b_read_addr = disp_read_addr;
+    assign disp_read_data = buffer_select ? fb_a_read_data : fb_b_read_data;
 
     // DrawingManager writes to the INACTIVE buffer
     assign fb_a_write_en = !buffer_select_sync_sys ? dm_write_en : 1'b0;
-    assign fb_a_write_addr = !buffer_select_sync_sys ? dm_write_addr : '0;
-    assign fb_a_write_data = !buffer_select_sync_sys ? dm_write_data : '0;
+    assign fb_a_write_addr = dm_write_addr;
+    assign fb_a_write_data = dm_write_data;
 
     assign fb_b_write_en = buffer_select_sync_sys ? dm_write_en : 1'b0;
-    assign fb_b_write_addr = buffer_select_sync_sys ? dm_write_addr : '0;
-    assign fb_b_write_data = buffer_select_sync_sys ? dm_write_data : '0;
+    assign fb_b_write_addr = dm_write_addr;
+    assign fb_b_write_data = dm_write_data;
 
 endmodule

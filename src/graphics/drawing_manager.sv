@@ -1,6 +1,6 @@
 import types_pkg::*;
 import fixed_pkg::*;
-import model_data_pkg::*;
+// import model_data_pkg::*;
 
 module DrawingManager #(
     parameter int BUFFER_WIDTH = 160,
@@ -20,7 +20,8 @@ module DrawingManager #(
 
     // Temp inputs for debugging
     input logic [3:0] sw, // Used for selecting colors
-    input logic buffer_select
+    input logic buffer_select,
+    input position_t position
 );
     typedef enum {
         IDLE,
@@ -29,6 +30,9 @@ module DrawingManager #(
         FRAMERATE,
         FRAME_DONE
     } pipeline_state_t;
+
+    localparam string FILE_PATH = "static/teapot";
+    localparam int TRIANGLE_COUNT = 900;
 
     // Add one to triangle count to be able store when 
     // all triangles have been fed to the rasterizer.
@@ -72,29 +76,41 @@ module DrawingManager #(
     );
 
     ///////////////
-    // Transform //
+    // Model ROM //
     ///////////////
 
     // Which triangle to send next.
     triangle_index_t triangle_index;
+    triangle_t triangle;
+
+    ModelRom #(
+        .FILE_PATH(FILE_PATH),
+        .TRIANGLE_COUNT(TRIANGLE_COUNT)
+    ) mode_rom (
+        .clk(clk),
+        .address(triangle_index),
+        .triangle(triangle)
+    );
+
+    ///////////////
+    // Transform //
+    ///////////////
+
+    position_t position_d;
 
     // Input data to the transform module.
     triangle_tf_t triangle_tf_data;
     assign triangle_tf_data.transform.rotmat = sw_r[1] ? '{
-        m00: rtof(1.0), m01: rtof(0.0), m02: rtof(0.0),
-        m10: rtof(0.0), m11: rtof(1.0), m12: rtof(0.0),
-        m20: rtof(0.0), m21: rtof(0.0), m22: rtof(1.0)
+        m00: rtof( 0.5), m01: rtof( 0.0), m02: rtof( 0.0),
+        m10: rtof( 0.0), m11: rtof(-0.5), m12: rtof( 0.0),
+        m20: rtof( 0.0), m21: rtof( 0.0), m22: rtof( 0.5)
     } : '{
-        m00: rtof(0.707), m01: rtof(-0.707), m02: rtof(0.0),
-        m10: rtof(0.707), m11: rtof( 0.707), m12: rtof(0.0),
-        m20: rtof(0.000), m21: rtof( 0.000), m22: rtof(1.0)
+        m00: rtof(0.707/2), m01: rtof(-0.707/2), m02: rtof(0.0/2),
+        m10: rtof(0.707/2), m11: rtof( 0.707/2), m12: rtof(0.0/2),
+        m20: rtof(0.000/2), m21: rtof( 0.000/2), m22: rtof(1.0/2)
     };
-    assign triangle_tf_data.transform.position = '{
-        x: sw_r[2] ? rtof(0.5) : rtof(0.4),
-        y: sw_r[3] ? rtof(0.5) : rtof(0.4),
-        z: rtof(0.0)
-    };
-    assign triangle_tf_data.triangle = triangles[triangle_index];
+    assign triangle_tf_data.transform.position = position_d;
+    assign triangle_tf_data.triangle = triangle;
 
     logic triangle_tf_metadata;
     assign triangle_tf_metadata = triangle_index == triangle_index_t'(TRIANGLE_COUNT - 1);
@@ -156,20 +172,24 @@ module DrawingManager #(
     pipeline_state_t state, next_state;
     
     logic framerate_indicator, frame_indicator_next;
+    logic triangle_changed;
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             state <= IDLE;
             triangle_index <= '0;
             framerate_indicator <= 1'b0;
+            triangle_changed <= 1'b0;
         end else begin
             state <= next_state;
             triangle_index <= triangle_index_next;
             framerate_indicator <= frame_indicator_next;
+            triangle_changed <= triangle_index_next != triangle_index;
 
             // Only sample update color between draws.
             if (state == FRAME_DONE) begin
                 sw_r <= sw;
+                position_d <= position;
             end
         end
     end
@@ -206,11 +226,12 @@ module DrawingManager #(
             end
             GRAPHICS: begin
                 // So long as we have triangles to send, do so.
-                if (triangle_index < triangle_index_t'(TRIANGLE_COUNT))
+                // Take one cycle delay of loading into account.
+                if (!triangle_changed && (triangle_index < triangle_index_t'(TRIANGLE_COUNT)))
                     triangle_tf_valid = 1'b1;
 
                 // Advance triangle index when triangle is accepted.
-                if (triangle_transformed_valid && triangle_transformed_ready)
+                if (triangle_tf_valid && triangle_tf_ready)
                     triangle_index_next = triangle_index + 1;
 
                 if (pixel_valid) begin
@@ -223,7 +244,7 @@ module DrawingManager #(
                         write_data = {4'h0, 4'(ftoi(mul(itof(15), pixel.depth))), 4'h0};
                     end else begin
                         // Otherwise, write the actual pixel color.
-                        write_data = pixel.color;
+                        write_data = pixel.color[15:4];
                     end
 
                     if (pixel_metadata.last) begin
@@ -236,7 +257,7 @@ module DrawingManager #(
             FRAMERATE: begin
                 // Toggle first pixel to be able to see framerate.
                 write_en = 1;
-                write_addr = BUFFER_WIDTH-1;
+                write_addr = BUFFER_ADDR_WIDTH'((BUFFER_WIDTH - 1) + (BUFFER_HEIGHT - 1) * BUFFER_WIDTH);
                 write_data = framerate_indicator ? 12'hF00 : 12'h00F;
                 frame_indicator_next = ~framerate_indicator;
                 next_state = FRAME_DONE;

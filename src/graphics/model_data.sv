@@ -48,4 +48,4 @@ package model_data_pkg;
             }
         }
     };
-endpackage;
+endpackage

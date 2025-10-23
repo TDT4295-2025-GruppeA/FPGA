@@ -5,6 +5,7 @@ package types_pkg;
         logic [3:0] red;
         logic [3:0] green;
         logic [3:0] blue;
+        logic [3:0] reserved;
     } color_t;
 
     typedef struct packed {

@@ -1,6 +1,6 @@
 """Python-versions of types defined in src/types.sv"""
 
-from logic_object import Fixed, LogicObject, Int, UInt, LogicField
+from logic_object import Fixed, LogicObject, UInt, LogicField
 
 # static type checkers don't recognize that the field declarations here
 # are semantically equivalent to
@@ -17,6 +17,7 @@ class RGB(LogicObject):
     r: int = LogicField(UInt(4))  # type: ignore
     g: int = LogicField(UInt(4))  # type: ignore
     b: int = LogicField(UInt(4))  # type: ignore
+    reserved: int = LogicField(UInt(4), default=0)  # type: ignore
 
 
 class Position(LogicObject):
