@@ -30,8 +30,10 @@ package fixed_pkg;
         // Add a bias to round to nearest integer in stead of just truncating.
         fixed bias = 1 <<< (DECIMAL_WIDTH - 1);
         // If number is negative, the bias will need to be subtracted.
-        bias = f[TOTAL_WIDTH-1] ? -bias : bias;
-        return int'((f + bias) >>> DECIMAL_WIDTH);
+        fixed signed_bias = f[TOTAL_WIDTH-1] ? -bias : bias;
+        fixed rounded = f + signed_bias;
+        
+        return int'(rounded) >>> DECIMAL_WIDTH;
     endfunction
 
     function automatic fixed itof(int i);

@@ -3,7 +3,7 @@ import numpy as np
 from stubs.fixedtb import Fixedtb
 from cocotb.triggers import Timer
 
-from utils import quantize, to_fixed, within_tolerance
+from utils import MAX_VALUE, MIN_VALUE, quantize, to_fixed, within_tolerance
 from cases import TEST_VALUES
 
 VERILOG_MODULE = "FixedTB"
@@ -33,17 +33,20 @@ async def test_fixed_arithmetic(dut: Fixedtb):
             a = quantize(a)
             b = quantize(b)
 
-            # Check that the arithmetic operations are as expected.
-            assert within_tolerance(
-                dut.sum.value, a + b
-            ), f"Addition failed: {a:.5f} + {b:.5f} = {dut.sum.value:.5f} != {a + b:.5f}"
-            assert within_tolerance(
-                dut.diff.value, a - b
-            ), f"Subtraction failed: {a:.5f} - {b:.5f} = {dut.diff.value:.5f} != {a - b:.5f}"
-            assert within_tolerance(
-                dut.prod.value, a * b
-            ), f"Multiplication failed: {a:.5f} * {b:.5f} = {dut.prod.value:.5f} != {a * b:.5f}"
+            expected_value = [
+                (dut.sum.value, a + b, f"Addition failed: {a:.5f} + {b:.5f} = {dut.sum.value:.5f} != {a + b:.5f}"),
+                (dut.diff.value, a - b, f"Subtraction failed: {a:.5f} - {b:.5f} = {dut.diff.value:.5f} != {a - b:.5f}"),
+                (dut.prod.value, a * b, f"Multiplication failed: {a:.5f} * {b:.5f} = {dut.prod.value:.5f} != {a * b:.5f}"),
+            ]
+
             if b != 0:
-                assert within_tolerance(
-                    dut.quot.value, a / b
-                ), f"Division failed: {a:.5f} / {b:.5f} = {dut.quot.value:.5f} != {a / b:.5f}"
+                expected_value.append(
+                    (dut.quot.value, a / b, f"Division failed: {a:.5f} / {b:.5f} = {dut.quot.value:.5f} != {a / b:.5f}")
+                )
+
+            for actual, expected, error_msg in expected_value:
+                if expected > MAX_VALUE or expected < MIN_VALUE:
+                    dut._log.info(f"Skipping test as result is out of bounds: {expected:.5f}")
+                    continue
+
+                assert within_tolerance(actual, expected), error_msg

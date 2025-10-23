@@ -22,7 +22,7 @@ class UInt(_LogicType):
 
 class Fixed(_LogicType):
     def __init__(self):
-        super().__init__(32)
+        super().__init__(18)
 
 
 class Bytes(_LogicType):

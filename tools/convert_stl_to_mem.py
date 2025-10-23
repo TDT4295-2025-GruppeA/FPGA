@@ -4,8 +4,11 @@ import sys
 import os
 import numpy as np
 
-def float_to_q16_16(value: float) -> int:
-    return int(value * (1 << 16))
+DECIMAL_WIDHT = 10
+
+def float_to_fixed(value: float, fractional_bits: int) -> int:
+    """Convert float to fixed-point representation with given fractional bits."""
+    return int(round(value * (1 << fractional_bits)))
 
 def random_color_12bit_high() -> int:
     r = random.randint(0x8, 0xF)
@@ -20,14 +23,13 @@ def ensure_winding(vs, stl_normal):
     """Ensure the triangle vertices are ordered consistently with the STL normal."""
     n = triangle_normal(vs[0], vs[1], vs[2])
     if np.dot(n, stl_normal) < 0:
-        # Flip v1 and v2 to match normal
         return np.array([vs[0], vs[2], vs[1]])
     return vs
 
 def write_sv_mem_triangles(stl_path: str, output_path: str):
     model = mesh.Mesh.from_file(stl_path)
-    vertices = model.vectors.copy()  # shape (n_triangles, 3, 3)
-    normals = model.normals  # shape (n_triangles, 3)
+    vertices = model.vectors.copy()
+    normals = model.normals
 
     # min-max normalization to [-1, 1] across all vertices
     all_vertices = vertices.reshape(-1, 3)
@@ -45,7 +47,9 @@ def write_sv_mem_triangles(stl_path: str, output_path: str):
             output = ""
             for v in triangle_vertices:
                 x, y, z = v
-                qx, qy, qz = float_to_q16_16(x), float_to_q16_16(y), float_to_q16_16(z)
+                qx = float_to_fixed(x, DECIMAL_WIDHT)
+                qy = float_to_fixed(y, DECIMAL_WIDHT)
+                qz = float_to_fixed(z, DECIMAL_WIDHT)
                 output += f"{qx & 0xFFFFFFFF:08X}"
                 output += f"{qy & 0xFFFFFFFF:08X}"
                 output += f"{qz & 0xFFFFFFFF:08X}"

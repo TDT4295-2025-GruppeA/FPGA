@@ -39,7 +39,7 @@ module FixedReciprocalDivider (
     assign internal_dividend_data = {1'b1, 16'b0};
     // Divisor and output have the same width as
     // out fixed point type so no shift needed.
-    assign internal_divisor_data = { {14{divisor_s_data[17]}}, divisor_s_data };
+    assign internal_divisor_data = 32'(divisor_s_data);
     // Truncate result to fit in fixed type.
     assign result_m_data = fixed'(internal_result_data);
 endmodule
