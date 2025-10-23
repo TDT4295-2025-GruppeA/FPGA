@@ -18,11 +18,13 @@ module Transform #(
 );
 
     // FSM states
-    typedef enum logic [1:0] {
-        S_IDLE,   // waiting for input
-        S_MUL,    // perform multiplication
-        S_ADD,    // perform addition
-        S_OUT     // wait for consumer to accept output
+    typedef enum logic [2:0] {
+        S_IDLE,     // waiting for input
+        S_MUL_V0,   // multiply vertex 0
+        S_MUL_V1,   // multiply vertex 1
+        S_MUL_V2,   // multiply vertex 2
+        S_ADD,      // add position offset
+        S_OUT       // wait for consumer to accept output
     } state_t;
 
     state_t state, next_state;
@@ -46,14 +48,21 @@ module Transform #(
     // State transition logic
     always_comb begin
         next_state = state;
-
         case (state)
             S_IDLE: begin
                 if (triangle_tf_s_valid)
-                    next_state = S_MUL;
+                next_state = S_MUL_V0;
             end
 
-            S_MUL: begin
+            S_MUL_V0: begin
+                next_state = S_MUL_V1;
+            end
+
+            S_MUL_V1: begin
+                next_state = S_MUL_V2;
+            end
+
+            S_MUL_V2: begin
                 next_state = S_ADD;
             end
 
@@ -65,9 +74,14 @@ module Transform #(
                 if (triangle_m_valid && triangle_m_ready)
                     next_state = S_IDLE;
             end
+
+            default: begin
+               next_state = S_IDLE;
+           end
         endcase
     end
 
+    // Sequential state
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn)
             state <= S_IDLE;
@@ -93,16 +107,12 @@ module Transform #(
         end
     end
 
-    // Multiplication part of the transform
+    // Multiply vertex 0
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             v0_mul <= '0;
-            v1_mul <= '0;
-            v2_mul <= '0;
-            m_stage1 <= '0;
         end
-        else if (state == S_MUL) begin
-            // Vertex 0
+        else if (state == S_MUL_V0) begin
             v0_mul.m00x <= mul(rotmat_reg.m00, triangle_reg.v0.position.x);
             v0_mul.m01y <= mul(rotmat_reg.m01, triangle_reg.v0.position.y);
             v0_mul.m02z <= mul(rotmat_reg.m02, triangle_reg.v0.position.z);
@@ -112,8 +122,14 @@ module Transform #(
             v0_mul.m20x <= mul(rotmat_reg.m20, triangle_reg.v0.position.x);
             v0_mul.m21y <= mul(rotmat_reg.m21, triangle_reg.v0.position.y);
             v0_mul.m22z <= mul(rotmat_reg.m22, triangle_reg.v0.position.z);
+        end
+    end
 
-            // Vertex 1
+    // Multiply vertex 1
+    always_ff @(posedge clk or negedge rstn) begin
+        if (!rstn)
+            v1_mul <= '0;
+        else if (state == S_MUL_V1) begin
             v1_mul.m00x <= mul(rotmat_reg.m00, triangle_reg.v1.position.x);
             v1_mul.m01y <= mul(rotmat_reg.m01, triangle_reg.v1.position.y);
             v1_mul.m02z <= mul(rotmat_reg.m02, triangle_reg.v1.position.z);
@@ -123,8 +139,14 @@ module Transform #(
             v1_mul.m20x <= mul(rotmat_reg.m20, triangle_reg.v1.position.x);
             v1_mul.m21y <= mul(rotmat_reg.m21, triangle_reg.v1.position.y);
             v1_mul.m22z <= mul(rotmat_reg.m22, triangle_reg.v1.position.z);
+        end
+    end
 
-            // Vertex 2
+    // Multiply vertex 2
+    always_ff @(posedge clk or negedge rstn) begin
+        if (!rstn)
+            v2_mul <= '0;
+        else if (state == S_MUL_V2) begin
             v2_mul.m00x <= mul(rotmat_reg.m00, triangle_reg.v2.position.x);
             v2_mul.m01y <= mul(rotmat_reg.m01, triangle_reg.v2.position.y);
             v2_mul.m02z <= mul(rotmat_reg.m02, triangle_reg.v2.position.z);
@@ -134,12 +156,11 @@ module Transform #(
             v2_mul.m20x <= mul(rotmat_reg.m20, triangle_reg.v2.position.x);
             v2_mul.m21y <= mul(rotmat_reg.m21, triangle_reg.v2.position.y);
             v2_mul.m22z <= mul(rotmat_reg.m22, triangle_reg.v2.position.z);
-
-            m_stage1 <= m_reg;
+            m_stage1 <= m_reg; // propagate metadata after last multiply
         end
     end
 
-    // Addition part of the transform
+    // Add position offset
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             triangle_out <= '0;
