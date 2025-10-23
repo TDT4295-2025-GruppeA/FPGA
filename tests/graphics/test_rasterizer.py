@@ -69,6 +69,8 @@ async def feed_triangles(clock: Clock, dut: Rasterizer):
     for i, triangle in enumerate(TEST_TRIANGLES):
         last = i == len(TEST_TRIANGLES) - 1
 
+        cocotb.log.info(f"Feeding triangle {i}: {triangle}")
+
         # Set triangle data on input.
         dut.triangle_s_valid.value = 1
         dut.triangle_s_data.value = triangle.to_logicarray()

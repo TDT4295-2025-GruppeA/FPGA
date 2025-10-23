@@ -11,7 +11,7 @@ module ReciprocalDivider #(
 
     output logic s_axis_dividend_tready,
     input logic s_axis_dividend_tvalid,
-    input logic [16:0] s_axis_dividend_tdata,
+    input logic [21:0] s_axis_dividend_tdata,
     
     output logic s_axis_divisor_tready,
     input logic s_axis_divisor_tvalid,
@@ -33,7 +33,7 @@ module ReciprocalDivider #(
     assign s_axis_dividend_tready = 1'b1;
 
     logic valid = 0;
-    logic [23:0] result;
+    logic signed [31:0] result;
 
     assign m_axis_dout_tvalid = valid;
 
@@ -45,16 +45,13 @@ module ReciprocalDivider #(
 
                 // Store result of "computation" in internal register.
                 // It will be output once "computation" is done.
-                /* verilator lint_off WIDTHEXPAND */
-                result <= $signed({{7{s_axis_dividend_tdata[16]}}, s_axis_dividend_tdata}) /
-                        $signed(s_axis_divisor_tdata[23:0]);
-                /* verilator lint_on WIDTHEXPAND */
+                result <= 32'(signed'(s_axis_dividend_tdata)) / signed'(s_axis_divisor_tdata);
             end
         end else begin
             if (counter == count'(DELAY)) begin
                 // Put data on output once "computation" is done.
                 valid <= 1;
-                m_axis_dout_tdata <= result;
+                m_axis_dout_tdata <= 24'(result);
             end else begin
                 // Continue "computation" until done.
                 counter <= counter + 1;

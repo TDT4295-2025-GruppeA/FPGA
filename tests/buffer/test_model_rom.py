@@ -22,10 +22,11 @@ async def test_model_rom(dut: Modelrom):
         dut.address.value = address
         await clock.cycles(1)
         await Timer(1, "ns")
+        triangle = Triangle.from_logicarray(dut.triangle.value)
         cocotb.log.info(
             f"Address: {address}\n"
             f"Bits: {hex(dut.triangle.value.to_unsigned())}\n"
-            f"Struct: {Triangle.from_logicarray(dut.triangle.value)}"
+            f"Struct: {triangle}"
         )
 
-    assert False
+    assert True

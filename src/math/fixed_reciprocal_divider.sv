@@ -14,7 +14,7 @@ module FixedReciprocalDivider (
 );
     // Sizes are hardcoded as the IP core is generated
     // with fixed sized inputs and outputs.
-    logic [16:0] internal_dividend_data;
+    logic [21:0] internal_dividend_data;
     logic [31:0] internal_divisor_data;
     logic [23:0] internal_result_data;
     
@@ -36,7 +36,7 @@ module FixedReciprocalDivider (
 
     // Left shift dividend to 64 bits to preserve
     // decimal point position after division.
-    assign internal_dividend_data = {1'b1, 16'b0};
+    assign internal_dividend_data = 22'(1 << DECIMAL_WIDTH*2);
     // Divisor and output have the same width as
     // out fixed point type so no shift needed.
     assign internal_divisor_data = 32'(divisor_s_data);

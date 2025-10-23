@@ -4,7 +4,12 @@ import sys
 import os
 import numpy as np
 
-DECIMAL_WIDHT = 10
+from split import split_memory_file
+
+# We store the models with Q16.16 independently of what the FPGA
+# uses internally for the sake of simplicity. The FPGA will
+# convert to its own format as needed.
+DECIMAL_WIDTH = 16
 
 def float_to_fixed(value: float, fractional_bits: int) -> int:
     """Convert float to fixed-point representation with given fractional bits."""
@@ -47,9 +52,10 @@ def write_sv_mem_triangles(stl_path: str, output_path: str):
             output = ""
             for v in triangle_vertices:
                 x, y, z = v
-                qx = float_to_fixed(x, DECIMAL_WIDHT)
-                qy = float_to_fixed(y, DECIMAL_WIDHT)
-                qz = float_to_fixed(z, DECIMAL_WIDHT)
+                qx = float_to_fixed(x, DECIMAL_WIDTH)
+                qy = float_to_fixed(y, DECIMAL_WIDTH)
+                qz = float_to_fixed(z, DECIMAL_WIDTH)
+                print(x, y, z)
                 output += f"{qx & 0xFFFFFFFF:08X}"
                 output += f"{qy & 0xFFFFFFFF:08X}"
                 output += f"{qz & 0xFFFFFFFF:08X}"
@@ -71,3 +77,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     write_sv_mem_triangles(stl_path, output_path)
+
+    split_memory_file(output_path)
+    
