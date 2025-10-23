@@ -137,12 +137,7 @@ module DrawingManager #(
     logic projected_metadata;
 
     Projection #(
-        .intrinsics('{
-            fx: rtof(69.0),
-            fy: rtof(69.0),
-            cx: rtof(80.0),
-            cy: rtof(60.0)
-        })
+        .FOCAL_LENGTH(rtof(0.01))
     ) projection (
         .clk(clk),
         .rstn(rstn),

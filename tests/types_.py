@@ -14,11 +14,10 @@ from logic_object import Fixed, LogicObject, UInt, LogicField
 
 
 class RGB(LogicObject):
-    r: int = LogicField(UInt(4))  # type: ignore
-    g: int = LogicField(UInt(4))  # type: ignore
-    b: int = LogicField(UInt(4))  # type: ignore
-    reserved: int = LogicField(UInt(4), default=0)  # type: ignore
-
+    r: int = LogicField(UInt(4), default=0) # type: ignore
+    g: int = LogicField(UInt(4), default=0) # type: ignore
+    b: int = LogicField(UInt(4), default=0) # type: ignore
+    reserved: int = LogicField(UInt(4), default=0) # type: ignore
 
 class Position(LogicObject):
     x: float = LogicField(Fixed())  # type: ignore
@@ -28,8 +27,7 @@ class Position(LogicObject):
 
 class Vertex(LogicObject):
     position: Position = LogicField(Position)  # type: ignore
-    color: RGB = LogicField(RGB)  # type: ignore
-
+    color: RGB = LogicField(RGB, default_factory=RGB)  # type: ignore
 
 class Triangle(LogicObject):
     v0: Vertex = LogicField(Vertex)  # type: ignore

@@ -3,23 +3,17 @@ import fixed_pkg::*;
 
 // Projects a single coordinate using the formula:
 //   p' = f * p * (1/z) + c
-function automatic fixed project(fixed f, fixed point, fixed rec_z, fixed c);
-    return add(mul(f, mul(point, rec_z)), c);
+function automatic fixed project(fixed f, fixed point, fixed rec_z);
+    return mul(f, mul(point, rec_z));
 endfunction
 
-// Projection module: converts 3D triangle vertices to 2D
-// screen coordinates using camera intrinsics.
+// Projection module: converts 3D triangle vertices to NDC space.
 // Each vertex is projected as:
-//   x' = fx * x / z + cx
-//   y' = fy * y / z + cy
+//   x' = f * x / z
+//   y' = f * y / z
 //   z' = 1/z
 module Projection #(
-    parameter camera_intrinsics_t intrinsics = '{
-        fx: itof(69.0),
-        fy: itof(69.0),
-        cx: itof(80.0),
-        cy: itof(60.0)
-    }
+    parameter fixed FOCAL_LENGTH = rtof(0.10) // Default focal length
 )(
     input  logic        clk,
     input  logic        rstn,
@@ -185,26 +179,20 @@ module Projection #(
             m_stage2 <= 1'b0;
         end else if (state == S_PROJ) begin
             // Vertex 0
-            t_proj.v0.position.x <= project(intrinsics.fx,
-                                        t_in.v0.position.x, rec_z0, intrinsics.cx);
-            t_proj.v0.position.y <= project(intrinsics.fy,
-                                        t_in.v0.position.y, rec_z0, intrinsics.cy);
+            t_proj.v0.position.x <= project(FOCAL_LENGTH, t_in.v0.position.x, rec_z0);
+            t_proj.v0.position.y <= project(FOCAL_LENGTH, t_in.v0.position.y, rec_z0);
             t_proj.v0.position.z <= rec_z0;
             t_proj.v0.color      <= t_in.v0.color;
 
             // Vertex 1
-            t_proj.v1.position.x <= project(intrinsics.fx,
-                                        t_in.v1.position.x, rec_z1, intrinsics.cx);
-            t_proj.v1.position.y <= project(intrinsics.fy,
-                                        t_in.v1.position.y, rec_z1, intrinsics.cy);
+            t_proj.v1.position.x <= project(FOCAL_LENGTH, t_in.v1.position.x, rec_z1);
+            t_proj.v1.position.y <= project(FOCAL_LENGTH, t_in.v1.position.y, rec_z1);
             t_proj.v1.position.z <= rec_z1;
             t_proj.v1.color      <= t_in.v1.color;
 
             // Vertex 2
-            t_proj.v2.position.x <= project(intrinsics.fx,
-                                        t_in.v2.position.x, rec_z2, intrinsics.cx);
-            t_proj.v2.position.y <= project(intrinsics.fy,
-                                        t_in.v2.position.y, rec_z2, intrinsics.cy);
+            t_proj.v2.position.x <= project(FOCAL_LENGTH, t_in.v2.position.x, rec_z2);
+            t_proj.v2.position.y <= project(FOCAL_LENGTH, t_in.v2.position.y, rec_z2);
             t_proj.v2.position.z <= rec_z2;
             t_proj.v2.color      <= t_in.v2.color;
 
