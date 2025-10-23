@@ -273,20 +273,20 @@ module TriangleInterpolator #(
         b2_3_r, triangle_3_r.v2.position.z
     );
 
-    assign pixel_data_3_c.color.red = barycentric_weight_color(
-        b0_3_r, triangle_3_r.v0.color.red,
-        b1_3_r, triangle_3_r.v1.color.red,
-        b2_3_r, triangle_3_r.v2.color.red
+     assign pixel_data_3_c.color.red = barycentric_weight_color(
+    b0_3_r, triangle_3_r.v0.color.red,
+    b1_3_r, triangle_3_r.v1.color.red,
+    b2_3_r, triangle_3_r.v2.color.red
     );
     assign pixel_data_3_c.color.green = barycentric_weight_color(
-        b0_3_r, triangle_3_r.v0.color.green,
-        b1_3_r, triangle_3_r.v1.color.green,
-        b2_3_r, triangle_3_r.v2.color.green
+    b0_3_r, triangle_3_r.v0.color.green,
+    b1_3_r, triangle_3_r.v1.color.green,
+    b2_3_r, triangle_3_r.v2.color.green
     );
     assign pixel_data_3_c.color.blue = barycentric_weight_color(
-        b0_3_r, triangle_3_r.v0.color.blue,
-        b1_3_r, triangle_3_r.v1.color.blue,
-        b2_3_r, triangle_3_r.v2.color.blue
+    b0_3_r, triangle_3_r.v0.color.blue,
+    b1_3_r, triangle_3_r.v1.color.blue,
+    b2_3_r, triangle_3_r.v2.color.blue
     );
 
     /////////////

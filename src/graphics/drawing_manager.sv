@@ -49,11 +49,6 @@ module DrawingManager #(
     logic [BUFFER_ADDR_WIDTH-1:0] bg_write_addr;
     logic [BUFFER_DATA_WIDTH-1:0] bg_write_data;
     logic bg_write_en;
-
-    logic sprite_draw_start, sprite_draw_done;
-    logic [BUFFER_ADDR_WIDTH-1:0] sprite_write_addr;
-    logic [BUFFER_DATA_WIDTH-1:0] sprite_write_data;
-    logic sprite_write_en;
     
     ///////////////////////
     // Background Drawer //
@@ -138,6 +133,32 @@ module DrawingManager #(
         .triangle_m_metadata(triangle_transformed_metadata)
     );
 
+    triangle_t projected_triangle;
+    logic projected_valid, projected_ready;
+    logic projected_metadata;
+
+    Projection #(
+        .intrinsics('{
+            fx: rtof(69.0),
+            fy: rtof(69.0),
+            cx: rtof(80.0),
+            cy: rtof(60.0)
+        })
+    ) projection (
+        .clk(clk),
+        .rstn(rstn),
+
+        .triangle_s_data(triangle_transformed),
+        .triangle_s_metadata(triangle_transformed_metadata),
+        .triangle_s_valid(triangle_transformed_valid),
+        .triangle_s_ready(triangle_transformed_ready),
+
+        .projected_triangle_m_data(projected_triangle),
+        .projected_triangle_m_valid(projected_valid),
+        .projected_triangle_m_metadata(projected_metadata),
+        .projected_triangle_m_ready(projected_ready)
+    );
+
     ///////////////////
     // Rasterization //
     ///////////////////
@@ -153,10 +174,10 @@ module DrawingManager #(
         .clk(clk),
         .rstn(rstn),
 
-        .triangle_s_ready(triangle_transformed_ready),
-        .triangle_s_valid(triangle_transformed_valid),
-        .triangle_s_data(triangle_transformed),
-        .triangle_s_metadata('{ last: triangle_transformed_metadata }),
+        .triangle_s_ready(projected_ready),
+        .triangle_s_valid(projected_valid),
+        .triangle_s_data(projected_triangle),
+        .triangle_s_metadata('{ last: projected_metadata }),
 
         .pixel_data_m_ready(1'b1), // We are always ready.
         .pixel_data_m_valid(pixel_valid),
@@ -197,7 +218,6 @@ module DrawingManager #(
     always_comb begin
         next_state = state;
         bg_draw_start = 1'b0;
-        sprite_draw_start = 1'b0;
         frame_done = 1'b0;
         
         write_en = 1'b0;

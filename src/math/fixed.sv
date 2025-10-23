@@ -6,8 +6,8 @@
 // shall be done in stead of truncation.
 
 package fixed_pkg;
-    localparam int DECIMAL_WIDTH = 16;
-    localparam int TOTAL_WIDTH = 32;
+    localparam int DECIMAL_WIDTH = 10;
+    localparam int TOTAL_WIDTH = 18;
 
     typedef logic signed [TOTAL_WIDTH-1:0] fixed;
 

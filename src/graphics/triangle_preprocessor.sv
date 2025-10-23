@@ -112,12 +112,8 @@ module TrianglePreprocessor (
         triangle.v2.position
     );
 
-    FixedDivider divider (
+    FixedReciprocalDivider divider (
         .clk(clk),
-        
-        .dividend_s_ready(), // Ignored.
-        .dividend_s_valid(1'b1), // Always valid.
-        .dividend_s_data(itof(1)), // We want 1 / area.
 
         .divisor_s_ready(), // Ignored
         .divisor_s_valid(state == LATCH_AREA),
