@@ -3,7 +3,7 @@ import fixed_pkg::*;
 
 // Simple read-only memory module for storing model triangles.
 module ModelRom #(
-    parameter int TRIANGLE_COUNT = 3,
+    parameter int TRIANGLE_COUNT = 36,
     parameter string FILE_PATH = "static/cube"
 ) (
     input logic clk,

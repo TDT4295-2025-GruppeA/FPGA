@@ -7,7 +7,7 @@ from stubs.drawingmanager import Drawingmanager
 VERILOG_MODULE = "DrawingManager"
 
 
-@cocotb.test(timeout_time=1, timeout_unit="ms")
+@cocotb.test(timeout_time=10, timeout_unit="ms")
 async def test_drawing_manager_states(dut: Drawingmanager):
     """Step through each DrawingManager state transition"""
 

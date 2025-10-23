@@ -6,7 +6,9 @@ module DrawingManager #(
     parameter int BUFFER_WIDTH = 160,
     parameter int BUFFER_HEIGHT = 120,
     parameter int BUFFER_DATA_WIDTH = 12,
-    parameter int BUFFER_ADDR_WIDTH = $clog2(BUFFER_WIDTH * BUFFER_HEIGHT)
+    parameter int BUFFER_ADDR_WIDTH = $clog2(BUFFER_WIDTH * BUFFER_HEIGHT),
+    parameter string FILE_PATH = "../static/cube",
+    parameter int TRIANGLE_COUNT = 36
 )(
     input logic clk,
     input logic rstn,
@@ -30,9 +32,6 @@ module DrawingManager #(
         FRAMERATE,
         FRAME_DONE
     } pipeline_state_t;
-
-    localparam string FILE_PATH = "static/teapot";
-    localparam int TRIANGLE_COUNT = 160;
 
     // Add one to triangle count to be able store when 
     // all triangles have been fed to the rasterizer.

@@ -103,6 +103,10 @@ module Projection #(
                 if (projected_triangle_m_valid && projected_triangle_m_ready)
                     next_state = S_IDLE;
             end
+
+            default: begin
+                // Do nothing
+            end
         endcase
     end
 
@@ -146,6 +150,10 @@ module Projection #(
                 divisor_valid = divisor_ready;
                 current_z     = t_in.v2.position.z;
             end
+
+            default: begin
+                // Do nothing
+            end
         endcase
     end
 
@@ -161,6 +169,9 @@ module Projection #(
                 S_DIV_V0: if (z_reciprocal_valid) rec_z0 <= z_reciprocal;
                 S_DIV_V1: if (z_reciprocal_valid) rec_z1 <= z_reciprocal;
                 S_DIV_V2: if (z_reciprocal_valid) rec_z2 <= z_reciprocal;
+                default: begin
+                    // Do nothing
+                end
             endcase
             if (state == S_DIV_V2 && z_reciprocal_valid)
                 m_stage1 <= m_in;
