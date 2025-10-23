@@ -18,13 +18,15 @@ module Transform #(
 );
 
     // FSM states
-    typedef enum logic [2:0] {
-        S_IDLE,     // waiting for input
-        S_MUL_V0,   // multiply vertex 0
-        S_MUL_V1,   // multiply vertex 1
-        S_MUL_V2,   // multiply vertex 2
-        S_ADD,      // add position offset
-        S_OUT       // wait for consumer to accept output
+    typedef enum logic [3:0] {
+        S_IDLE,       // waiting for input
+        S_MUL_V0,     // multiply vertex 0
+        S_ADD_V0,     // add vertex 0
+        S_MUL_V1,     // multiply vertex 1
+        S_ADD_V1,     // add vertex 1
+        S_MUL_V2,     // multiply vertex 2
+        S_ADD_V2,     // add vertex 2
+        S_OUT          // output
     } state_t;
 
     state_t state, next_state;
@@ -35,15 +37,24 @@ module Transform #(
     position_t pos_reg;
     logic      m_reg;
 
+    // Shared multiplier outputs (combinational)
+    fixed m00x, m01y, m02z;
+    fixed m10x, m11y, m12z;
+    fixed m20x, m21y, m22z;
+
+    // Registered multiplier results (pipeline stage)
     typedef struct packed {
         fixed m00x, m01y, m02z;
         fixed m10x, m11y, m12z;
         fixed m20x, m21y, m22z;
-    } vertex_partial_t; // Helper struct to hold multiplication results
+    } mul_result_t;
+    mul_result_t mul_r;
 
-    vertex_partial_t v0_mul, v1_mul, v2_mul;
-    triangle_t triangle_out;
-    logic      m_stage1, m_stage2;
+    // Output vertex registers
+    vertex_t v0_out, v1_out, v2_out;
+
+    // Active vertex selector
+    vertex_t active_vertex;
 
     // State transition logic
     always_comb begin
@@ -51,33 +62,40 @@ module Transform #(
         case (state)
             S_IDLE: begin
                 if (triangle_tf_s_valid)
-                next_state = S_MUL_V0;
+                    next_state = S_MUL_V0;
             end
 
             S_MUL_V0: begin
+                next_state = S_ADD_V0;
+            end
+            S_ADD_V0: begin
                 next_state = S_MUL_V1;
             end
 
             S_MUL_V1: begin
+                next_state = S_ADD_V1;
+            end
+
+            S_ADD_V1: begin
                 next_state = S_MUL_V2;
             end
 
             S_MUL_V2: begin
-                next_state = S_ADD;
+                next_state = S_ADD_V2;
             end
 
-            S_ADD: begin
+            S_ADD_V2: begin
                 next_state = S_OUT;
             end
 
             S_OUT: begin
                 if (triangle_m_valid && triangle_m_ready)
-                    next_state = S_IDLE;
+                             next_state = S_IDLE;
             end
 
             default: begin
-               next_state = S_IDLE;
-           end
+                 next_state = S_IDLE;
+            end
         endcase
     end
 
@@ -107,83 +125,68 @@ module Transform #(
         end
     end
 
-    // Multiply vertex 0
-    always_ff @(posedge clk or negedge rstn) begin
-        if (!rstn) begin
-            v0_mul <= '0;
-        end
-        else if (state == S_MUL_V0) begin
-            v0_mul.m00x <= mul(rotmat_reg.m00, triangle_reg.v0.position.x);
-            v0_mul.m01y <= mul(rotmat_reg.m01, triangle_reg.v0.position.y);
-            v0_mul.m02z <= mul(rotmat_reg.m02, triangle_reg.v0.position.z);
-            v0_mul.m10x <= mul(rotmat_reg.m10, triangle_reg.v0.position.x);
-            v0_mul.m11y <= mul(rotmat_reg.m11, triangle_reg.v0.position.y);
-            v0_mul.m12z <= mul(rotmat_reg.m12, triangle_reg.v0.position.z);
-            v0_mul.m20x <= mul(rotmat_reg.m20, triangle_reg.v0.position.x);
-            v0_mul.m21y <= mul(rotmat_reg.m21, triangle_reg.v0.position.y);
-            v0_mul.m22z <= mul(rotmat_reg.m22, triangle_reg.v0.position.z);
-        end
+    // Select the active vertex (used in MUL states)
+    always_comb begin
+        case (state)
+            S_MUL_V0, S_ADD_V0: active_vertex = triangle_reg.v0;
+            S_MUL_V1, S_ADD_V1: active_vertex = triangle_reg.v1;
+            S_MUL_V2, S_ADD_V2: active_vertex = triangle_reg.v2;
+            default:             active_vertex = '0;
+        endcase
     end
 
-    // Multiply vertex 1
+    // Time-multiplexed vertex multiplication
+    assign m00x = mul(rotmat_reg.m00, active_vertex.position.x);
+    assign m01y = mul(rotmat_reg.m01, active_vertex.position.y);
+    assign m02z = mul(rotmat_reg.m02, active_vertex.position.z);
+    assign m10x = mul(rotmat_reg.m10, active_vertex.position.x);
+    assign m11y = mul(rotmat_reg.m11, active_vertex.position.y);
+    assign m12z = mul(rotmat_reg.m12, active_vertex.position.z);
+    assign m20x = mul(rotmat_reg.m20, active_vertex.position.x);
+    assign m21y = mul(rotmat_reg.m21, active_vertex.position.y);
+    assign m22z = mul(rotmat_reg.m22, active_vertex.position.z);
+
+    // Register the multiplier results (pipeline stage)
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn)
-            v1_mul <= '0;
-        else if (state == S_MUL_V1) begin
-            v1_mul.m00x <= mul(rotmat_reg.m00, triangle_reg.v1.position.x);
-            v1_mul.m01y <= mul(rotmat_reg.m01, triangle_reg.v1.position.y);
-            v1_mul.m02z <= mul(rotmat_reg.m02, triangle_reg.v1.position.z);
-            v1_mul.m10x <= mul(rotmat_reg.m10, triangle_reg.v1.position.x);
-            v1_mul.m11y <= mul(rotmat_reg.m11, triangle_reg.v1.position.y);
-            v1_mul.m12z <= mul(rotmat_reg.m12, triangle_reg.v1.position.z);
-            v1_mul.m20x <= mul(rotmat_reg.m20, triangle_reg.v1.position.x);
-            v1_mul.m21y <= mul(rotmat_reg.m21, triangle_reg.v1.position.y);
-            v1_mul.m22z <= mul(rotmat_reg.m22, triangle_reg.v1.position.z);
+            mul_r <= '0;
+        else if (state inside {S_MUL_V0, S_MUL_V1, S_MUL_V2}) begin
+            mul_r.m00x <= m00x;  mul_r.m01y <= m01y;  mul_r.m02z <= m02z;
+            mul_r.m10x <= m10x;  mul_r.m11y <= m11y;  mul_r.m12z <= m12z;
+            mul_r.m20x <= m20x;  mul_r.m21y <= m21y;  mul_r.m22z <= m22z;
         end
     end
 
-    // Multiply vertex 2
-    always_ff @(posedge clk or negedge rstn) begin
-        if (!rstn)
-            v2_mul <= '0;
-        else if (state == S_MUL_V2) begin
-            v2_mul.m00x <= mul(rotmat_reg.m00, triangle_reg.v2.position.x);
-            v2_mul.m01y <= mul(rotmat_reg.m01, triangle_reg.v2.position.y);
-            v2_mul.m02z <= mul(rotmat_reg.m02, triangle_reg.v2.position.z);
-            v2_mul.m10x <= mul(rotmat_reg.m10, triangle_reg.v2.position.x);
-            v2_mul.m11y <= mul(rotmat_reg.m11, triangle_reg.v2.position.y);
-            v2_mul.m12z <= mul(rotmat_reg.m12, triangle_reg.v2.position.z);
-            v2_mul.m20x <= mul(rotmat_reg.m20, triangle_reg.v2.position.x);
-            v2_mul.m21y <= mul(rotmat_reg.m21, triangle_reg.v2.position.y);
-            v2_mul.m22z <= mul(rotmat_reg.m22, triangle_reg.v2.position.z);
-            m_stage1 <= m_reg; // propagate metadata after last multiply
-        end
-    end
-
-    // Add position offset
+    // Add stage (uses registered multiplier results)
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
-            triangle_out <= '0;
-            m_stage2 <= '0;
-        end
-        else if (state == S_ADD) begin
-            triangle_out.v0.position.x <= add(add(v0_mul.m00x, v0_mul.m01y), add(v0_mul.m02z, pos_reg.x));
-            triangle_out.v0.position.y <= add(add(v0_mul.m10x, v0_mul.m11y), add(v0_mul.m12z, pos_reg.y));
-            triangle_out.v0.position.z <= add(add(v0_mul.m20x, v0_mul.m21y), add(v0_mul.m22z, pos_reg.z));
-
-            triangle_out.v1.position.x <= add(add(v1_mul.m00x, v1_mul.m01y), add(v1_mul.m02z, pos_reg.x));
-            triangle_out.v1.position.y <= add(add(v1_mul.m10x, v1_mul.m11y), add(v1_mul.m12z, pos_reg.y));
-            triangle_out.v1.position.z <= add(add(v1_mul.m20x, v1_mul.m21y), add(v1_mul.m22z, pos_reg.z));
-
-            triangle_out.v2.position.x <= add(add(v2_mul.m00x, v2_mul.m01y), add(v2_mul.m02z, pos_reg.x));
-            triangle_out.v2.position.y <= add(add(v2_mul.m10x, v2_mul.m11y), add(v2_mul.m12z, pos_reg.y));
-            triangle_out.v2.position.z <= add(add(v2_mul.m20x, v2_mul.m21y), add(v2_mul.m22z, pos_reg.z));
-
-            triangle_out.v0.color <= triangle_reg.v0.color;
-            triangle_out.v1.color <= triangle_reg.v1.color;
-            triangle_out.v2.color <= triangle_reg.v2.color;
-
-            m_stage2 <= m_stage1;
+            v0_out <= '0;
+            v1_out <= '0;
+            v2_out <= '0;
+        end else begin
+            case (state)
+                S_ADD_V0: begin
+                    v0_out.position.x <= add(add(mul_r.m00x, mul_r.m01y), add(mul_r.m02z, pos_reg.x));
+                    v0_out.position.y <= add(add(mul_r.m10x, mul_r.m11y), add(mul_r.m12z, pos_reg.y));
+                    v0_out.position.z <= add(add(mul_r.m20x, mul_r.m21y), add(mul_r.m22z, pos_reg.z));
+                    v0_out.color      <= triangle_reg.v0.color;
+                end
+                S_ADD_V1: begin
+                    v1_out.position.x <= add(add(mul_r.m00x, mul_r.m01y), add(mul_r.m02z, pos_reg.x));
+                    v1_out.position.y <= add(add(mul_r.m10x, mul_r.m11y), add(mul_r.m12z, pos_reg.y));
+                    v1_out.position.z <= add(add(mul_r.m20x, mul_r.m21y), add(mul_r.m22z, pos_reg.z));
+                    v1_out.color      <= triangle_reg.v1.color;
+                end
+                S_ADD_V2: begin
+                    v2_out.position.x <= add(add(mul_r.m00x, mul_r.m01y), add(mul_r.m02z, pos_reg.x));
+                    v2_out.position.y <= add(add(mul_r.m10x, mul_r.m11y), add(mul_r.m12z, pos_reg.y));
+                    v2_out.position.z <= add(add(mul_r.m20x, mul_r.m21y), add(mul_r.m22z, pos_reg.z));
+                    v2_out.color      <= triangle_reg.v2.color;
+                end
+                default: begin
+                    // Do nothing
+                end
+            endcase
         end
     end
 
@@ -191,13 +194,15 @@ module Transform #(
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn)
             triangle_m_valid <= 1'b0;
-        else if (state == S_ADD)
+        else if (state == S_ADD_V2)
             triangle_m_valid <= 1'b1;
         else if (state == S_OUT && triangle_m_valid && triangle_m_ready)
             triangle_m_valid <= 1'b0;
     end
 
-    assign triangle_m_data     = triangle_out;
-    assign triangle_m_metadata = m_stage2;
+    assign triangle_m_data.v0 = v0_out;
+    assign triangle_m_data.v1 = v1_out;
+    assign triangle_m_data.v2 = v2_out;
+    assign triangle_m_metadata = m_reg;
 
 endmodule
