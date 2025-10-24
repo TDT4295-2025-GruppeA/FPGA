@@ -55,7 +55,6 @@ def write_sv_mem_triangles(stl_path: str, output_path: str):
                 qx = float_to_fixed(x, DECIMAL_WIDTH)
                 qy = float_to_fixed(y, DECIMAL_WIDTH)
                 qz = float_to_fixed(z, DECIMAL_WIDTH)
-                print(x, y, z)
                 output += f"{qx & 0xFFFFFFFF:08X}"
                 output += f"{qy & 0xFFFFFFFF:08X}"
                 output += f"{qz & 0xFFFFFFFF:08X}"

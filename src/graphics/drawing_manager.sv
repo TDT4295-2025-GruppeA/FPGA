@@ -7,8 +7,8 @@ module DrawingManager #(
     parameter int BUFFER_HEIGHT = 120,
     parameter int BUFFER_DATA_WIDTH = 12,
     parameter int BUFFER_ADDR_WIDTH = $clog2(BUFFER_WIDTH * BUFFER_HEIGHT),
-    parameter string FILE_PATH = "../static/cube",
-    parameter int TRIANGLE_COUNT = 36
+    parameter string FILE_PATH = "static/models/teapot",
+    parameter int TRIANGLE_COUNT = 160
 )(
     input logic clk,
     input logic rstn,
@@ -95,9 +95,9 @@ module DrawingManager #(
     // Input data to the transform module.
     triangle_tf_t triangle_tf_data;
     assign triangle_tf_data.transform.rotmat = sw_r[1] ? '{
-        m00: rtof( 0.5), m01: rtof( 0.0), m02: rtof( 0.0),
-        m10: rtof( 0.0), m11: rtof(-0.5), m12: rtof( 0.0),
-        m20: rtof( 0.0), m21: rtof( 0.0), m22: rtof( 0.5)
+        m00: rtof( 0.8), m01: rtof( 0.0), m02: rtof( 0.0),
+        m10: rtof( 0.0), m11: rtof( 0.8), m12: rtof( 0.0),
+        m20: rtof( 0.0), m21: rtof( 0.0), m22: rtof( 0.8)
     } : '{
         m00: rtof(0.707/2), m01: rtof(-0.707/2), m02: rtof(0.0/2),
         m10: rtof(0.707/2), m11: rtof( 0.707/2), m12: rtof(0.0/2),
@@ -132,26 +132,31 @@ module DrawingManager #(
         .triangle_m_metadata(triangle_transformed_metadata)
     );
 
-    triangle_t projected_triangle;
-    logic projected_valid, projected_ready;
-    logic projected_metadata;
+    // triangle_t projected_triangle;
+    // logic projected_valid, projected_ready;
+    // logic projected_metadata;
 
-    Projection #(
-        .FOCAL_LENGTH(rtof(0.01))
-    ) projection (
-        .clk(clk),
-        .rstn(rstn),
+    // Projection #(
+    //     .intrinsics('{
+    //         fx: rtof(69.0),
+    //         fy: rtof(69.0),
+    //         cx: rtof(80.0),
+    //         cy: rtof(60.0)
+    //     })
+    // ) projection (
+    //     .clk(clk),
+    //     .rstn(rstn),
 
-        .triangle_s_data(triangle_transformed),
-        .triangle_s_metadata(triangle_transformed_metadata),
-        .triangle_s_valid(triangle_transformed_valid),
-        .triangle_s_ready(triangle_transformed_ready),
+    //     .triangle_s_data(triangle_transformed),
+    //     .triangle_s_metadata(triangle_transformed_metadata),
+    //     .triangle_s_valid(triangle_transformed_valid),
+    //     .triangle_s_ready(triangle_transformed_ready),
 
-        .projected_triangle_m_data(projected_triangle),
-        .projected_triangle_m_valid(projected_valid),
-        .projected_triangle_m_metadata(projected_metadata),
-        .projected_triangle_m_ready(projected_ready)
-    );
+    //     .projected_triangle_m_data(projected_triangle),
+    //     .projected_triangle_m_valid(projected_valid),
+    //     .projected_triangle_m_metadata(projected_metadata),
+    //     .projected_triangle_m_ready(projected_ready)
+    // );
 
     ///////////////////
     // Rasterization //
@@ -168,10 +173,10 @@ module DrawingManager #(
         .clk(clk),
         .rstn(rstn),
 
-        .triangle_s_ready(projected_ready),
-        .triangle_s_valid(projected_valid),
-        .triangle_s_data(projected_triangle),
-        .triangle_s_metadata('{ last: projected_metadata }),
+        .triangle_s_ready(triangle_transformed_ready),
+        .triangle_s_valid(triangle_transformed_valid),
+        .triangle_s_data(triangle_transformed),
+        .triangle_s_metadata('{ last: triangle_transformed_metadata }),
 
         .pixel_data_m_ready(1'b1), // We are always ready.
         .pixel_data_m_valid(pixel_valid),
@@ -255,7 +260,7 @@ module DrawingManager #(
 
                     if (sw_r[0]) begin
                         // If switch zero is set display the depth map.
-                        write_data = {4'h0, 4'(ftoi(mul(itof(15), mul(pixel.depth, rtof(0.5))))), 4'h0};
+                        write_data = {4'h0, 4'(ftoi(mul(itof(15), pixel.depth))), 4'h0};
                     end else begin
                         // Otherwise, write the actual pixel color.
                         write_data = pixel.color[15:4];

@@ -4,7 +4,7 @@ import fixed_pkg::*;
 // Simple read-only memory module for storing model triangles.
 module ModelRom #(
     parameter int TRIANGLE_COUNT = 36,
-    parameter string FILE_PATH = "static/cube"
+    parameter string FILE_PATH = "static/models/cube"
 ) (
     input logic clk,
     input logic [$clog2(TRIANGLE_COUNT)-1:0] address,
@@ -18,14 +18,14 @@ module ModelRom #(
     // which represent how the data is stored in the ROM.
 
     typedef struct packed {
-        logic [31:0] x;
-        logic [31:0] y;
-        logic [31:0] z;
+        logic signed [31:0] x;
+        logic signed [31:0] y;
+        logic signed [31:0] z;
     } aligned_position_t;
 
     typedef struct packed {
         aligned_position_t position;
-        logic [15:0] color;
+        logic signed [15:0] color;
     } aligned_vertex_t;
 
     typedef struct packed {
@@ -43,11 +43,11 @@ module ModelRom #(
     (* rom_style = "block" *) logic [47:0] mem4 [TRIANGLE_COUNT];
     
     initial begin
-        $readmemh({FILE_PATH, "0.mem"}, mem0);
-        $readmemh({FILE_PATH, "1.mem"}, mem1);
-        $readmemh({FILE_PATH, "2.mem"}, mem2);
-        $readmemh({FILE_PATH, "3.mem"}, mem3);
-        $readmemh({FILE_PATH, "4.mem"}, mem4);
+        $readmemh({FILE_PATH, "/0.mem"}, mem0);
+        $readmemh({FILE_PATH, "/1.mem"}, mem1);
+        $readmemh({FILE_PATH, "/2.mem"}, mem2);
+        $readmemh({FILE_PATH, "/3.mem"}, mem3);
+        $readmemh({FILE_PATH, "/4.mem"}, mem4);
     end
 
     logic [71:0] tri_data0, tri_data1, tri_data2, tri_data3;

@@ -2,7 +2,7 @@
 import os
 import sys
 
-def split_memory_file(file_path):
+def split_memory_file(file_path: str):
     # Read lines
     with open(file_path, 'r') as f:
         lines = [line.strip() for line in f if line.strip()]
@@ -22,8 +22,9 @@ def split_memory_file(file_path):
 
     # Save each "column" to its own file
     base_name, ext = os.path.splitext(file_path)
+    os.makedirs(base_name, exist_ok=True)
     for idx, data in enumerate(files_data):
-        out_file = f"{base_name}{idx}{ext}"
+        out_file = f"{base_name}/{idx}{ext}"
         with open(out_file, 'w') as f:
             f.write('\n'.join(data))
         print(f"Saved {out_file}")

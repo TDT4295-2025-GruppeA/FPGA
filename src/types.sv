@@ -71,6 +71,7 @@ package types_pkg;
     typedef struct packed {
         triangle_t triangle;
         fixed area_inv; // Actually 1 / (2 * area)
+        logic small_area; // Area less than threshold
     } attributed_triangle_t;
     
     typedef struct packed {

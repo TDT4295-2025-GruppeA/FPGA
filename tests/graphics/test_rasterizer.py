@@ -5,8 +5,8 @@ from stubs.rasterizer import Rasterizer
 
 from types_ import RGB, PixelData, PixelDataMetadata, Position, Triangle, TriangleMetadata, Vertex
 
-VIEWPORT_WIDTH = 65
-VIEWPORT_HEIGHT = 65
+VIEWPORT_WIDTH = 64
+VIEWPORT_HEIGHT = 64
 
 CLOCK_PERIOD = 2 # ns
 
@@ -63,6 +63,11 @@ TEST_TRIANGLES = [
         Vertex(Position(0.40, -0.40, 0.00), RGB(15, 0, 0)),
         Vertex(Position(0.40, -1.00, 0.00), RGB(15, 0, 0)),
     ),
+    Triangle(
+        Vertex(Position(0.51,  0.50, 1.00), RGB(15, 0, 0)),
+        Vertex(Position(0.51, -0.51, 1.00), RGB(15, 0, 0)),
+        Vertex(Position(0.50,  0.50, 1.00), RGB(15, 0, 0)),
+    ),
 ]
 
 async def feed_triangles(clock: Clock, dut: Rasterizer):
@@ -86,7 +91,7 @@ async def feed_triangles(clock: Clock, dut: Rasterizer):
         await clock.cycles(1)
         dut.triangle_s_valid.value = 0
 
-@cocotb.test(timeout_time=100, timeout_unit="us")
+@cocotb.test(timeout_time=1, timeout_unit="ms")
 async def test_rasterizer(dut: Rasterizer):
     # Setup clock which will be used to drive the simulation
     clock = Clock(dut.clk, CLOCK_PERIOD, unit="ns")

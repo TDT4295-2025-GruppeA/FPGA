@@ -50,6 +50,7 @@ module TrianglePreprocessor (
     triangle_metadata_t triangle_metadata;
     fixed area_c, area_r, area_inv;
     logic area_inv_valid;
+    logic small_area;
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
@@ -71,6 +72,7 @@ module TrianglePreprocessor (
             if (area_inv_valid) begin
                 attributed_triangle_m_data.triangle <= triangle;
                 attributed_triangle_m_data.area_inv <= area_inv;
+                attributed_triangle_m_data.small_area <= small_area;
                 attributed_triangle_m_metadata <= triangle_metadata;
             end
         end
@@ -111,6 +113,8 @@ module TrianglePreprocessor (
         triangle.v1.position,
         triangle.v2.position
     );
+
+    assign small_area = (area_r < 2);
 
     FixedReciprocalDivider divider (
         .clk(clk),

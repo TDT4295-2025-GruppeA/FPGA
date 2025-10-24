@@ -10,7 +10,7 @@ TRIANGLE_COUNT = 12
 VERILOG_MODULE = "ModelRom"
 VERILOG_PARAMETERS = {
     "TRIANGLE_COUNT": TRIANGLE_COUNT,
-    "FILE_PATH": "\"../static/cube\"",
+    "FILE_PATH": "\"../static/models/cube\"",
 }
 
 @cocotb.test(timeout_time=1, timeout_unit="us")
@@ -29,4 +29,5 @@ async def test_model_rom(dut: Modelrom):
             f"Struct: {triangle}"
         )
 
-    assert True
+    # We don't do any asserts as the test is that Triangle.from_logicarray
+    # does not raise any errors when reading all triangles from the ROM.
