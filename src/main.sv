@@ -122,7 +122,7 @@ module Top (
     logic draw_start;
     assign draw_start = rst_deassert_pulse | (buffer_select_sync_sys != buffer_select_sync_sys_d);
 
-    position_t position;
+    logic signed [7:0] data;
 
     DrawingManager #(
         .BUFFER_WIDTH(BUFFER_CONFIG.width),
@@ -140,7 +140,7 @@ module Top (
         .write_data(dm_write_data),
         .frame_done(dm_frame_done),
         .buffer_select(buffer_select_sync_sys),
-        .position(position)
+        .data(data)
     );
 
     ///////////////////////////////////////
@@ -249,10 +249,10 @@ module Top (
     // SPI //
     /////////
 
-    position_t rx_position;
+    logic signed [7:0] rx_data;
 
     SpiSub #(
-        .WORD_SIZE($bits(position_t)),
+        .WORD_SIZE(8),
         .RX_QUEUE_LENGTH(2),
         .TX_QUEUE_LENGTH(2)
     ) spi_controller (
@@ -269,8 +269,8 @@ module Top (
         // User data interface
         .tx_data_en(1'b1), // Never sending anything.
         .rx_data_en(1'b1), // Always reading.
-        .tx_data(position), // Sending back received data.
-        .rx_data(rx_position), // Word to receive.
+        .tx_data(data), // Sending back received data.
+        .rx_data(rx_data), // Word to receive.
         .tx_ready(), // Ignored.
         .rx_ready(), // Ignored.
         .active() // Ignored.
@@ -278,9 +278,9 @@ module Top (
 
     always_ff @(posedge clk_system or negedge rstn_system) begin
         if (!rstn_system) begin
-            position <= '0;
+            data <= '0;
         end else begin
-            position <= rx_position;
+            data <= rx_data;
         end
     end
 

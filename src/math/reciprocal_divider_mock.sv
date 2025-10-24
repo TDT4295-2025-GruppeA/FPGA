@@ -11,7 +11,7 @@ module ReciprocalDivider #(
 
     output logic s_axis_dividend_tready,
     input logic s_axis_dividend_tvalid,
-    input logic [21:0] s_axis_dividend_tdata,
+    input logic [32:0] s_axis_dividend_tdata,
     
     output logic s_axis_divisor_tready,
     input logic s_axis_divisor_tvalid,
@@ -19,7 +19,7 @@ module ReciprocalDivider #(
 
     input logic m_axis_dout_tready,
     output logic m_axis_dout_tvalid,
-    output logic [23:0] m_axis_dout_tdata
+    output logic [39:0] m_axis_dout_tdata
 );
     // This is by far not how the actual divider IP core works,
     // but it will work for our simple use case.
@@ -51,7 +51,7 @@ module ReciprocalDivider #(
             if (counter == count'(DELAY)) begin
                 // Put data on output once "computation" is done.
                 valid <= 1;
-                m_axis_dout_tdata <= 24'(result);
+                m_axis_dout_tdata <= 40'(result);
             end else begin
                 // Continue "computation" until done.
                 counter <= counter + 1;

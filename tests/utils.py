@@ -5,8 +5,8 @@ from cocotb.types import Array, LogicArray
 
 # How many decimals bits are used in the fixed point format.
 # IMPORTANT: This needs to match the fixed point format used in the Verilog code
-DECIMAL_WIDTH = 10
-TOTAL_WIDTH = 18
+DECIMAL_WIDTH = 14
+TOTAL_WIDTH = 25
 
 # The smallest representable interval in the fixed point format.
 RESOLUTION = 2**-DECIMAL_WIDTH

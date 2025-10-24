@@ -23,7 +23,7 @@ module DrawingManager #(
     // Temp inputs for debugging
     input logic [3:0] sw, // Used for selecting colors
     input logic buffer_select,
-    input position_t position
+    input logic signed [7:0] data
 );
     typedef enum {
         IDLE,
@@ -90,20 +90,28 @@ module DrawingManager #(
     // Transform //
     ///////////////
 
-    position_t position_d;
+    logic signed [7:0] data_d;
 
     // Input data to the transform module.
     triangle_tf_t triangle_tf_data;
     assign triangle_tf_data.transform.rotmat = sw_r[1] ? '{
-        m00: rtof( 0.8), m01: rtof( 0.0), m02: rtof( 0.0),
-        m10: rtof( 0.0), m11: rtof( 0.8), m12: rtof( 0.0),
-        m20: rtof( 0.0), m21: rtof( 0.0), m22: rtof( 0.8)
+        m00: rtof( 1.0), m01: rtof( 0.0), m02: rtof( 0.0),
+        m10: rtof( 0.0), m11: rtof(-1.0), m12: rtof( 0.0),
+        m20: rtof( 0.0), m21: rtof( 0.0), m22: rtof( 1.0)
     } : '{
-        m00: rtof(0.707/2), m01: rtof(-0.707/2), m02: rtof(0.0/2),
-        m10: rtof(0.707/2), m11: rtof( 0.707/2), m12: rtof(0.0/2),
-        m20: rtof(0.000/2), m21: rtof( 0.000/2), m22: rtof(1.0/2)
+        m00: rtof(0.707/1), m01: rtof( 0.707/1), m02: rtof(0.0/1),
+        m10: rtof(0.707/1), m11: rtof(-0.707/1), m12: rtof(0.0/1),
+        m20: rtof(0.000/1), m21: rtof( 0.000/1), m22: rtof(1.0/1)
     };
-    assign triangle_tf_data.transform.position = position_d;
+    assign triangle_tf_data.transform.position = sw_r[2] ? '{
+        x: rtof(0.0),
+        y: rtof(0.0),
+        z: rtof(2.5)
+    } : '{
+        x: rtof(0.0),
+        y: rtof(0.0),
+        z: itof(data)
+    };
     assign triangle_tf_data.triangle = triangle;
 
     logic triangle_tf_metadata;
@@ -132,31 +140,26 @@ module DrawingManager #(
         .triangle_m_metadata(triangle_transformed_metadata)
     );
 
-    // triangle_t projected_triangle;
-    // logic projected_valid, projected_ready;
-    // logic projected_metadata;
+    triangle_t projected_triangle;
+    logic projected_valid, projected_ready;
+    logic projected_metadata;
 
-    // Projection #(
-    //     .intrinsics('{
-    //         fx: rtof(69.0),
-    //         fy: rtof(69.0),
-    //         cx: rtof(80.0),
-    //         cy: rtof(60.0)
-    //     })
-    // ) projection (
-    //     .clk(clk),
-    //     .rstn(rstn),
+    Projection #(
+        .FOCAL_LENGTH(rtof(1.0))
+    ) projection (
+        .clk(clk),
+        .rstn(rstn),
 
-    //     .triangle_s_data(triangle_transformed),
-    //     .triangle_s_metadata(triangle_transformed_metadata),
-    //     .triangle_s_valid(triangle_transformed_valid),
-    //     .triangle_s_ready(triangle_transformed_ready),
+        .triangle_s_data(triangle_transformed),
+        .triangle_s_metadata(triangle_transformed_metadata),
+        .triangle_s_valid(triangle_transformed_valid),
+        .triangle_s_ready(triangle_transformed_ready),
 
-    //     .projected_triangle_m_data(projected_triangle),
-    //     .projected_triangle_m_valid(projected_valid),
-    //     .projected_triangle_m_metadata(projected_metadata),
-    //     .projected_triangle_m_ready(projected_ready)
-    // );
+        .projected_triangle_m_data(projected_triangle),
+        .projected_triangle_m_valid(projected_valid),
+        .projected_triangle_m_metadata(projected_metadata),
+        .projected_triangle_m_ready(projected_ready)
+    );
 
     ///////////////////
     // Rasterization //
@@ -173,10 +176,10 @@ module DrawingManager #(
         .clk(clk),
         .rstn(rstn),
 
-        .triangle_s_ready(triangle_transformed_ready),
-        .triangle_s_valid(triangle_transformed_valid),
-        .triangle_s_data(triangle_transformed),
-        .triangle_s_metadata('{ last: triangle_transformed_metadata }),
+        .triangle_s_ready(projected_ready),
+        .triangle_s_valid(projected_valid),
+        .triangle_s_data(projected_triangle),
+        .triangle_s_metadata('{ last: projected_metadata }),
 
         .pixel_data_m_ready(1'b1), // We are always ready.
         .pixel_data_m_valid(pixel_valid),
@@ -209,7 +212,7 @@ module DrawingManager #(
             // Only sample update color between draws.
             if (state == FRAME_DONE) begin
                 sw_r <= sw;
-                position_d <= position;
+                data_d <= data;
             end
         end
     end

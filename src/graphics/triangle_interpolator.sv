@@ -218,9 +218,9 @@ module TriangleInterpolator #(
     // larger than a small threshold to avoid numerical issues.
     logic covered_2_c;
     assign covered_2_c = (
-        (f01_2_r > 0 || f01_2_r > -EDGE_TOLERANCE && topleft01_2_c) &&
-        (f12_2_r > 0 || f12_2_r > -EDGE_TOLERANCE && topleft12_2_c) &&
-        (f20_2_r > 0 || f20_2_r > -EDGE_TOLERANCE && topleft20_2_c) &&
+        (f01_2_r > 0 || f01_2_r >= -EDGE_TOLERANCE && topleft01_2_c) &&
+        (f12_2_r > 0 || f12_2_r >= -EDGE_TOLERANCE && topleft12_2_c) &&
+        (f20_2_r > 0 || f20_2_r >= -EDGE_TOLERANCE && topleft20_2_c) &&
         !small_2_r
     );
 
