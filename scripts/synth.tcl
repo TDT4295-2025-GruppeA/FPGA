@@ -7,6 +7,7 @@ set rpt_dir "build/reports"
 set part_long $::env(FPGA_PART_LONG)
 set target $::env(FPGA_TARGET)
 set board $::env(FPGA_BOARD)
+set top $::env(TOP)
 
 #########
 # Setup #
@@ -33,7 +34,7 @@ read_verilog [ fileutil::findByPattern src *.*v ]
 # Load constratins for Arty A7
 read_xdc constraints/${board}.xdc
 
-synth_design -top Top
+synth_design -top $top
 
 write_checkpoint -force $rpt_dir/post_synth_checkpoint
 
@@ -60,4 +61,4 @@ report_timing -delay_type min_max -max_paths 1 -file $rpt_dir/post_route_timing.
 # Ensure build directory exists
 exec mkdir -p build
 
-write_bitstream -force build/top_${target}.bit
+write_bitstream -force build/${top}_${target}.bit
