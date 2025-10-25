@@ -1,6 +1,6 @@
-import fixed_pkg::*;
 
 package types_pkg;
+    import fixed_pkg::*;
     // Generic types
     typedef logic[7:0] byte_t;
     typedef logic[15:0] short_t;
