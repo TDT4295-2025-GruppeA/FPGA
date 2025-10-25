@@ -1,10 +1,6 @@
 package types_pkg;
-<<<<<<< HEAD
     import fixed_pkg::*;
-
-=======
     // Generic types
->>>>>>> 254c21e (refactor: rename structs for consistency)
     typedef logic[7:0] byte_t;
     typedef logic[15:0] short_t;
 
