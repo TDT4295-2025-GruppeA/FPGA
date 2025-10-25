@@ -71,7 +71,7 @@ module ModelBuffer #(
     always_comb begin
         read_addr = registry[read_model_index].index + read_triangle_index;
         write_in_ready = 1;
-        read_in_ready = read_out_ready;
+        read_in_ready = ~read_out_valid | read_out_ready;
 
         if (write_model_idx != write_prev_model_index) begin
             write_triangle_index = 0;
@@ -89,24 +89,11 @@ module ModelBuffer #(
             write_in_ready = 0; // Refuse to write to already written model
         end
 
-        read_out_data = model_buffer[read_addr];
-        read_out_valid = read_in_valid && read_in_ready;
-
-        // Mark last triange in model
-        if (read_triangle_index + 1 == registry[read_model_index].size) begin
-            read_out_metadata.last = 1;
-        end else begin
-            read_out_metadata.last = 0;
-        end
     end
 
     always_ff @(posedge clk or negedge rstn) begin
         // Mark model as written if we have started writing to another model
         // It is only allowed to write to a model once.
-        if (write_en && write_in_ready && (write_model_idx != write_prev_model_index) && rstn) begin
-            if (registry[write_prev_model_index].state == STATE_WRITING)
-                registry[write_prev_model_index].state <= STATE_WRITTEN;
-        end
 
         if (!rstn) begin // Reset control signals
             addr_next <= 0;
@@ -116,23 +103,39 @@ module ModelBuffer #(
                 registry[i].size = 0;
                 registry[i].index = 0;
             end
-        end else if (write_en) begin
-            // Write the triangle and update model states
-            triangle_index <= write_triangle_index; // Update triangle index
-            model_buffer[write_addr] <= write_triangle;
-            registry[write_model_idx].size += 1;
+        end else begin
+            if (write_en) begin
+                if (write_in_ready && (write_model_idx != write_prev_model_index)) begin
+                    if (registry[write_prev_model_index].state == STATE_WRITING)
+                        registry[write_prev_model_index].state <= STATE_WRITTEN;
+                end
 
-            if (write_triangle_index == 0) begin
-                registry[write_model_idx].index <= addr_next;
+                // Write the triangle and update model states
+                triangle_index <= write_triangle_index; // Update triangle index
+                model_buffer[write_addr] <= write_triangle;
+                registry[write_model_idx].size += 1;
+
+                if (write_triangle_index == 0) begin
+                    registry[write_model_idx].index <= addr_next;
+                end
+                addr_next <= write_addr + 1;
+
+                // Update state of the model we are writing to
+                if (registry[write_model_idx].state == STATE_EMPTY) begin
+                    registry[write_model_idx].state <= STATE_WRITING;
+                end
+
+                write_prev_model_index <= write_model_idx;
             end
-            addr_next <= write_addr + 1;
+        end
 
-            // Update state of the model we are writing to
-            if (registry[write_model_idx].state == STATE_EMPTY) begin
-                registry[write_model_idx].state <= STATE_WRITING;
-            end
-
-            write_prev_model_index <= write_model_idx;
+        read_out_data <= model_buffer[read_addr];
+        read_out_valid <= read_in_valid && read_in_ready;
+        // Mark last triange in model
+        if (read_triangle_index + 1 == registry[read_model_index].size) begin
+            read_out_metadata.last <= 1;
+        end else begin
+            read_out_metadata.last <= 0;
         end
     end
 endmodule
