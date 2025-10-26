@@ -1,6 +1,20 @@
 import types_pkg::*;
 import fixed_pkg::*;
 
+function automatic logic [9:0] normalized_to_pixel_floor(fixed normalized_coordinate, int viewport_size);
+    fixed pixel_coordinate = mul(add(normalized_coordinate, rtof(1.0 - 1/16)), rtof(real'(viewport_size - 1)/2));
+    pixel_coordinate = (pixel_coordinate < itof(0)) ? itof(0) : pixel_coordinate;
+    pixel_coordinate = (pixel_coordinate > itof(viewport_size - 1)) ? itof(viewport_size - 1) : pixel_coordinate;
+    return 10'(ftoi(pixel_coordinate));
+endfunction
+
+function automatic logic [9:0] normalized_to_pixel_ceil(fixed normalized_coordinate, int viewport_size);
+    fixed pixel_coordinate = mul(add(normalized_coordinate, rtof(1.0 + 1/16)), rtof(real'(viewport_size - 1)/2));
+    pixel_coordinate = (pixel_coordinate < itof(0)) ? itof(0) : pixel_coordinate;
+    pixel_coordinate = (pixel_coordinate > itof(viewport_size - 1)) ? itof(viewport_size - 1) : pixel_coordinate;
+    return 10'(ftoi(pixel_coordinate));
+endfunction
+
 module Rasterizer #(
     // The viewport size to rasterize
     parameter int VIEWPORT_WIDTH = 64,
@@ -53,12 +67,13 @@ module Rasterizer #(
 
     // Which pixel we are currently sampling.
     pixel_coordinate_t pixel_coordinate;
+    pixel_coordinate_t end_coordinate;
 
     // Flags to indicate if we are on the last pixel
     // of the row or the last row of the viewport.
     logic last_x, last_y;
-    assign last_x = (pixel_coordinate.x == 10'(VIEWPORT_WIDTH - 1));
-    assign last_y = (pixel_coordinate.y == 10'(VIEWPORT_HEIGHT - 1));
+    assign last_x = (pixel_coordinate.x == end_coordinate.x);
+    assign last_y = (pixel_coordinate.y == end_coordinate.y);
 
     pixel_metadata_t pixel_coordinate_metadata;
     assign pixel_coordinate_metadata.last = last_x && last_y;
@@ -106,6 +121,11 @@ module Rasterizer #(
                     if (attributed_triangle_valid && rasterizer_ready) begin
                         // Start rasterizing if so.
                         state <= RUNNING;
+
+                        pixel_coordinate.x <= normalized_to_pixel_floor(attributed_triangle.bounding_box.left,  VIEWPORT_WIDTH);
+                        pixel_coordinate.y <= normalized_to_pixel_floor(attributed_triangle.bounding_box.top,   VIEWPORT_HEIGHT);
+                        end_coordinate.x   <= normalized_to_pixel_ceil(attributed_triangle.bounding_box.right,  VIEWPORT_WIDTH);
+                        end_coordinate.y   <= normalized_to_pixel_ceil(attributed_triangle.bounding_box.bottom, VIEWPORT_HEIGHT);
                     end
                 end
                 RUNNING: begin
@@ -114,8 +134,6 @@ module Rasterizer #(
                         // Go to the next pixel.
                         // If it is the last reset to IDLE.
                         if (last_y && last_x) begin
-                            pixel_coordinate.x <= 0;
-                            pixel_coordinate.y <= 0;    
                             state <= IDLE;
                         end else if (last_x) begin
                             pixel_coordinate.x <= 0;

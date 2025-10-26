@@ -116,7 +116,9 @@ async def test_rasterizer(dut: Rasterizer):
     # Feed triangles
     cocotb.start_soon(feed_triangles(clock, dut))
 
+
     # Create a ASCII representation of the buffer
+    # TODO: Create an actual image.
     covered_output = [
         list(UNINITIALIZED_PIXEL * VIEWPORT_WIDTH) for _ in range(VIEWPORT_HEIGHT)
     ]
@@ -199,8 +201,8 @@ async def test_rasterizer(dut: Rasterizer):
         f.write(covered_output)
 
     assert (
-        UNINITIALIZED_PIXEL not in covered_output
-    ), "All pixels should have been written to."
+        UNINITIALIZED_PIXEL in covered_output
+    ), "Some pixels should not have been written to."
     assert all(
         shade_pixel in covered_output for shade_pixel in SHADE_PIXELS
     ), "All shades should have been drawn."

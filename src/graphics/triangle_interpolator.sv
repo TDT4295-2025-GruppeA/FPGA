@@ -210,7 +210,7 @@ module TriangleInterpolator #(
     // check if the edge function equals zero. However, due to
     // numerical imprecision we need to allow for a small tolerance.
     // NOTE: The value 4 here corresponds to 4 LSBs.
-    localparam fixed EDGE_TOLERANCE = 4;
+    localparam fixed EDGE_TOLERANCE = 8;
 
     // The sample point is within the triangle if it is on the right
     // side of all three edges or if the sample point is exactly on an edge

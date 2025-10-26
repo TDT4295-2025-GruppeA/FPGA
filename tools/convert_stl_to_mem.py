@@ -16,13 +16,16 @@ def float_to_fixed(value: float, fractional_bits: int) -> int:
     """Convert float to fixed-point representation with given fractional bits."""
     return int(round(value * (1 << fractional_bits)))
 
+def pseudo_random_12_bit_color(v: np.ndarray) -> int:
+    s = np.sin(v[0] * 12.9898 + v[1] * 78.2323 + v[2] * 37.1719)
+    t = np.sin(v[0] * 93.1234 + v[1] * 67.3435 + v[2] * 54.1623)
+    u = np.sin(v[0] * 23.5621 + v[1] * 11.5234 + v[2] * 98.7650)
 
-def random_color_12bit_high() -> int:
-    r = random.randint(0x8, 0xF)
-    g = random.randint(0x8, 0xF)
-    b = random.randint(0x8, 0xF)
-    return (r << 12) | (g << 8) | (b << 4)
+    r = int(((s * 43758.5453) % 1.0) * 15) & 0xF
+    g = int(((t * 24654.6543) % 1.0) * 15) & 0xF
+    b = int(((u * 13579.2468) % 1.0) * 15) & 0xF
 
+    return (r << 8) | (g << 4) | (b << 0)
 
 def triangle_normal(v0, v1, v2):
     return np.cross(v1 - v0, v2 - v0)
@@ -45,17 +48,19 @@ def write_sv_mem_triangles(stl_path: str, output_path: str):
     all_vertices = vertices.reshape(-1, 3)
     v_min = all_vertices.min(axis=0)
     v_max = all_vertices.max(axis=0)
-    vertices = 2 * (vertices - v_min) / (v_max - v_min) - 1
+    center = (v_min + v_max) / 2
+    scale = (v_max - v_min).max() / 2
+    vertices = (vertices - center) / scale
 
     with open(output_path, "w") as f:
         for tri_idx in range(vertices.shape[0]):
             triangle_vertices = vertices[tri_idx]
             stl_normal = normals[tri_idx]
             triangle_vertices = ensure_winding(triangle_vertices, stl_normal)
-            color = random_color_12bit_high()
 
             output = ""
             for v in triangle_vertices:
+                color = pseudo_random_12_bit_color(v) << 4
                 x, y, z = v
                 qx = float_to_fixed(x, DECIMAL_WIDTH)
                 qy = float_to_fixed(y, DECIMAL_WIDTH)

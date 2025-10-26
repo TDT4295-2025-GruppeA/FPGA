@@ -19,6 +19,20 @@ function automatic fixed triangle_area(position_t p0, position_t p1, position_t 
     );
 endfunction
 
+function automatic fixed max(fixed a, fixed b, fixed c);
+    fixed m;
+    m = (a > b) ? a : b;
+    m = (m > c) ? m : c;
+    return m;
+endfunction
+
+function automatic fixed min(fixed a, fixed b, fixed c);
+    fixed m;
+    m = (a < b) ? a : b;
+    m = (m < c) ? m : c;
+    return m;
+endfunction
+
 module TrianglePreprocessor (
     input logic clk,
     input logic rstn,
@@ -51,6 +65,7 @@ module TrianglePreprocessor (
     fixed area_c, area_r, area_inv;
     logic area_inv_valid;
     logic small_area;
+    bounding_box_t bounding_box;
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
@@ -73,6 +88,7 @@ module TrianglePreprocessor (
                 attributed_triangle_m_data.triangle <= triangle;
                 attributed_triangle_m_data.area_inv <= area_inv;
                 attributed_triangle_m_data.small_area <= small_area;
+                attributed_triangle_m_data.bounding_box <= bounding_box;
                 attributed_triangle_m_metadata <= triangle_metadata;
             end
         end
@@ -88,7 +104,7 @@ module TrianglePreprocessor (
                 end
             end
             CALCULATE_AREA: begin
-                // This also just takes one cycle.
+                // This takes just one cycle.
                 state_next = LATCH_AREA;
             end
             LATCH_AREA: begin
@@ -115,6 +131,27 @@ module TrianglePreprocessor (
     );
 
     assign small_area = (area_r < 2);
+
+    assign bounding_box.top = min(
+        triangle.v0.position.y,
+        triangle.v1.position.y,
+        triangle.v2.position.y
+    );
+    assign bounding_box.bottom = max(
+        triangle.v0.position.y,
+        triangle.v1.position.y,
+        triangle.v2.position.y
+    );
+    assign bounding_box.left = min(
+        triangle.v0.position.x,
+        triangle.v1.position.x,
+        triangle.v2.position.x
+    );
+    assign bounding_box.right = max(
+        triangle.v0.position.x,
+        triangle.v1.position.x,
+        triangle.v2.position.x
+    );
 
     FixedReciprocalDivider divider (
         .clk(clk),

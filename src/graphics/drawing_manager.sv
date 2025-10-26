@@ -7,8 +7,8 @@ module DrawingManager #(
     parameter int BUFFER_HEIGHT = 120,
     parameter int BUFFER_DATA_WIDTH = 12,
     parameter int BUFFER_ADDR_WIDTH = $clog2(BUFFER_WIDTH * BUFFER_HEIGHT),
-    parameter string FILE_PATH = "static/models/teapot",
-    parameter int TRIANGLE_COUNT = 160
+    parameter string FILE_PATH = "static/models/suzanne",
+    parameter int TRIANGLE_COUNT = 968
 )(
     input logic clk,
     input logic rstn,
@@ -263,6 +263,8 @@ module DrawingManager #(
             triangle_index <= '0;
             framerate_indicator <= 1'b0;
             triangle_changed <= 1'b0;
+            transform_d <= '0;
+            sw_r <= '0;
         end else begin
             state <= next_state;
             triangle_index <= triangle_index_next;
@@ -323,7 +325,7 @@ module DrawingManager #(
 
                     if (sw_r[0]) begin
                         // If switch zero is set display the depth map.
-                        write_data = {4'h0, 4'(ftoi(mul(itof(15), pixel.depth))), 4'h0};
+                        write_data = {4'h0, 4'(ftoi(mul(itof(7), pixel.depth))), 4'h0};
                     end else begin
                         // Otherwise, write the actual pixel color.
                         write_data = pixel.color[15:4];

@@ -65,8 +65,8 @@ module SpiSub #(
         .WIDTH(WORD_SIZE),
         .MIN_LENGTH(RX_QUEUE_LENGTH)
     ) rx_queue (
-        // NOPE! XXX Use system reset to be able to read data after transaction. XXX
-        .rstn(rstn),
+        // Use system reset to be able to read data after transaction.
+        .rstn(sys_rstn),
 
         .write_clk(sclk),
         .write_en(rx_buffer_ready),

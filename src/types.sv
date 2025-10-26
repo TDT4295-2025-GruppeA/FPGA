@@ -69,11 +69,19 @@ package types_pkg;
     } pixel_metadata_t;
 
     typedef struct packed {
+        fixed top;
+        fixed bottom;
+        fixed left;
+        fixed right;
+    } bounding_box_t;
+
+    typedef struct packed {
         triangle_t triangle;
         fixed area_inv; // Actually 1 / (2 * area)
         logic small_area; // Area less than threshold
+        bounding_box_t bounding_box;
     } attributed_triangle_t;
-    
+
     typedef struct packed {
         triangle_t triangle;
         transform_t transform;
