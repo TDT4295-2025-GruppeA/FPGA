@@ -12,6 +12,8 @@ module FixedReciprocalDivider (
     output logic result_m_valid,
     output fixed result_m_data
 );
+    logic internal_dividend_valid, internal_divisor_ready;
+
     // Sizes are hardcoded as the IP core is generated
     // with fixed sized inputs and outputs.
     logic [32:0] internal_dividend_data;
@@ -21,11 +23,11 @@ module FixedReciprocalDivider (
     ReciprocalDivider divider (
         .aclk(clk),
         
-        .s_axis_dividend_tready(),
-        .s_axis_dividend_tvalid(1'b1),
+        .s_axis_dividend_tready(internal_dividend_valid),
+        .s_axis_dividend_tvalid(divisor_s_valid),
         .s_axis_dividend_tdata(internal_dividend_data),
         
-        .s_axis_divisor_tready(divisor_s_ready),
+        .s_axis_divisor_tready(internal_divisor_ready),
         .s_axis_divisor_tvalid(divisor_s_valid),
         .s_axis_divisor_tdata(internal_divisor_data),
         
@@ -33,6 +35,8 @@ module FixedReciprocalDivider (
         .m_axis_dout_tvalid(result_m_valid),
         .m_axis_dout_tdata(internal_result_data)
     );
+
+    assign divisor_s_ready = internal_divisor_ready && internal_dividend_valid;
 
     // Left shift dividend to 64 bits to preserve
     // decimal point position after division.

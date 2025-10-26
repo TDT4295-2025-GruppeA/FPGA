@@ -27,7 +27,9 @@ async def test_fixed_divider(dut: Fixeddivider):
             expected_result = quantize(a) / quantize(b) if to_fixed(b) != 0 else 0.0
 
             if expected_result > MAX_VALUE or expected_result < MIN_VALUE:
-                dut._log.info(f"Skipping test as result is out of bounds: {expected_result:.6f}")
+                dut._log.info(
+                    f"Skipping test as result is out of bounds: {expected_result:.6f}"
+                )
                 continue
 
             dut.dividend_s_data.value = to_fixed(a)

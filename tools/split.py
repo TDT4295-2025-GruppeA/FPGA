@@ -2,9 +2,10 @@
 import os
 import sys
 
+
 def split_memory_file(file_path: str):
     # Read lines
-    with open(file_path, 'r') as f:
+    with open(file_path, "r") as f:
         lines = [line.strip() for line in f if line.strip()]
 
     chunk_size = 18
@@ -12,7 +13,7 @@ def split_memory_file(file_path: str):
 
     # Split each line into chunks
     for line in lines:
-        chunks = [line[i:i+chunk_size] for i in range(0, len(line), chunk_size)]
+        chunks = [line[i : i + chunk_size] for i in range(0, len(line), chunk_size)]
         # Extend files_data if needed
         while len(files_data) < len(chunks):
             files_data.append([])
@@ -25,9 +26,10 @@ def split_memory_file(file_path: str):
     os.makedirs(base_name, exist_ok=True)
     for idx, data in enumerate(files_data):
         out_file = f"{base_name}/{idx}{ext}"
-        with open(out_file, 'w') as f:
-            f.write('\n'.join(data))
+        with open(out_file, "w") as f:
+            f.write("\n".join(data))
         print(f"Saved {out_file}")
+
 
 def main():
     if len(sys.argv) != 2:
@@ -40,6 +42,7 @@ def main():
         sys.exit(1)
 
     split_memory_file(file_path)
+
 
 if __name__ == "__main__":
     main()

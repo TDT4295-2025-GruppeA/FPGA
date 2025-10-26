@@ -13,7 +13,8 @@ endfunction
 //   y' = f * y / z
 //   z' = 1/z
 module Projection #(
-    parameter fixed FOCAL_LENGTH = rtof(0.10) // Default focal length
+    parameter real FOCAL_LENGTH = 0.1,
+    parameter real ASPECT_RATIO = 1.0
 )(
     input  logic        clk,
     input  logic        rstn,
@@ -28,13 +29,18 @@ module Projection #(
     output logic        projected_triangle_m_metadata,
     input  logic        projected_triangle_m_ready
 );
+    localparam fixed FOCAL_LENGTH_X = rtof(FOCAL_LENGTH / ASPECT_RATIO);
+    localparam fixed FOCAL_LENGTH_Y = rtof(FOCAL_LENGTH);
 
     // FSM states
-    typedef enum logic [2:0] {
+    typedef enum {
         S_IDLE,
-        S_DIV_V0,
-        S_DIV_V1,
-        S_DIV_V2,
+        S_LOAD_DIV_V0,
+        S_WAIT_DIV_V0,
+        S_LOAD_DIV_V1,
+        S_WAIT_DIV_V1,
+        S_LOAD_DIV_V2,
+        S_WAIT_DIV_V2,
         S_PROJ,
         S_OUT
     } state_t;
@@ -42,13 +48,13 @@ module Projection #(
     state_t state, next_state;
 
     // Input regs
-    triangle_t t_in;
-    triangle_t t_proj;
-    logic      m_in, m_stage1, m_stage2;
+    triangle_t triangle_in;
+    triangle_t triangle_projected;
+    logic      metadata_in, m_stage1, m_stage2;
 
     fixed rec_z0, rec_z1, rec_z2;
     fixed current_z;
-    logic divisor_valid, divisor_ready, z_reciprocal_valid;
+    logic divisor_valid, divisor_ready, z_reciprocal_valid, z_reciprocal_ready;
     fixed z_reciprocal;
 
     
@@ -57,9 +63,9 @@ module Projection #(
 
         .divisor_s_ready(divisor_ready),
         .divisor_s_valid(divisor_valid),
-        .divisor_s_data(current_z),      // current z value
+        .divisor_s_data(current_z),
 
-        .result_m_ready(1'b1),
+        .result_m_ready(z_reciprocal_ready),
         .result_m_valid(z_reciprocal_valid),
         .result_m_data(z_reciprocal)
     );
@@ -71,20 +77,35 @@ module Projection #(
         case (state)
             S_IDLE: begin
                 if (triangle_s_valid)
-                    next_state = S_DIV_V0;
+                    next_state = S_LOAD_DIV_V0;
             end
 
-            S_DIV_V0: begin
+            S_LOAD_DIV_V0: begin
+                if (divisor_ready)
+                    next_state = S_WAIT_DIV_V0;
+            end
+
+            S_WAIT_DIV_V0: begin
                 if (z_reciprocal_valid)
-                    next_state = S_DIV_V1;
+                    next_state = S_LOAD_DIV_V1;
             end
 
-            S_DIV_V1: begin
+            S_LOAD_DIV_V1: begin
+                if (divisor_ready)
+                    next_state = S_WAIT_DIV_V1;
+            end
+
+            S_WAIT_DIV_V1: begin
                 if (z_reciprocal_valid)
-                    next_state = S_DIV_V2;
+                    next_state = S_LOAD_DIV_V2;
             end
 
-            S_DIV_V2: begin
+            S_LOAD_DIV_V2: begin
+                if (divisor_ready)
+                    next_state = S_WAIT_DIV_V2;
+            end
+
+            S_WAIT_DIV_V2: begin
                 if (z_reciprocal_valid)
                     next_state = S_PROJ;
             end
@@ -116,33 +137,46 @@ module Projection #(
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
-            t_in <= '0;
-            m_in <= '0;
+            triangle_in <= '0;
+            metadata_in <= '0;
         end else if (triangle_s_ready && triangle_s_valid) begin
-            t_in <= triangle_s_data;
-            m_in <= triangle_s_metadata;
+            triangle_in <= triangle_s_data;
+            metadata_in <= triangle_s_metadata;
         end
     end
 
     // Divider input control
     always_comb begin
         divisor_valid = 1'b0;
+        z_reciprocal_ready = 1'b0;
         current_z     = '0;
 
         case (state)
-            S_DIV_V0: begin
-                divisor_valid = divisor_ready;
-                current_z     = t_in.v0.position.z;
+            S_LOAD_DIV_V0: begin
+                divisor_valid = 1'b1;
+                current_z = triangle_in.v0.position.z;
             end
 
-            S_DIV_V1: begin
-                divisor_valid = divisor_ready;
-                current_z     = t_in.v1.position.z;
+            S_WAIT_DIV_V0: begin
+                z_reciprocal_ready = 1'b1;
             end
 
-            S_DIV_V2: begin
-                divisor_valid = divisor_ready;
-                current_z     = t_in.v2.position.z;
+            S_LOAD_DIV_V1: begin
+                divisor_valid = 1'b1;
+                current_z     = triangle_in.v1.position.z;
+            end
+
+            S_WAIT_DIV_V1: begin
+                z_reciprocal_ready = 1'b1;
+            end
+
+            S_LOAD_DIV_V2: begin
+                divisor_valid = 1'b1;
+                current_z     = triangle_in.v2.position.z;
+            end
+
+            S_WAIT_DIV_V2: begin
+                z_reciprocal_ready = 1'b1;
             end
 
             default: begin
@@ -157,61 +191,47 @@ module Projection #(
             rec_z0 <= '0;
             rec_z1 <= '0;
             rec_z2 <= '0;
-            m_stage1 <= 1'b0;
         end else begin
             case (state)
-                S_DIV_V0: if (z_reciprocal_valid) rec_z0 <= z_reciprocal;
-                S_DIV_V1: if (z_reciprocal_valid) rec_z1 <= z_reciprocal;
-                S_DIV_V2: if (z_reciprocal_valid) rec_z2 <= z_reciprocal;
+                S_WAIT_DIV_V0: if (z_reciprocal_valid) rec_z0 <= z_reciprocal;
+                S_WAIT_DIV_V1: if (z_reciprocal_valid) rec_z1 <= z_reciprocal;
+                S_WAIT_DIV_V2: if (z_reciprocal_valid) rec_z2 <= z_reciprocal;
                 default: begin
                     // Do nothing
                 end
             endcase
-            if (state == S_DIV_V2 && z_reciprocal_valid)
-                m_stage1 <= m_in;
         end
     end
 
     // Projection math
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
-            t_proj <= '0;
-            m_stage2 <= 1'b0;
+            triangle_projected <= '0;
         end else if (state == S_PROJ) begin
             // Vertex 0
-            t_proj.v0.position.x <= project(FOCAL_LENGTH, t_in.v0.position.x, rec_z0);
-            t_proj.v0.position.y <= project(FOCAL_LENGTH, t_in.v0.position.y, rec_z0);
-            t_proj.v0.position.z <= rec_z0;
-            t_proj.v0.color      <= t_in.v0.color;
+            triangle_projected.v0.position.x <= project(FOCAL_LENGTH_X, triangle_in.v0.position.x, rec_z0);
+            triangle_projected.v0.position.y <= project(FOCAL_LENGTH_Y, triangle_in.v0.position.y, rec_z0);
+            triangle_projected.v0.position.z <= rec_z0;
+            triangle_projected.v0.color      <= triangle_in.v0.color;
 
             // Vertex 1
-            t_proj.v1.position.x <= project(FOCAL_LENGTH, t_in.v1.position.x, rec_z1);
-            t_proj.v1.position.y <= project(FOCAL_LENGTH, t_in.v1.position.y, rec_z1);
-            t_proj.v1.position.z <= rec_z1;
-            t_proj.v1.color      <= t_in.v1.color;
+            triangle_projected.v1.position.x <= project(FOCAL_LENGTH_X, triangle_in.v1.position.x, rec_z1);
+            triangle_projected.v1.position.y <= project(FOCAL_LENGTH_Y, triangle_in.v1.position.y, rec_z1);
+            triangle_projected.v1.position.z <= rec_z1;
+            triangle_projected.v1.color      <= triangle_in.v1.color;
 
             // Vertex 2
-            t_proj.v2.position.x <= project(FOCAL_LENGTH, t_in.v2.position.x, rec_z2);
-            t_proj.v2.position.y <= project(FOCAL_LENGTH, t_in.v2.position.y, rec_z2);
-            t_proj.v2.position.z <= rec_z2;
-            t_proj.v2.color      <= t_in.v2.color;
-
-            m_stage2 <= m_stage1;
+            triangle_projected.v2.position.x <= project(FOCAL_LENGTH_X, triangle_in.v2.position.x, rec_z2);
+            triangle_projected.v2.position.y <= project(FOCAL_LENGTH_Y, triangle_in.v2.position.y, rec_z2);
+            triangle_projected.v2.position.z <= rec_z2;
+            triangle_projected.v2.color      <= triangle_in.v2.color;
         end
     end
 
     // Output handshake
-    always_ff @(posedge clk or negedge rstn) begin
-        if (!rstn)
-            projected_triangle_m_valid <= 1'b0;
-        else if (state == S_PROJ)
-            projected_triangle_m_valid <= 1'b1;
-        else if (state == S_OUT && projected_triangle_m_valid &&
-                 projected_triangle_m_ready)
-            projected_triangle_m_valid <= 1'b0;
-    end
+    assign projected_triangle_m_valid = state == S_OUT;
 
-    assign projected_triangle_m_data     = t_proj;
-    assign projected_triangle_m_metadata = m_stage2;
+    assign projected_triangle_m_data     = triangle_projected;
+    assign projected_triangle_m_metadata = metadata_in;
 
 endmodule

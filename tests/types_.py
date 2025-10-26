@@ -13,11 +13,16 @@ from logic_object import Fixed, LogicObject, UInt, LogicField
 # type-ignored.
 
 
+class Bit(LogicObject):
+    bit: int = LogicField(UInt(1))  # type: ignore
+
+
 class RGB(LogicObject):
-    r: int = LogicField(UInt(4), default=0) # type: ignore
-    g: int = LogicField(UInt(4), default=0) # type: ignore
-    b: int = LogicField(UInt(4), default=0) # type: ignore
-    reserved: int = LogicField(UInt(4), default=0) # type: ignore
+    r: int = LogicField(UInt(4), default=0)  # type: ignore
+    g: int = LogicField(UInt(4), default=0)  # type: ignore
+    b: int = LogicField(UInt(4), default=0)  # type: ignore
+    reserved: int = LogicField(UInt(4), default=0)  # type: ignore
+
 
 class Position(LogicObject):
     x: float = LogicField(Fixed())  # type: ignore
@@ -29,13 +34,16 @@ class Vertex(LogicObject):
     position: Position = LogicField(Position)  # type: ignore
     color: RGB = LogicField(RGB, default_factory=RGB)  # type: ignore
 
+
 class Triangle(LogicObject):
     v0: Vertex = LogicField(Vertex)  # type: ignore
     v1: Vertex = LogicField(Vertex)  # type: ignore
     v2: Vertex = LogicField(Vertex)  # type: ignore
 
+
 class TriangleMetadata(LogicObject):
-    last: int = LogicField(UInt(1)) # type: ignore
+    last: int = LogicField(UInt(1))  # type: ignore
+
 
 class RotationMatrix(LogicObject):
     m00: float = LogicField(Fixed())  # type: ignore
@@ -52,6 +60,11 @@ class RotationMatrix(LogicObject):
 class Transform(LogicObject):
     position: Position = LogicField(Position)  # type: ignore
     rotation: RotationMatrix = LogicField(RotationMatrix)  # type: ignore
+
+
+class TriangleTransform(LogicObject):
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+    transform: Transform = LogicField(Transform)  # type: ignore
 
 
 class ModelInstance(LogicObject):

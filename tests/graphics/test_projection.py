@@ -1,25 +1,20 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
-import math
 
+from utils import TOTAL_WIDTH, to_fixed, within_tolerance
 from tools.pipeline import Producer, Consumer
 from logic_object import LogicObject, LogicField, UInt
 from types_ import Triangle, Vertex, Position, RGB
 
-VERILOG_MODULE = "Projection"
 FOCAL_LENGTH = 0.10
 
-# ---------------------------------------------------------------------
-# Helper LogicObject for 1-bit metadata
-# ---------------------------------------------------------------------
-class Bit(LogicObject):
-    bit: int = LogicField(UInt(1))  # type: ignore
+VERILOG_MODULE = "Projection"
+VERILOG_PARAMETERS = {
+    "FOCAL_LENGTH": f"{FOCAL_LENGTH}",
+}
 
 
-# ---------------------------------------------------------------------
-# Clock / Reset helper
-# ---------------------------------------------------------------------
 async def make_clock(dut):
     cocotb.start_soon(Clock(dut.clk, 10, "ns").start())
     dut.rstn.value = 0
@@ -29,39 +24,59 @@ async def make_clock(dut):
     await RisingEdge(dut.clk)
 
 
-# ---------------------------------------------------------------------
-# Tests
-# ---------------------------------------------------------------------
+TEST_TRIANGLES = [
+    Triangle(
+        Vertex(Position(1, 2, 4), RGB(1, 2, 3)),
+        Vertex(Position(2, 1, 2), RGB(4, 5, 6)),
+        Vertex(Position(3, 4, 1), RGB(7, 8, 9)),
+    ),
+    Triangle(
+        Vertex(Position(-1, -2, 5), RGB(5, 10, 15)),
+        Vertex(Position(-2, -1, 10), RGB(15, 10, 5)),
+        Vertex(Position(-3, -4, 2), RGB(10, 10, 10)),
+    ),
+    Triangle(
+        Vertex(Position(0, 0, 1), RGB(0xF, 0xF, 0xF)),
+        Vertex(Position(1, 1, 1), RGB(0x8, 0x8, 0x8)),
+        Vertex(Position(-1, -1, 1), RGB(0, 0, 0)),
+    ),
+]
 
-@cocotb.test()
-async def test_single_projection(dut):
-    """Test projection of one triangle."""
+
+async def feed_triangles(producer: Producer, triangles):
+    for triangle in triangles:
+        await producer.produce(triangle)
+
+
+@cocotb.test(timeout_time=1, timeout_unit="us")
+async def test_projection(dut):
+    """Test projection of multiple triangles."""
     await make_clock(dut)
 
     producer = Producer(dut, "triangle", has_metadata=False, signal_style="ms")
     consumer = Consumer(dut, "projected_triangle", Triangle, None, signal_style="ms")
+
     await producer.run()
     await consumer.run()
 
-    # Input triangle in camera space
-    tri_in = Triangle(
-        Vertex(Position(1, 2, 4), RGB(1, 2, 3)),
-        Vertex(Position(2, 1, 2), RGB(4, 5, 6)),
-        Vertex(Position(3, 4, 1), RGB(7, 8, 9)),
-    )
+    await feed_triangles(producer, TEST_TRIANGLES)
 
-    await producer.produce(tri_in, None)
-    await RisingEdge(dut.projected_triangle_m_valid)
-    tri_out, _ = await consumer.consume()
+    for triangle_in in TEST_TRIANGLES:
+        triangle_out, _ = await consumer.consume()
 
-    # Check reciprocal depth and projection math
-    for v_in, v_out in zip((tri_in.v0, tri_in.v1, tri_in.v2),
-                       (tri_out.v0, tri_out.v1, tri_out.v2)):
-        z = float(v_in.position.z)
-        w_expected = 1 / z
-        x_expected =  FOCAL_LENGTH * (v_in.position.x * w_expected)
-        y_expected =  FOCAL_LENGTH * (v_in.position.y * w_expected)
+        cocotb.log.info(f"Input Triangle: {triangle_in}")
+        cocotb.log.info(f"Projected Triangle: {triangle_out}")
 
-        assert math.isclose(float(v_out.position.x), x_expected, abs_tol=1e-2)
-        assert math.isclose(float(v_out.position.y), y_expected, abs_tol=1e-2)
-        assert math.isclose(float(v_out.position.z), w_expected, abs_tol=1e-2)
+        # Check reciprocal depth and projection math
+        for v_in, v_out in zip(
+            (triangle_in.v0, triangle_in.v1, triangle_in.v2),
+            (triangle_out.v0, triangle_out.v1, triangle_out.v2),
+        ):
+            z = v_in.position.z
+            w_expected = 1 / z
+            x_expected = FOCAL_LENGTH * (v_in.position.x * w_expected)
+            y_expected = FOCAL_LENGTH * (v_in.position.y * w_expected)
+
+            assert within_tolerance(v_out.position.x, x_expected, 2)
+            assert within_tolerance(v_out.position.y, y_expected, 2)
+            assert within_tolerance(v_out.position.z, w_expected, 2)

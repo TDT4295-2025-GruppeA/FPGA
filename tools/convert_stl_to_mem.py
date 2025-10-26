@@ -11,9 +11,11 @@ from split import split_memory_file
 # convert to its own format as needed.
 DECIMAL_WIDTH = 16
 
+
 def float_to_fixed(value: float, fractional_bits: int) -> int:
     """Convert float to fixed-point representation with given fractional bits."""
     return int(round(value * (1 << fractional_bits)))
+
 
 def random_color_12bit_high() -> int:
     r = random.randint(0x8, 0xF)
@@ -21,8 +23,10 @@ def random_color_12bit_high() -> int:
     b = random.randint(0x8, 0xF)
     return (r << 12) | (g << 8) | (b << 4)
 
+
 def triangle_normal(v0, v1, v2):
     return np.cross(v1 - v0, v2 - v0)
+
 
 def ensure_winding(vs, stl_normal):
     """Ensure the triangle vertices are ordered consistently with the STL normal."""
@@ -30,6 +34,7 @@ def ensure_winding(vs, stl_normal):
     if np.dot(n, stl_normal) < 0:
         return np.array([vs[0], vs[2], vs[1]])
     return vs
+
 
 def write_sv_mem_triangles(stl_path: str, output_path: str):
     model = mesh.Mesh.from_file(stl_path)
@@ -44,7 +49,7 @@ def write_sv_mem_triangles(stl_path: str, output_path: str):
 
     with open(output_path, "w") as f:
         for tri_idx in range(vertices.shape[0]):
-            triangle_vertices = vertices[tri_idx]            
+            triangle_vertices = vertices[tri_idx]
             stl_normal = normals[tri_idx]
             triangle_vertices = ensure_winding(triangle_vertices, stl_normal)
             color = random_color_12bit_high()
@@ -63,6 +68,7 @@ def write_sv_mem_triangles(stl_path: str, output_path: str):
 
     print(f"Wrote {vertices.shape[0]} triangles to {output_path}")
 
+
 if __name__ == "__main__":
     if len(sys.argv) != 3:
         print("Usage: python convert_stl_to_mem.py input.stl output.mem")
@@ -78,4 +84,3 @@ if __name__ == "__main__":
     write_sv_mem_triangles(stl_path, output_path)
 
     split_memory_file(output_path)
-    

@@ -5,24 +5,16 @@ from cocotb.triggers import RisingEdge
 from tools.pipeline import Producer, Consumer
 from logic_object import LogicObject, LogicField, UInt
 from types_ import (
+    Transform,
+    TriangleTransform,
     Vertex,
     Triangle,
     Position,
     RotationMatrix,
     RGB,
-    Transform as TransformStruct,
 )
 
 VERILOG_MODULE = "Transform"
-
-
-class InputData(LogicObject):
-    triangle: Triangle = LogicField(Triangle) # type: ignore
-    transform: TransformStruct = LogicField(TransformStruct) # type: ignore
-
-
-class OutputData(LogicObject):
-    triangle: Triangle = LogicField(Triangle) # type: ignore
 
 
 async def make_clock(dut):
@@ -40,11 +32,11 @@ async def test_transform_identity(dut):
     await make_clock(dut)
 
     producer = Producer(dut, "triangle_tf", False, signal_style="ms")
-    consumer = Consumer(dut, "triangle", OutputData, None, signal_style="ms")
+    consumer = Consumer(dut, "triangle", Triangle, None, signal_style="ms")
     await producer.run()
     await consumer.run()
 
-    transform = TransformStruct(
+    transform = Transform(
         Position(0, 0, 0),
         RotationMatrix(1, 0, 0, 0, 1, 0, 0, 0, 1),
     )
@@ -55,13 +47,12 @@ async def test_transform_identity(dut):
         Vertex(Position(7, 8, 9), RGB(7, 8, 9)),
     )
 
-    input_data = [(InputData(triangle=triangle_in, transform=transform), None)]
+    input_data = [(TriangleTransform(triangle=triangle_in, transform=transform), None)]
     for data, meta in input_data:
         await producer.produce(data, meta)
 
     await RisingEdge(dut.triangle_m_valid)
-    out_data, _ = await consumer.consume()
-    triangle_out = out_data.triangle
+    triangle_out, _ = await consumer.consume()
 
     assert (
         triangle_out == triangle_in
@@ -74,11 +65,11 @@ async def test_transform_translation(dut):
     await make_clock(dut)
 
     producer = Producer(dut, "triangle_tf", False, signal_style="ms")
-    consumer = Consumer(dut, "triangle", OutputData, None, signal_style="ms")
+    consumer = Consumer(dut, "triangle", Triangle, None, signal_style="ms")
     await producer.run()
     await consumer.run()
 
-    transform = TransformStruct(
+    transform = Transform(
         Position(1, 2, 3),
         RotationMatrix(1, 0, 0, 0, 1, 0, 0, 0, 1),
     )
@@ -89,7 +80,7 @@ async def test_transform_translation(dut):
         Vertex(Position(3, 3, 3), RGB(1, 1, 1)),
     )
 
-    input_data = [(InputData(triangle=triangle_in, transform=transform), None)]
+    input_data = [(TriangleTransform(triangle=triangle_in, transform=transform), None)]
 
     triangle_expected = Triangle(
         Vertex(Position(2, 3, 4), RGB(1, 1, 1)),
@@ -102,8 +93,7 @@ async def test_transform_translation(dut):
 
     await RisingEdge(dut.triangle_m_valid)
 
-    out_data, _ = await consumer.consume()
-    triangle_out = out_data.triangle
+    triangle_out, _ = await consumer.consume()
 
     assert (
         triangle_out.v0 == triangle_expected.v0
@@ -122,7 +112,7 @@ async def test_transform_rotation_z_90(dut):
     await make_clock(dut)
 
     producer = Producer(dut, "triangle_tf", False, signal_style="ms")
-    consumer = Consumer(dut, "triangle", OutputData, None, signal_style="ms")
+    consumer = Consumer(dut, "triangle", Triangle, None, signal_style="ms")
     await producer.run()
     await consumer.run()
 
@@ -130,11 +120,11 @@ async def test_transform_rotation_z_90(dut):
     # [ 0 -1  0 ]
     # [ 1  0  0 ]
     # [ 0  0  1 ]
-    transform = TransformStruct(
+    transform = Transform(
         Position(0, 0, 0),
         RotationMatrix(
             0,
-            (-1),
+            -1,
             0,
             1,
             0,
@@ -148,10 +138,10 @@ async def test_transform_rotation_z_90(dut):
     triangle_in = Triangle(
         Vertex(Position(1, 0, 0), RGB(1, 0, 0)),
         Vertex(Position(0, 1, 0), RGB(0, 1, 0)),
-        Vertex(Position((-1), 0, 0), RGB(0, 0, 1)),
+        Vertex(Position(-1, 0, 0), RGB(0, 0, 1)),
     )
 
-    input_data = [(InputData(triangle=triangle_in, transform=transform), None)]
+    input_data = [(TriangleTransform(triangle=triangle_in, transform=transform), None)]
 
     # Expected results after 90° rotation:
     # (1,0,0) -> (0,1,0)
@@ -168,8 +158,7 @@ async def test_transform_rotation_z_90(dut):
 
     await RisingEdge(dut.triangle_m_valid)
 
-    out_data, _ = await consumer.consume()
-    triangle_out = out_data.triangle
+    triangle_out, _ = await consumer.consume()
 
     assert (
         triangle_out.v0 == triangle_expected.v0
@@ -186,8 +175,7 @@ async def test_transform_rotation_z_90(dut):
 
     await RisingEdge(dut.triangle_m_valid)
 
-    out_data, _ = await consumer.consume()
-    triangle_out = out_data.triangle
+    triangle_out, _ = await consumer.consume()
 
     for i, (expected, got) in enumerate(
         zip(
@@ -209,12 +197,12 @@ async def test_transform_rotation_translation(dut):
     await make_clock(dut)
 
     producer = Producer(dut, "triangle_tf", False, signal_style="ms")
-    consumer = Consumer(dut, "triangle", OutputData, None, signal_style="ms")
+    consumer = Consumer(dut, "triangle", Triangle, None, signal_style="ms")
     await producer.run()
     await consumer.run()
 
     # 180° rotation about Z axis: (x,y) → (-x,-y)
-    transform = TransformStruct(
+    transform = Transform(
         Position(1, 2, 3),
         RotationMatrix((-1), 0, 0, 0, (-1), 0, 0, 0, 1),
     )
@@ -235,12 +223,13 @@ async def test_transform_rotation_translation(dut):
         Vertex(Position(-2, -1, 6), RGB(15, 15, 15)),
     )
 
-    await producer.produce(InputData(triangle=triangle_in, transform=transform), None)
+    await producer.produce(
+        TriangleTransform(triangle=triangle_in, transform=transform), None
+    )
 
     await RisingEdge(dut.triangle_m_valid)
 
-    out_data, _ = await consumer.consume()
-    triangle_out = out_data.triangle
+    triangle_out, _ = await consumer.consume()
 
     for i, (expected, got) in enumerate(
         zip(
@@ -265,16 +254,22 @@ async def test_transform_metadata_passthrough(dut):
         bit: int = LogicField(UInt(1))  # type: ignore
 
     producer = Producer(dut, "triangle_tf", has_metadata=True, signal_style="ms")
-    consumer = Consumer(dut, "triangle", OutputData, Bit, signal_style="ms")
+    consumer = Consumer(dut, "triangle", Triangle, Bit, signal_style="ms")
     await producer.run()
     await consumer.run()
 
-    transform = TransformStruct(
+    transform = Transform(
         Position(0, 0, 0),
         RotationMatrix(
-            1, 0, 0,
-            0, 1, 0,
-            0, 0, 1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
         ),
     )
 
@@ -289,18 +284,19 @@ async def test_transform_metadata_passthrough(dut):
         metadata_expected = metadata_in
 
         await producer.produce(
-            InputData(triangle=triangle_in, transform=transform), Bit(metadata_in)
+            TriangleTransform(triangle=triangle_in, transform=transform),
+            Bit(metadata_in),
         )
 
         await RisingEdge(dut.triangle_m_valid)
-        out_data, out_meta = await consumer.consume()
+        triangle_out, metadata_out = await consumer.consume()
 
-        triangle_out = out_data.triangle
+        assert metadata_out is not None, "Expected metadata but got None"
 
         assert (
             triangle_out == triangle_expected
         ), f"Triangle changed under identity transform!\nExpected: {triangle_expected}\nGot: {triangle_out}"
 
         assert (
-            out_meta.bit == metadata_expected
-        ), f"Metadata mismatch!\nExpected: {metadata_expected}\nGot: {out_meta.bit}"
+            metadata_out.bit == metadata_expected
+        ), f"Metadata mismatch!\nExpected: {metadata_expected}\nGot: {metadata_out.bit}"

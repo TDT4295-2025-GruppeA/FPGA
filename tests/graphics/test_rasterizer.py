@@ -3,12 +3,20 @@ from cocotb.clock import Clock
 from cocotb.triggers import ReadOnly
 from stubs.rasterizer import Rasterizer
 
-from types_ import RGB, PixelData, PixelDataMetadata, Position, Triangle, TriangleMetadata, Vertex
+from types_ import (
+    RGB,
+    PixelData,
+    PixelDataMetadata,
+    Position,
+    Triangle,
+    TriangleMetadata,
+    Vertex,
+)
 
 VIEWPORT_WIDTH = 64
 VIEWPORT_HEIGHT = 64
 
-CLOCK_PERIOD = 2 # ns
+CLOCK_PERIOD = 2  # ns
 
 UNINITIALIZED_PIXEL = "?"
 SHADE_PIXELS = ["█", "▓", "▒", "░"]
@@ -64,11 +72,12 @@ TEST_TRIANGLES = [
         Vertex(Position(0.40, -1.00, 0.00), RGB(15, 0, 0)),
     ),
     Triangle(
-        Vertex(Position(0.51,  0.50, 1.00), RGB(15, 0, 0)),
+        Vertex(Position(0.51, 0.50, 1.00), RGB(15, 0, 0)),
         Vertex(Position(0.51, -0.51, 1.00), RGB(15, 0, 0)),
-        Vertex(Position(0.50,  0.50, 1.00), RGB(15, 0, 0)),
+        Vertex(Position(0.50, 0.50, 1.00), RGB(15, 0, 0)),
     ),
 ]
+
 
 async def feed_triangles(clock: Clock, dut: Rasterizer):
     for i, triangle in enumerate(TEST_TRIANGLES):
@@ -86,10 +95,11 @@ async def feed_triangles(clock: Clock, dut: Rasterizer):
         while not dut.triangle_s_ready.value:
             await clock.cycles(1)
             await ReadOnly()
-        
+
         # Wait one cycle for transaction to complete.
         await clock.cycles(1)
         dut.triangle_s_valid.value = 0
+
 
 @cocotb.test(timeout_time=1, timeout_unit="ms")
 async def test_rasterizer(dut: Rasterizer):
@@ -141,7 +151,10 @@ async def test_rasterizer(dut: Rasterizer):
         # Skip non covered pixels.
         if not pixel.covered:
             # If nothing has been drawn at that location yet, set it to an empty pixel.
-            if covered_output[pixel.coordinate.y][pixel.coordinate.x] == UNINITIALIZED_PIXEL:
+            if (
+                covered_output[pixel.coordinate.y][pixel.coordinate.x]
+                == UNINITIALIZED_PIXEL
+            ):
                 covered_output[pixel.coordinate.y][pixel.coordinate.x] = EMPTY_PIXEL
             await clock.cycles(1)
             continue
@@ -170,9 +183,9 @@ async def test_rasterizer(dut: Rasterizer):
 
     # Add a border to the output
     covered_output = (
-        ["#" * (VIEWPORT_WIDTH + 2)] +
-        ["#" + "".join(row) + "#" for row in covered_output] +
         ["#" * (VIEWPORT_WIDTH + 2)]
+        + ["#" + "".join(row) + "#" for row in covered_output]
+        + ["#" * (VIEWPORT_WIDTH + 2)]
     )
 
     # Duplicate every element to make it more visible in the output

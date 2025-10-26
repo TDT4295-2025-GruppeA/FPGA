@@ -23,7 +23,7 @@ module DrawingManager #(
     // Temp inputs for debugging
     input logic [3:0] sw, // Used for selecting colors
     input logic buffer_select,
-    input logic signed [7:0] data
+    input transform_t transform
 );
     typedef enum {
         IDLE,
@@ -90,28 +90,11 @@ module DrawingManager #(
     // Transform //
     ///////////////
 
-    logic signed [7:0] data_d;
+    transform_t transform_d;
 
     // Input data to the transform module.
     triangle_tf_t triangle_tf_data;
-    assign triangle_tf_data.transform.rotmat = sw_r[1] ? '{
-        m00: rtof( 1.0), m01: rtof( 0.0), m02: rtof( 0.0),
-        m10: rtof( 0.0), m11: rtof(-1.0), m12: rtof( 0.0),
-        m20: rtof( 0.0), m21: rtof( 0.0), m22: rtof( 1.0)
-    } : '{
-        m00: rtof(0.707/1), m01: rtof( 0.707/1), m02: rtof(0.0/1),
-        m10: rtof(0.707/1), m11: rtof(-0.707/1), m12: rtof(0.0/1),
-        m20: rtof(0.000/1), m21: rtof( 0.000/1), m22: rtof(1.0/1)
-    };
-    assign triangle_tf_data.transform.position = sw_r[2] ? '{
-        x: rtof(0.0),
-        y: rtof(0.0),
-        z: rtof(2.5)
-    } : '{
-        x: rtof(0.0),
-        y: rtof(0.0),
-        z: itof(data)
-    };
+    assign triangle_tf_data.transform = transform_d;
     assign triangle_tf_data.triangle = triangle;
 
     logic triangle_tf_metadata;
@@ -125,7 +108,7 @@ module DrawingManager #(
     logic triangle_transformed_metadata;
     triangle_t triangle_transformed;
 
-    Transform transform (
+    Transform transformer (
         .clk(clk),
         .rstn(rstn),
 
@@ -145,7 +128,8 @@ module DrawingManager #(
     logic projected_metadata;
 
     Projection #(
-        .FOCAL_LENGTH(rtof(1.0))
+        .FOCAL_LENGTH(1.0),
+        .ASPECT_RATIO(real'(BUFFER_WIDTH) / real'(BUFFER_HEIGHT))
     ) projection (
         .clk(clk),
         .rstn(rstn),
@@ -212,7 +196,7 @@ module DrawingManager #(
             // Only sample update color between draws.
             if (state == FRAME_DONE) begin
                 sw_r <= sw;
-                data_d <= data;
+                transform_d <= transform;
             end
         end
     end

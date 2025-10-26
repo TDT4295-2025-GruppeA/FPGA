@@ -34,19 +34,37 @@ async def test_fixed_arithmetic(dut: Fixedtb):
             b = quantize(b)
 
             expected_value = [
-                (dut.sum.value, a + b, f"Addition failed: {a:.5f} + {b:.5f} = {dut.sum.value:.5f} != {a + b:.5f}"),
-                (dut.diff.value, a - b, f"Subtraction failed: {a:.5f} - {b:.5f} = {dut.diff.value:.5f} != {a - b:.5f}"),
-                (dut.prod.value, a * b, f"Multiplication failed: {a:.5f} * {b:.5f} = {dut.prod.value:.5f} != {a * b:.5f}"),
+                (
+                    dut.sum.value,
+                    a + b,
+                    f"Addition failed: {a:.5f} + {b:.5f} = {dut.sum.value:.5f} != {a + b:.5f}",
+                ),
+                (
+                    dut.diff.value,
+                    a - b,
+                    f"Subtraction failed: {a:.5f} - {b:.5f} = {dut.diff.value:.5f} != {a - b:.5f}",
+                ),
+                (
+                    dut.prod.value,
+                    a * b,
+                    f"Multiplication failed: {a:.5f} * {b:.5f} = {dut.prod.value:.5f} != {a * b:.5f}",
+                ),
             ]
 
             if b != 0:
                 expected_value.append(
-                    (dut.quot.value, a / b, f"Division failed: {a:.5f} / {b:.5f} = {dut.quot.value:.5f} != {a / b:.5f}")
+                    (
+                        dut.quot.value,
+                        a / b,
+                        f"Division failed: {a:.5f} / {b:.5f} = {dut.quot.value:.5f} != {a / b:.5f}",
+                    )
                 )
 
             for actual, expected, error_msg in expected_value:
                 if expected > MAX_VALUE or expected < MIN_VALUE:
-                    dut._log.info(f"Skipping test as result is out of bounds: {expected:.5f}")
+                    dut._log.info(
+                        f"Skipping test as result is out of bounds: {expected:.5f}"
+                    )
                     continue
 
                 assert within_tolerance(actual, expected), error_msg

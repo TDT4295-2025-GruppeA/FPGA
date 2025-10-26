@@ -10,8 +10,9 @@ TRIANGLE_COUNT = 12
 VERILOG_MODULE = "ModelRom"
 VERILOG_PARAMETERS = {
     "TRIANGLE_COUNT": TRIANGLE_COUNT,
-    "FILE_PATH": "\"../static/models/cube\"",
+    "FILE_PATH": '"../static/models/cube"',
 }
+
 
 @cocotb.test(timeout_time=1, timeout_unit="us")
 async def test_model_rom(dut: Modelrom):

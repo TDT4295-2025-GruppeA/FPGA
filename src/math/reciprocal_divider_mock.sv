@@ -24,6 +24,9 @@ module ReciprocalDivider #(
     // This is by far not how the actual divider IP core works,
     // but it will work for our simple use case.
 
+    // TODO: Add fifo buffer to input to reflect 
+    // how the actual IP core works.
+
     typedef logic [$clog2(DELAY)-1:0] count;
 
     logic busy = 0;

@@ -122,7 +122,7 @@ module Top (
     logic draw_start;
     assign draw_start = rst_deassert_pulse | (buffer_select_sync_sys != buffer_select_sync_sys_d);
 
-    logic signed [7:0] data;
+    transform_t transform;
 
     DrawingManager #(
         .BUFFER_WIDTH(BUFFER_CONFIG.width),
@@ -140,7 +140,7 @@ module Top (
         .write_data(dm_write_data),
         .frame_done(dm_frame_done),
         .buffer_select(buffer_select_sync_sys),
-        .data(data)
+        .transform(transform)
     );
 
     ///////////////////////////////////////
@@ -249,10 +249,8 @@ module Top (
     // SPI //
     /////////
 
-    logic signed [7:0] rx_data;
-
     SpiSub #(
-        .WORD_SIZE(8),
+        .WORD_SIZE($bits(transform_t)),
         .RX_QUEUE_LENGTH(2),
         .TX_QUEUE_LENGTH(2)
     ) spi_controller (
@@ -263,26 +261,18 @@ module Top (
         .miso(spi_miso),
 
         // System interface
-        .sys_clk(clk_ext),
-        .sys_rstn(~reset),
+        .sys_clk(clk_system),
+        .sys_rstn(rstn_system),
 
         // User data interface
         .tx_data_en(1'b1), // Never sending anything.
         .rx_data_en(1'b1), // Always reading.
-        .tx_data(data), // Sending back received data.
-        .rx_data(rx_data), // Word to receive.
+        .tx_data(transform), // Sending back received data.
+        .rx_data(transform), // Word to receive.
         .tx_ready(), // Ignored.
         .rx_ready(), // Ignored.
         .active() // Ignored.
     );
-
-    always_ff @(posedge clk_system or negedge rstn_system) begin
-        if (!rstn_system) begin
-            data <= '0;
-        end else begin
-            data <= rx_data;
-        end
-    end
 
     ///////////////////////////////////////
     ////////////// BUFFER ROUTING /////////
