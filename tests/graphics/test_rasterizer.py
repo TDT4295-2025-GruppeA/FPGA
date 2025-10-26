@@ -116,7 +116,6 @@ async def test_rasterizer(dut: Rasterizer):
     # Feed triangles
     cocotb.start_soon(feed_triangles(clock, dut))
 
-
     # Create a ASCII representation of the buffer
     # TODO: Create an actual image.
     covered_output = [

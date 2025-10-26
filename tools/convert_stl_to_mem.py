@@ -16,6 +16,7 @@ def float_to_fixed(value: float, fractional_bits: int) -> int:
     """Convert float to fixed-point representation with given fractional bits."""
     return int(round(value * (1 << fractional_bits)))
 
+
 def pseudo_random_12_bit_color(v: np.ndarray) -> int:
     s = np.sin(v[0] * 12.9898 + v[1] * 78.2323 + v[2] * 37.1719)
     t = np.sin(v[0] * 93.1234 + v[1] * 67.3435 + v[2] * 54.1623)
@@ -26,6 +27,7 @@ def pseudo_random_12_bit_color(v: np.ndarray) -> int:
     b = int(((u * 13579.2468) % 1.0) * 15) & 0xF
 
     return (r << 8) | (g << 4) | (b << 0)
+
 
 def triangle_normal(v0, v1, v2):
     return np.cross(v1 - v0, v2 - v0)

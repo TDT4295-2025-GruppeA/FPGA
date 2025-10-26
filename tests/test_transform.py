@@ -15,12 +15,15 @@ from types_ import (
 
 VERILOG_MODULE = "Transform"
 
+
 class InputData(LogicObject):
-    triangle: Triangle = LogicField(Triangle) # type: ignore
-    transform: TransformStruct = LogicField(TransformStruct) # type: ignore
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+    transform: TransformStruct = LogicField(TransformStruct)  # type: ignore
+
 
 class OutputData(LogicObject):
-    triangle: Triangle = LogicField(Triangle) # type: ignore
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+
 
 async def make_clock(dut):
     cocotb.start_soon(Clock(dut.clk, 10, "ns").start())
@@ -29,6 +32,7 @@ async def make_clock(dut):
     await RisingEdge(dut.clk)
     dut.rstn.value = 1
     await RisingEdge(dut.clk)
+
 
 @cocotb.test()
 async def test_transform_identity(dut):
@@ -59,9 +63,10 @@ async def test_transform_identity(dut):
     out_data, _ = await consumer.consume()
     triangle_out = out_data.triangle
 
-    assert triangle_out == triangle_in, (
-        f"Triangle changed under identity transform!\nExpected: {triangle_in}\nGot: {triangle_out}"
-    )
+    assert (
+        triangle_out == triangle_in
+    ), f"Triangle changed under identity transform!\nExpected: {triangle_in}\nGot: {triangle_out}"
+
 
 @cocotb.test()
 async def test_transform_translation(dut):
@@ -84,7 +89,6 @@ async def test_transform_translation(dut):
         Vertex(Position(3, 3, 3), RGB(1, 1, 1)),
     )
 
-
     input_data = [(InputData(triangle=triangle_in, transform=transform), None)]
 
     triangle_expected = Triangle(
@@ -92,7 +96,6 @@ async def test_transform_translation(dut):
         Vertex(Position(3, 4, 5), RGB(1, 1, 1)),
         Vertex(Position(4, 5, 6), RGB(1, 1, 1)),
     )
-
 
     for data, meta in input_data:
         await producer.produce(data, meta)
@@ -102,15 +105,16 @@ async def test_transform_translation(dut):
     out_data, _ = await consumer.consume()
     triangle_out = out_data.triangle
 
-    assert triangle_out.v0 == triangle_expected.v0, (
-        f"Transformed vertex 0 mismatch!\nExpected: {triangle_expected.v0}\nGot: {triangle_out.v0}"
-    )
-    assert triangle_out.v1 == triangle_expected.v1, (
-        f"Transformed vertex 1 mismatch!\nExpected: {triangle_expected.v1}\nGot: {triangle_out.v1}"
-    )
-    assert triangle_out.v2 == triangle_expected.v2, (
-        f"Transformed vertex 2 mismatch!\nExpected: {triangle_expected.v2}\nGot: {triangle_out.v2}"
-    )
+    assert (
+        triangle_out.v0 == triangle_expected.v0
+    ), f"Transformed vertex 0 mismatch!\nExpected: {triangle_expected.v0}\nGot: {triangle_out.v0}"
+    assert (
+        triangle_out.v1 == triangle_expected.v1
+    ), f"Transformed vertex 1 mismatch!\nExpected: {triangle_expected.v1}\nGot: {triangle_out.v1}"
+    assert (
+        triangle_out.v2 == triangle_expected.v2
+    ), f"Transformed vertex 2 mismatch!\nExpected: {triangle_expected.v2}\nGot: {triangle_out.v2}"
+
 
 @cocotb.test()
 async def test_transform_rotation_z_90(dut):
@@ -167,15 +171,15 @@ async def test_transform_rotation_z_90(dut):
     out_data, _ = await consumer.consume()
     triangle_out = out_data.triangle
 
-    assert triangle_out.v0 == triangle_expected.v0, (
-        f"Transformed vertex 0 mismatch!\nExpected: {triangle_expected.v0}\nGot: {triangle_out.v0}"
-    )
-    assert triangle_out.v1 == triangle_expected.v1, (
-        f"Transformed vertex 1 mismatch!\nExpected: {triangle_expected.v1}\nGot: {triangle_out.v1}"
-    )
-    assert triangle_out.v2 == triangle_expected.v2, (
-        f"Transformed vertex 2 mismatch!\nExpected: {triangle_expected.v2}\nGot: {triangle_out.v2}"
-    )
+    assert (
+        triangle_out.v0 == triangle_expected.v0
+    ), f"Transformed vertex 0 mismatch!\nExpected: {triangle_expected.v0}\nGot: {triangle_out.v0}"
+    assert (
+        triangle_out.v1 == triangle_expected.v1
+    ), f"Transformed vertex 1 mismatch!\nExpected: {triangle_expected.v1}\nGot: {triangle_out.v1}"
+    assert (
+        triangle_out.v2 == triangle_expected.v2
+    ), f"Transformed vertex 2 mismatch!\nExpected: {triangle_expected.v2}\nGot: {triangle_out.v2}"
 
     for data, meta in input_data:
         await producer.produce(data, meta)
@@ -185,16 +189,19 @@ async def test_transform_rotation_z_90(dut):
     out_data, _ = await consumer.consume()
     triangle_out = out_data.triangle
 
-    for i, (expected, got) in enumerate(zip(
-        (triangle_expected.v0, triangle_expected.v1, triangle_expected.v2),
-        (triangle_out.v0, triangle_out.v1, triangle_out.v2)
-    )):
-        assert got.position == expected.position, (
-            f"Vertex {i} position mismatch!\nExpected: {expected.position}\nGot: {got.position}"
+    for i, (expected, got) in enumerate(
+        zip(
+            (triangle_expected.v0, triangle_expected.v1, triangle_expected.v2),
+            (triangle_out.v0, triangle_out.v1, triangle_out.v2),
         )
-        assert got.color == expected.color, (
-            f"Vertex {i} color mismatch!\nExpected: {expected.color}\nGot: {got.color}"
-        )
+    ):
+        assert (
+            got.position == expected.position
+        ), f"Vertex {i} position mismatch!\nExpected: {expected.position}\nGot: {got.position}"
+        assert (
+            got.color == expected.color
+        ), f"Vertex {i} color mismatch!\nExpected: {expected.color}\nGot: {got.color}"
+
 
 @cocotb.test()
 async def test_transform_rotation_translation(dut):
@@ -235,16 +242,19 @@ async def test_transform_rotation_translation(dut):
     out_data, _ = await consumer.consume()
     triangle_out = out_data.triangle
 
-    for i, (expected, got) in enumerate(zip(
-        (triangle_expected.v0, triangle_expected.v1, triangle_expected.v2),
-        (triangle_out.v0, triangle_out.v1, triangle_out.v2)
-    )):
-        assert got.position == expected.position, (
-            f"Vertex {i} position mismatch!\nExpected: {expected.position}\nGot: {got.position}"
+    for i, (expected, got) in enumerate(
+        zip(
+            (triangle_expected.v0, triangle_expected.v1, triangle_expected.v2),
+            (triangle_out.v0, triangle_out.v1, triangle_out.v2),
         )
-        assert got.color == expected.color, (
-            f"Vertex {i} color mismatch!\nExpected: {expected.color}\nGot: {got.color}"
-        )
+    ):
+        assert (
+            got.position == expected.position
+        ), f"Vertex {i} position mismatch!\nExpected: {expected.position}\nGot: {got.position}"
+        assert (
+            got.color == expected.color
+        ), f"Vertex {i} color mismatch!\nExpected: {expected.color}\nGot: {got.color}"
+
 
 @cocotb.test()
 async def test_transform_metadata_passthrough(dut):
@@ -252,7 +262,7 @@ async def test_transform_metadata_passthrough(dut):
     await make_clock(dut)
 
     class Bit(LogicObject):
-        bit: int = LogicField(UInt(1)) # type: ignore
+        bit: int = LogicField(UInt(1))  # type: ignore
 
     producer = Producer(dut, "triangle_tf", has_metadata=True, signal_style="ms")
     consumer = Consumer(dut, "triangle", OutputData, Bit, signal_style="ms")
@@ -262,9 +272,15 @@ async def test_transform_metadata_passthrough(dut):
     transform = TransformStruct(
         Position(0, 0, 0),
         RotationMatrix(
-            1, 0, 0,
-            0, 1, 0,
-            0, 0, 1,
+            1,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
         ),
     )
 
@@ -274,29 +290,29 @@ async def test_transform_metadata_passthrough(dut):
         Vertex(Position(3, 3, 3), RGB(3, 3, 3)),
     )
 
-
     for metadata_in in [0, 1]:
         triangle_expected = triangle_in
         metadata_expected = metadata_in
 
-        await producer.produce(InputData(triangle=triangle_in, transform=transform), Bit(metadata_in))
+        await producer.produce(
+            InputData(triangle=triangle_in, transform=transform), Bit(metadata_in)
+        )
 
         await RisingEdge(dut.triangle_m_valid)
         out_data, out_meta = await consumer.consume()
 
         triangle_out = out_data.triangle
 
-        assert triangle_out == triangle_expected, (
-            f"Triangle changed under identity transform!\nExpected: {triangle_expected}\nGot: {triangle_out}"
-        )
+        assert (
+            triangle_out == triangle_expected
+        ), f"Triangle changed under identity transform!\nExpected: {triangle_expected}\nGot: {triangle_out}"
 
-        assert out_meta.bit == metadata_expected, (
-            f"Metadata mismatch!\nExpected: {metadata_expected}\nGot: {out_meta.bit}"
-        )
+        assert (
+            out_meta.bit == metadata_expected
+        ), f"Metadata mismatch!\nExpected: {metadata_expected}\nGot: {out_meta.bit}"
 
         prev_meta = int(dut.triangle_m_metadata.value)
         await RisingEdge(dut.clk)
-        assert int(dut.triangle_m_metadata.value) == prev_meta, (
-            "Metadata changed while valid asserted!"
-        )
-
+        assert (
+            int(dut.triangle_m_metadata.value) == prev_meta
+        ), "Metadata changed while valid asserted!"
