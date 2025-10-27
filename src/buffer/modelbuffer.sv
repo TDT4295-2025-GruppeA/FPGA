@@ -127,15 +127,15 @@ module ModelBuffer #(
 
                 write_prev_model_index <= write_model_idx;
             end
+            read_out_data <= model_buffer[read_addr];
+            read_out_valid <= read_in_valid && read_in_ready;
+            // Mark last triange in model
+            if (read_triangle_index + 1 == registry[read_model_index].size) begin
+                read_out_metadata.last <= 1;
+            end else begin
+                read_out_metadata.last <= 0;
+            end
         end
 
-        read_out_data <= model_buffer[read_addr];
-        read_out_valid <= read_in_valid && read_in_ready;
-        // Mark last triange in model
-        if (read_triangle_index + 1 == registry[read_model_index].size) begin
-            read_out_metadata.last <= 1;
-        end else begin
-            read_out_metadata.last <= 0;
-        end
     end
 endmodule
