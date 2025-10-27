@@ -20,12 +20,16 @@ module SpiSub #(
     input logic sys_rstn,
 
     // User data interface
-    input logic tx_data_en, // Set high when word in tx_data is ready to send.
-    input logic rx_data_en, // Set high when word in rx_data has been read.
-    input logic [WORD_SIZE-1:0] tx_data, // Word to send.
-    output logic [WORD_SIZE-1:0] rx_data, // Word to receive.
-    output logic tx_ready, // High when ready to accept new data to send.
-    output logic rx_ready, // High when data has been received. (rx_data is valid)
+    // Transmitting data
+    input logic tx_in_valid,
+    input logic [WORD_SIZE-1:0] tx_in_data,
+    output logic tx_in_ready,
+
+    // Receiving data
+    input logic rx_out_ready,
+    output logic [WORD_SIZE-1:0] rx_out_data,
+    output logic rx_out_valid,
+
     output logic active // High as long as a transaction is ongoing. (SSN is low)
 );
     // Reset should happen when either master is
@@ -73,10 +77,10 @@ module SpiSub #(
         .data_in(rx_buffer),
 
         .read_clk(sys_clk),
-        .read_en(rx_data_en),
-        .data_out(rx_data),
+        .read_en(rx_out_ready),
+        .data_out(rx_out_data),
 
-        .read_ready(rx_ready),
+        .read_ready(rx_out_valid),
 
         // Ignored.
         .empty(),
@@ -113,10 +117,10 @@ module SpiSub #(
         .data_out(tx_buffer),
 
         .write_clk(sys_clk),
-        .write_en(tx_data_en),
-        .data_in(tx_data),
+        .write_en(tx_in_valid),
+        .data_in(tx_in_data),
 
-        .write_ready(tx_ready),
+        .write_ready(tx_in_ready),
 
         // Ignored.
         .empty(),

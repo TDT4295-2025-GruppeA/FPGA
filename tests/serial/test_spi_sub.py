@@ -103,24 +103,24 @@ async def sub_transaction(dut: Spisub, receive_callback: Callable[[int], int]) -
 
     while dut.active.value:
         # Receive and process data if available.
-        if dut.rx_ready.value:
-            rx_byte = dut.rx_data.value.to_unsigned()
+        if dut.rx_out_valid.value:
+            rx_byte = dut.rx_out_data.value.to_unsigned()
             dut._log.info(f"Sub received byte: {rx_byte:02X}")
 
             tx_byte = receive_callback(rx_byte) & 0xFF
 
-            dut.rx_data_en.value = 1
+            dut.rx_out_ready.value = 1
             await Timer(SYS_CLOCK_PERIOD)
-            dut.rx_data_en.value = 0
+            dut.rx_out_ready.value = 0
 
         # Send data if available.
         if tx_byte is not None:
             dut._log.info(f"Sub transmitting byte: {tx_byte:02X}")
-            dut.tx_data.value = tx_byte
+            dut.tx_in_data.value = tx_byte
 
-            dut.tx_data_en.value = 1
+            dut.tx_in_valid.value = 1
             await Timer(SYS_CLOCK_PERIOD)
-            dut.tx_data_en.value = 0
+            dut.tx_in_valid.value = 0
 
             tx_byte = None
 

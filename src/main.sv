@@ -265,12 +265,13 @@ module Top (
         .sys_rstn(rstn_system),
 
         // User data interface
-        .tx_data_en(1'b1), // Never sending anything.
-        .rx_data_en(1'b1), // Always reading.
-        .tx_data(transform), // Sending back received data.
-        .rx_data(transform), // Word to receive.
-        .tx_ready(), // Ignored.
-        .rx_ready(), // Ignored.
+        .tx_in_valid(1'b1),
+        .tx_in_data(transform),
+        .tx_in_ready(),
+
+        .rx_out_ready(1'b1),
+        .rx_out_data(transform),
+        .rx_out_valid(),
         .active() // Ignored.
     );
 
