@@ -42,12 +42,6 @@ module SceneBuffer #(
     assign write_in_ready = !(scenes[scene_idx_write].ready ||
                         (write_idx == COUNT_TRANSFORM));
 
-    assign read_out_data = transforms[scene_idx_read][read_idx];
-    assign read_out_valid = scenes[scene_idx_read].ready;
-    assign read_out_metadata.last = read_out_valid &&
-                       (read_idx == scenes[scene_idx_read].size) &&
-                       read_out_ready;
-
     // Sequential logic
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
@@ -63,7 +57,7 @@ module SceneBuffer #(
             // Writing logic
             if (write_in_valid && write_in_ready) begin
                 transforms[scene_idx_write][write_idx] <= write_in_data;
-                scenes[scene_idx_write].size <= write_idx;
+                scenes[scene_idx_write].size <= write_idx + 1;
                 write_idx <= write_idx + 1;
                 if (write_in_metadata.last && !scenes[scene_idx_write].ready) begin
                     scenes[scene_idx_write].ready <= 1;
@@ -77,9 +71,12 @@ module SceneBuffer #(
             end
 
             // Reading logic
-            if (read_out_valid && read_out_ready) begin
+            if (read_out_ready) begin
                 if (read_idx < scenes[scene_idx_read].size) begin
                     read_idx <= read_idx + 1;
+                    read_out_valid <= 1;
+                    read_out_data <= transforms[scene_idx_read][read_idx];
+                    read_out_metadata.last <= (read_idx + 1 == scenes[scene_idx_read].size);
                 end else begin
                     // finished scene
                     scenes[scene_idx_read].ready <= 0;
@@ -90,6 +87,7 @@ module SceneBuffer #(
                     end
                     scenes[scene_idx_read].size <= 0;
                     read_idx <= 0;
+                    read_out_valid <= 0;
                 end
             end
         end
