@@ -8,7 +8,9 @@ module DrawingManager #(
     parameter int BUFFER_DATA_WIDTH = 12,
     parameter int BUFFER_ADDR_WIDTH = $clog2(BUFFER_WIDTH * BUFFER_HEIGHT),
     parameter string FILE_PATH = "static/models/teapot",
-    parameter int TRIANGLE_COUNT = 160
+    parameter int TRIANGLE_COUNT = 160,
+    parameter real NEAR_PLANE = 1.0,
+    parameter real FAR_PLANE  = 10.0
 )(
     input logic clk,
     input logic rstn,
@@ -199,6 +201,10 @@ module DrawingManager #(
         .triangle_m_metadata(triangle_transformed_metadata)
     );
 
+    /////////////////
+    // Projection  //
+    /////////////////
+
     triangle_t projected_triangle;
     logic projected_valid, projected_ready;
     logic projected_metadata;
@@ -247,6 +253,32 @@ module DrawingManager #(
         .pixel_data_m_metadata(pixel_metadata)
     );
 
+    //////////////////////
+    // Depth (Z) Buffer //
+    //////////////////////
+    
+    logic depth_write_req;
+    logic depth_write_pass;
+    logic depth_clear_req;
+    logic [BUFFER_ADDR_WIDTH-1:0] depth_addr;
+
+    DepthBuffer #(
+        .BUFFER_WIDTH(BUFFER_WIDTH),
+        .BUFFER_HEIGHT(BUFFER_HEIGHT),
+        .BUFFER_ADDR_WIDTH(BUFFER_ADDR_WIDTH),
+        .NEAR_PLANE(NEAR_PLANE),
+        .FAR_PLANE(FAR_PLANE)
+    ) depth_buffer (
+        .clk(clk),
+        .rstn(rstn),
+        .write_req(depth_write_req),
+        .write_addr(depth_addr),
+        .write_depth(pixel.depth),
+        .write_pass(depth_write_pass),
+        .clear_req(depth_clear_req),
+        .clear_addr(bg_write_addr)
+    );
+
     ///////////////////
     // State Machine //
     ///////////////////
@@ -283,15 +315,20 @@ module DrawingManager #(
         next_state = state;
         bg_draw_start = 1'b0;
         frame_done = 1'b0;
-        
+
         write_en = 1'b0;
         write_addr = '0;
         write_data = '0;
-        
+
         triangle_tf_valid = 1'b0;
         triangle_index_next = triangle_index;
 
         frame_indicator_next = framerate_indicator;
+
+        // Depth buffer interface defaults
+        depth_write_req = 1'b0;
+        depth_clear_req = 1'b0;
+        depth_addr = '0;
 
         case (state)
             IDLE: begin
@@ -304,6 +341,7 @@ module DrawingManager #(
                 write_en = bg_write_en;
                 write_addr = bg_write_addr;
                 write_data = bg_write_data;
+                depth_clear_req = bg_write_en; // clear z-buffer
                 if (bg_draw_done) begin
                     next_state = GRAPHICS;
                 end
@@ -319,20 +357,22 @@ module DrawingManager #(
                     triangle_index_next = triangle_index + 1;
 
                 if (pixel_valid) begin
-                    // Write the received pixel to the buffer.
-                    write_en = pixel.covered;
-                    write_addr = BUFFER_ADDR_WIDTH'(pixel.coordinate.x + pixel.coordinate.y * 10'(BUFFER_WIDTH));
+                    depth_addr = BUFFER_ADDR_WIDTH'(pixel.coordinate.x + pixel.coordinate.y * BUFFER_WIDTH);
+                    depth_write_req = pixel.covered;
 
-                    if (sw_r[0]) begin
-                        // If switch zero is set display the depth map.
-                        write_data = {4'h0, 4'(ftoi(mul(itof(7), pixel.depth))), 4'h0};
-                    end else begin
-                        // Otherwise, write the actual pixel color.
-                        write_data = pixel.color[15:4];
+                    if (depth_write_pass) begin
+                        write_en = 1'b1;
+                        write_addr = depth_addr;
+                        if (sw_r[0]) begin
+                            // If switch zero is set display the depth map.
+                            write_data = {4'h0, 4'(ftoi(mul(itof(15), pixel.depth))), 4'h0};
+                        end else begin
+                            // Otherwise, write the actual pixel color.
+                            write_data = pixel.color[15:4];
+                        end
                     end
 
                     if (pixel_metadata.last) begin
-                        // Move to the next state if the rasterizer is done.
                         triangle_index_next = 0;
                         next_state = FRAMERATE;
                     end
