@@ -103,10 +103,10 @@ class Producer(PipelineBase, Generic[_Data, _Metadata]):
             while not self._ready.value:
                 await RisingEdge(self._dut.clk)
 
-            # Set data as invalid
-            # Only required if we do not have more items to produce.
-            self._valid.value = 0
-            await RisingEdge(self._dut.clk)
+            # Set data as invalid if we do not have more items
+            if self._input_queue.empty():
+                self._valid.value = 0
+                await RisingEdge(self._dut.clk)
 
 
 class Consumer(PipelineBase, Generic[_Data, _Metadata]):
@@ -129,6 +129,12 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
     async def consume(self) -> tuple[_Data, _Metadata | None]:
         """Retrieve a transaction from the DUT."""
         return await self._output_queue.get()
+
+    async def consume_all(self) -> list[tuple[_Data, _Metadata | None]]:
+        items = []
+        while not self._output_queue.empty():
+            items.append(await self._output_queue.get())
+        return items
 
     async def _run_loop(self):
         # TODO: expose this to the user so they can control when to
