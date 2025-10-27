@@ -36,9 +36,9 @@ module DepthBuffer #(
     // Stage 1: Input Latching  //
     //////////////////////////////
 
-    logic                        s1_write_req;
+    logic                         s1_write_req;
     logic [BUFFER_ADDR_WIDTH-1:0] s1_addr;
-    pixel_data_t                 s1_pixel;
+    pixel_data_t                  s1_pixel;
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
@@ -57,15 +57,15 @@ module DepthBuffer #(
     // Stage 2: Read current depth value
     /////////////////////////////////////
 
-    logic                        s2_write_req;
+    logic                         s2_write_req;
     logic [BUFFER_ADDR_WIDTH-1:0] s2_addr;
-    pixel_data_t                 s2_pixel;
-    fixed                        s2_current_depth;
+    pixel_data_t                  s2_pixel;
+    fixed                         s2_current_depth;
 
     always_ff @(posedge clk) begin
-        s2_write_req <= s1_write_req;
-        s2_addr      <= s1_addr;
-        s2_pixel     <= s1_pixel;
+        s2_write_req     <= s1_write_req;
+        s2_addr          <= s1_addr;
+        s2_pixel         <= s1_pixel;
         s2_current_depth <= fixed'(z_buffer[s1_addr]);
     end
 

@@ -16,7 +16,7 @@ module DrawingManager #(
     input logic rstn,
     input logic draw_start,
     input logic draw_ack,
-    
+
     output logic write_en,
     output logic [BUFFER_ADDR_WIDTH-1:0] write_addr,
     output logic [BUFFER_DATA_WIDTH-1:0] write_data,
@@ -35,7 +35,7 @@ module DrawingManager #(
         FRAME_DONE
     } pipeline_state_t;
 
-    // Add one to triangle count to be able store when 
+    // Add one to triangle count to be able store when
     // all triangles have been fed to the rasterizer.
     typedef logic [$clog2(TRIANGLE_COUNT + 1)-1:0] triangle_index_t;
 
@@ -50,7 +50,7 @@ module DrawingManager #(
     logic [BUFFER_ADDR_WIDTH-1:0] bg_write_addr;
     logic [BUFFER_DATA_WIDTH-1:0] bg_write_data;
     logic bg_write_en;
-    
+
     ///////////////////////
     // Background Drawer //
     ///////////////////////
@@ -61,7 +61,7 @@ module DrawingManager #(
         .BUFFER_DATA_WIDTH(BUFFER_DATA_WIDTH),
         .BUFFER_ADDR_WIDTH(BUFFER_ADDR_WIDTH)
     ) background_drawer (
-        .clk(clk), 
+        .clk(clk),
         .rstn(rstn),
         .draw_start(bg_draw_start),
         .draw_done(bg_draw_done),
@@ -177,7 +177,6 @@ module DrawingManager #(
     // Depth (Z) Buffer //
     //////////////////////
     logic depth_write_en;
-    logic depth_clear_req;
     logic [BUFFER_ADDR_WIDTH-1:0] depth_write_addr;
     pixel_data_t depth_write_pixel;
 
@@ -199,7 +198,7 @@ module DrawingManager #(
         .write_addr_out(depth_write_addr),
         .write_pixel_out(depth_write_pixel),
 
-        .clear_req(depth_clear_req),
+        .clear_req(bg_write_en),
         .clear_addr(bg_write_addr)
     );
 
@@ -209,7 +208,7 @@ module DrawingManager #(
 
     triangle_index_t triangle_index_next;
     pipeline_state_t state, next_state;
-    
+
     logic framerate_indicator, frame_indicator_next;
     logic triangle_changed;
 
@@ -260,23 +259,16 @@ module DrawingManager #(
                 write_en = bg_write_en;
                 write_addr = bg_write_addr;
                 write_data = bg_write_data;
-                depth_clear_req = bg_write_en; // clear z-buffer
                 if (bg_draw_done) begin
                     next_state = GRAPHICS;
                 end
             end
             GRAPHICS: begin
-                // write_en = depth_write_en;
-                // write_addr = depth_write_addr;
-                // write_data = sw_r[0]
-                //     ? {4'h0, 4'(ftoi(mul(itof(15), depth_write_pixel.depth))), 4'h0}
-                //     : depth_write_pixel.color[15:4];
-                
-                write_en = pixel.covered && pixel_valid;
-                write_addr = BUFFER_ADDR_WIDTH'(pixel.coordinate.x + pixel.coordinate.y * BUFFER_WIDTH);
+                write_en = depth_write_en;
+                write_addr = depth_write_addr;
                 write_data = sw_r[0]
-                    ? {4'h0, 4'(ftoi(mul(itof(15), pixel.depth))), 4'h0}
-                    : pixel.color[15:4];
+                    ? {4'h0, 4'(ftoi(mul(itof(15), depth_write_pixel.depth))), 4'h0}
+                    : depth_write_pixel.color[15:4];
 
                 // So long as we have triangles to send, do so.
                 // Take one cycle delay of loading into account.
@@ -287,7 +279,7 @@ module DrawingManager #(
                 if (triangle_tf_valid && triangle_tf_ready)
                     triangle_index_next = triangle_index + 1;
 
-                if (pixel_metadata.last) begin
+                if (pixel_valid && pixel_metadata.last) begin
                     triangle_index_next = 0;
                     next_state = FRAMERATE;
                 end
