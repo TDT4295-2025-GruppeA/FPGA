@@ -14,8 +14,7 @@ testtools/testrunner.py
 testtools/stub_dummytests.py
 tests/stubs
 waveform
-rasterizer_output.txt
-graphics_pipeline_output.png
+*_output.png
 
 # Log files
 *.log

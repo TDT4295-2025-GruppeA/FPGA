@@ -58,8 +58,8 @@ endfunction
 // 3. Interpolate color and depth.
 // 4. Output pixel data.
 module TriangleInterpolator #(
-    parameter int VIEWPORT_WIDTH = 1,
-    parameter int VIEWPORT_HEIGHT = 1
+    parameter int VIEWPORT_WIDTH = 2,
+    parameter int VIEWPORT_HEIGHT = 2
 ) (
     input logic clk,
     input logic rstn,
@@ -322,7 +322,7 @@ module TriangleInterpolator #(
         b2_4_r, triangle_4_r.v2.position.z
     );
 
-     assign pixel_data_4_c.color.red = barycentric_weight_color(
+    assign pixel_data_4_c.color.red = barycentric_weight_color(
         b0_4_r, triangle_4_r.v0.color.red,
         b1_4_r, triangle_4_r.v1.color.red,
         b2_4_r, triangle_4_r.v2.color.red

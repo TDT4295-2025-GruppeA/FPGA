@@ -8,15 +8,15 @@ module DrawingManager #(
     parameter int BUFFER_DATA_WIDTH = 12,
     parameter int BUFFER_ADDR_WIDTH = $clog2(BUFFER_WIDTH * BUFFER_HEIGHT),
     parameter string FILE_PATH = "static/models/teapot",
-    parameter int TRIANGLE_COUNT = 160,
-    parameter real NEAR_PLANE = 1.0,
-    parameter real FAR_PLANE  = 10.0
+    parameter int TRIANGLE_COUNT = 900,
+    parameter real NEAR_PLANE = 0.25,
+    parameter real FAR_PLANE  = 1000.0
 )(
     input logic clk,
     input logic rstn,
     input logic draw_start,
     input logic draw_ack,
-    
+
     output logic write_en,
     output logic [BUFFER_ADDR_WIDTH-1:0] write_addr,
     output logic [BUFFER_DATA_WIDTH-1:0] write_data,
@@ -35,7 +35,7 @@ module DrawingManager #(
         FRAME_DONE
     } pipeline_state_t;
 
-    // Add one to triangle count to be able store when 
+    // Add one to triangle count to be able store when
     // all triangles have been fed to the rasterizer.
     typedef logic [$clog2(TRIANGLE_COUNT + 1)-1:0] triangle_index_t;
 
@@ -50,7 +50,7 @@ module DrawingManager #(
     logic [BUFFER_ADDR_WIDTH-1:0] bg_write_addr;
     logic [BUFFER_DATA_WIDTH-1:0] bg_write_data;
     logic bg_write_en;
-    
+
     ///////////////////////
     // Background Drawer //
     ///////////////////////
@@ -61,7 +61,7 @@ module DrawingManager #(
         .BUFFER_DATA_WIDTH(BUFFER_DATA_WIDTH),
         .BUFFER_ADDR_WIDTH(BUFFER_ADDR_WIDTH)
     ) background_drawer (
-        .clk(clk), 
+        .clk(clk),
         .rstn(rstn),
         .draw_start(bg_draw_start),
         .draw_done(bg_draw_done),
@@ -70,86 +70,6 @@ module DrawingManager #(
         .write_data(bg_write_data),
         .buffer_select(buffer_select)
     );
-
-    triangle_t triangles[TRIANGLE_COUNT];
-    assign triangles[0] = '{
-        v0: '{
-            position: '{
-                x: rtof( 0.2),
-                y: rtof( 0.2),
-                z: rtof( 0.0)
-            },
-            color: 'hF00
-        },
-        v1: '{
-            position: '{
-                x: rtof( 0.7),
-                y: rtof( 0.1),
-                z: rtof( 0.0)
-            },
-            color: 'h0F0
-        },
-        v2: '{
-            position: '{
-                x: rtof( 0.5),
-                y: rtof( 0.5),
-                z: rtof( 1.0)
-            },
-            color: 'hFFF
-        }
-    };
-    assign triangles[1] = '{
-        v0: '{
-            position: '{
-                x: rtof( 0.5),
-                y: rtof( 0.5),
-                z: rtof( 1.0)
-            },
-            color: 'hFFF
-        },
-        v1: '{
-            position: '{
-                x: rtof( 0.6),
-                y: rtof( 0.9),
-                z: rtof( 0.0)
-            },
-            color: 'h00F
-        },
-        v2: '{
-            position: '{
-                x: rtof( 0.2),
-                y: rtof( 0.2),
-                z: rtof( 0.0)
-            },
-            color: 'hF00
-        }
-    };
-    assign triangles[2] = '{
-        v0: '{
-            position: '{
-                x: rtof( 0.5),
-                y: rtof( 0.5),
-                z: rtof( 1.0)
-            },
-            color: 'hFFF
-        },
-        v1: '{
-            position: '{
-                x: rtof( 0.7),
-                y: rtof( 0.1),
-                z: rtof( 0.0)
-            },
-            color: 'h0F0
-        },
-        v2: '{
-            position: '{
-                x: rtof( 0.6),
-                y: rtof( 0.9),
-                z: rtof( 0.0)
-            },
-            color: 'h00F
-        }
-    };
 
     // Which triangle to send next.
     triangle_index_t triangle_index;
@@ -256,26 +176,29 @@ module DrawingManager #(
     //////////////////////
     // Depth (Z) Buffer //
     //////////////////////
-    
-    logic depth_write_req;
-    logic depth_write_pass;
-    logic depth_clear_req;
-    logic [BUFFER_ADDR_WIDTH-1:0] depth_addr;
+    logic depth_write_en;
+    logic [BUFFER_ADDR_WIDTH-1:0] depth_write_addr;
+    pixel_data_t depth_write_pixel;
 
     DepthBuffer #(
-        .BUFFER_WIDTH(BUFFER_WIDTH),
-        .BUFFER_HEIGHT(BUFFER_HEIGHT),
-        .BUFFER_ADDR_WIDTH(BUFFER_ADDR_WIDTH),
-        .NEAR_PLANE(NEAR_PLANE),
-        .FAR_PLANE(FAR_PLANE)
+    .BUFFER_WIDTH(BUFFER_WIDTH),
+    .BUFFER_HEIGHT(BUFFER_HEIGHT),
+    .BUFFER_ADDR_WIDTH(BUFFER_ADDR_WIDTH),
+    .NEAR_PLANE(NEAR_PLANE),
+    .FAR_PLANE(FAR_PLANE)
     ) depth_buffer (
         .clk(clk),
         .rstn(rstn),
-        .write_req(depth_write_req),
-        .write_addr(depth_addr),
-        .write_depth(pixel.depth),
-        .write_pass(depth_write_pass),
-        .clear_req(depth_clear_req),
+
+        .write_en_in(pixel_valid && pixel.covered),
+        .write_pixel_in(pixel),
+        .write_addr_in(BUFFER_ADDR_WIDTH'(pixel.coordinate.x + pixel.coordinate.y * BUFFER_WIDTH)),
+
+        .write_en_out(depth_write_en),
+        .write_addr_out(depth_write_addr),
+        .write_pixel_out(depth_write_pixel),
+
+        .clear_req(bg_write_en),
         .clear_addr(bg_write_addr)
     );
 
@@ -285,7 +208,7 @@ module DrawingManager #(
 
     triangle_index_t triangle_index_next;
     pipeline_state_t state, next_state;
-    
+
     logic framerate_indicator, frame_indicator_next;
     logic triangle_changed;
 
@@ -325,11 +248,6 @@ module DrawingManager #(
 
         frame_indicator_next = framerate_indicator;
 
-        // Depth buffer interface defaults
-        depth_write_req = 1'b0;
-        depth_clear_req = 1'b0;
-        depth_addr = '0;
-
         case (state)
             IDLE: begin
                 if (draw_start) begin
@@ -341,12 +259,17 @@ module DrawingManager #(
                 write_en = bg_write_en;
                 write_addr = bg_write_addr;
                 write_data = bg_write_data;
-                depth_clear_req = bg_write_en; // clear z-buffer
                 if (bg_draw_done) begin
                     next_state = GRAPHICS;
                 end
             end
             GRAPHICS: begin
+                write_en = depth_write_en;
+                write_addr = depth_write_addr;
+                write_data = sw_r[0]
+                    ? {4'h0, 4'(ftoi(mul(itof(15), depth_write_pixel.depth))), 4'h0}
+                    : depth_write_pixel.color[15:4];
+
                 // So long as we have triangles to send, do so.
                 // Take one cycle delay of loading into account.
                 if (!triangle_changed && (triangle_index < triangle_index_t'(TRIANGLE_COUNT)))
@@ -356,26 +279,9 @@ module DrawingManager #(
                 if (triangle_tf_valid && triangle_tf_ready)
                     triangle_index_next = triangle_index + 1;
 
-                if (pixel_valid) begin
-                    depth_addr = BUFFER_ADDR_WIDTH'(pixel.coordinate.x + pixel.coordinate.y * BUFFER_WIDTH);
-                    depth_write_req = pixel.covered;
-
-                    if (depth_write_pass) begin
-                        write_en = 1'b1;
-                        write_addr = depth_addr;
-                        if (sw_r[0]) begin
-                            // If switch zero is set display the depth map.
-                            write_data = {4'h0, 4'(ftoi(mul(itof(15), pixel.depth))), 4'h0};
-                        end else begin
-                            // Otherwise, write the actual pixel color.
-                            write_data = pixel.color[15:4];
-                        end
-                    end
-
-                    if (pixel_metadata.last) begin
-                        triangle_index_next = 0;
-                        next_state = FRAMERATE;
-                    end
+                if (pixel_valid && pixel_metadata.last) begin
+                    triangle_index_next = 0;
+                    next_state = FRAMERATE;
                 end
             end
             FRAMERATE: begin

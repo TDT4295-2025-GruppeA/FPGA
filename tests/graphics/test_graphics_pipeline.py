@@ -14,10 +14,10 @@ VERILOG_PARAMETERS = {
     # We have to specify the filepath here again
     # as the working directory is different when running
     # tests than when synthesizing for some reason...
-    "FILE_PATH": '"../static/models/teapot"',
-    "TRIANGLE_COUNT": 160,
     "BUFFER_WIDTH": BUFFER_WIDTH,
     "BUFFER_HEIGHT": BUFFER_HEIGHT,
+    "FILE_PATH": '"../static/models/teapot-low-poly"',
+    "TRIANGLE_COUNT": 160,
 }
 
 
@@ -29,7 +29,7 @@ async def test_graphics_pipeline(dut: Drawingmanager):
     dut.rstn.value = 1
     dut.draw_start.value = 1
     dut.transform_d.value = Transform(
-        Position(0, 0, 2),
+        Position(0, 0, 1.5),
         RotationMatrix(
             1,
             0,
@@ -72,5 +72,8 @@ async def test_graphics_pipeline(dut: Drawingmanager):
 
         await clock.cycles(1)
 
-    img = Image.fromarray(frame_buffer, "RGB")
-    img.save("graphics_pipeline_output.png")
+    # TODO: Have better assertions here. For example checking with a prerendered image.
+    assert frame_buffer.sum() > 0, "Frame buffer should have been written to."
+
+    image = Image.fromarray(frame_buffer, "RGB")
+    image.save("graphics_pipeline_output.png")

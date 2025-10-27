@@ -1,4 +1,5 @@
 import fixed_pkg::*;
+import types_pkg::*;
 
 function automatic fixed triangle_area(position_t p0, position_t p1, position_t p2);
     return add(

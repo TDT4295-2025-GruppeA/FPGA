@@ -85,6 +85,7 @@ class PixelData(LogicObject):
 class PixelDataMetadata(LogicObject):
     last: int = LogicField(UInt(1))  # type: ignore
 
+
 # Types in pipeline head
 class ModelBufferWrite(LogicObject):
     model_id: int = LogicField(UInt(8))  # type: ignore
