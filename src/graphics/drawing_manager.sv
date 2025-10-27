@@ -7,8 +7,8 @@ module DrawingManager #(
     parameter int BUFFER_HEIGHT = 120,
     parameter int BUFFER_DATA_WIDTH = 12,
     parameter int BUFFER_ADDR_WIDTH = $clog2(BUFFER_WIDTH * BUFFER_HEIGHT),
-    parameter string FILE_PATH = "static/models/suzanne",
-    parameter int TRIANGLE_COUNT = 968
+    parameter string FILE_PATH = "static/models/teapot",
+    parameter int TRIANGLE_COUNT = 160
 )(
     input logic clk,
     input logic rstn,
