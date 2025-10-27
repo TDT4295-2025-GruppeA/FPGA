@@ -190,11 +190,11 @@ module DrawingManager #(
         .clk(clk),
         .rstn(rstn),
 
-        .write_req(pixel_valid && pixel.covered),
-        .write_pixel(pixel),
+        .write_en_in(pixel_valid && pixel.covered),
+        .write_pixel_in(pixel),
         .write_addr_in(BUFFER_ADDR_WIDTH'(pixel.coordinate.x + pixel.coordinate.y * BUFFER_WIDTH)),
 
-        .write_en(depth_write_en),
+        .write_en_out(depth_write_en),
         .write_addr_out(depth_write_addr),
         .write_pixel_out(depth_write_pixel),
 

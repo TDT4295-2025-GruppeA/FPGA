@@ -1,18 +1,16 @@
 import types_pkg::*;
 import fixed_pkg::*;
 
-function automatic logic [9:0] normalized_to_pixel_floor(fixed normalized_coordinate, int viewport_size);
-    fixed pixel_coordinate = mul(add(normalized_coordinate, rtof(1.0)), rtof(real'(viewport_size - 1)/2));
+function automatic logic [9:0] clamp_pixel_coordinate(fixed pixel_coordinate, int viewport_size);
     pixel_coordinate = (pixel_coordinate < itof(0)) ? itof(0) : pixel_coordinate;
     pixel_coordinate = (pixel_coordinate > itof(viewport_size - 1)) ? itof(viewport_size - 1) : pixel_coordinate;
     return 10'(ftoi(pixel_coordinate));
 endfunction
 
-function automatic logic [9:0] normalized_to_pixel_ceil(fixed normalized_coordinate, int viewport_size);
-    fixed pixel_coordinate = mul(add(normalized_coordinate, rtof(1.0)), rtof(real'(viewport_size - 1)/2));
-    pixel_coordinate = (pixel_coordinate < itof(0)) ? itof(0) : pixel_coordinate;
-    pixel_coordinate = (pixel_coordinate > itof(viewport_size - 1)) ? itof(viewport_size - 1) : pixel_coordinate;
-    return 10'(ftoi(pixel_coordinate));
+function automatic logic [9:0] normalized_to_pixel(fixed normalized_coordinate, int viewport_size, int offset);
+    fixed half_viewport = rtof(real'(viewport_size - 1)/2);
+    fixed pixel_coordinate = add(mul(normalized_coordinate, half_viewport), half_viewport + itof(offset));
+    return clamp_pixel_coordinate(pixel_coordinate, viewport_size);
 endfunction
 
 module Rasterizer #(
@@ -34,12 +32,13 @@ module Rasterizer #(
     output pixel_data_t pixel_data_m_data,
     output pixel_metadata_t pixel_data_m_metadata
 );
-    typedef enum logic {
+    typedef enum {
         IDLE,
+        INIT,
         RUNNING
     } rasterizer_state;
 
-    rasterizer_state state = IDLE;
+    rasterizer_state state;
 
     attributed_triangle_t attributed_triangle;
     triangle_metadata_t attributed_triangle_metadata;
@@ -67,7 +66,7 @@ module Rasterizer #(
 
     // Which pixel we are currently sampling.
     pixel_coordinate_t pixel_coordinate;
-    pixel_coordinate_t end_coordinate;
+    pixel_coordinate_t start_coordinate, end_coordinate;
 
     // Flags to indicate if we are on the last pixel
     // of the row or the last row of the viewport.
@@ -119,14 +118,21 @@ module Rasterizer #(
                 IDLE: begin
                     // Check if a new triangle has been accepted.
                     if (attributed_triangle_valid && rasterizer_ready) begin
-                        // Start rasterizing if so.
-                        state <= RUNNING;
+                        // Set the start and end coordinates of the bounding box.
+                        start_coordinate.x <= normalized_to_pixel(attributed_triangle.bounding_box.left,   VIEWPORT_WIDTH,  -1);
+                        start_coordinate.y <= normalized_to_pixel(attributed_triangle.bounding_box.top,    VIEWPORT_HEIGHT, -1);
+                        end_coordinate.x   <= normalized_to_pixel(attributed_triangle.bounding_box.right,  VIEWPORT_WIDTH,   1);
+                        end_coordinate.y   <= normalized_to_pixel(attributed_triangle.bounding_box.bottom, VIEWPORT_HEIGHT,  1);
 
-                        pixel_coordinate.x <= normalized_to_pixel_floor(attributed_triangle.bounding_box.left,  VIEWPORT_WIDTH);
-                        pixel_coordinate.y <= normalized_to_pixel_floor(attributed_triangle.bounding_box.top,   VIEWPORT_HEIGHT);
-                        end_coordinate.x   <= normalized_to_pixel_ceil(attributed_triangle.bounding_box.right,  VIEWPORT_WIDTH);
-                        end_coordinate.y   <= normalized_to_pixel_ceil(attributed_triangle.bounding_box.bottom, VIEWPORT_HEIGHT);
+                        // Move to init phase.
+                        state <= INIT;
                     end
+                end
+                INIT: begin
+                    // Set the current sample coordinate to the start coordinate.
+                    // TODO: This is stage is completely unnecessary, but I was very lazy.
+                    pixel_coordinate <= start_coordinate;
+                    state <= RUNNING;
                 end
                 RUNNING: begin
                     // Wait until sampler is ready to receive new sample point.
@@ -136,12 +142,17 @@ module Rasterizer #(
                         if (last_y && last_x) begin
                             state <= IDLE;
                         end else if (last_x) begin
-                            pixel_coordinate.x <= 0;
+                            pixel_coordinate.x <= start_coordinate.x;
                             pixel_coordinate.y <= pixel_coordinate.y + 1;
                         end else begin
                             pixel_coordinate.x <= pixel_coordinate.x + 1;
                         end
                     end
+                end
+                default: begin
+                    // Should never happen, but you never know
+                    // when a cosmic bit flip might happen. :P
+                    state <= IDLE;
                 end
             endcase
         end
