@@ -82,7 +82,7 @@ module DepthBuffer #(
             if (s2_pixel.depth < REC_FAR || s2_pixel.depth > REC_NEAR) begin
                 // Outside frustum → reject
                 write_en   = 1'b0;
-            end else if (s2_pixel.depth >= s2_current_depth) begin
+            end else if (s2_pixel.depth > s2_current_depth) begin
                 // Closer → pass
                 write_en   = 1'b1;
             end

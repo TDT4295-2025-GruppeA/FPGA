@@ -10,7 +10,7 @@ module DrawingManager #(
     parameter string FILE_PATH = "static/models/teapot",
     parameter int TRIANGLE_COUNT = 160,
     parameter real NEAR_PLANE = 1.0,
-    parameter real FAR_PLANE  = 10.0
+    parameter real FAR_PLANE  = 1000.0
 )(
     input logic clk,
     input logic rstn,

@@ -2,14 +2,14 @@ import types_pkg::*;
 import fixed_pkg::*;
 
 function automatic logic [9:0] normalized_to_pixel_floor(fixed normalized_coordinate, int viewport_size);
-    fixed pixel_coordinate = mul(add(normalized_coordinate, rtof(1.0 - 1/16)), rtof(real'(viewport_size - 1)/2));
+    fixed pixel_coordinate = mul(add(normalized_coordinate, rtof(1.0)), rtof(real'(viewport_size - 1)/2));
     pixel_coordinate = (pixel_coordinate < itof(0)) ? itof(0) : pixel_coordinate;
     pixel_coordinate = (pixel_coordinate > itof(viewport_size - 1)) ? itof(viewport_size - 1) : pixel_coordinate;
     return 10'(ftoi(pixel_coordinate));
 endfunction
 
 function automatic logic [9:0] normalized_to_pixel_ceil(fixed normalized_coordinate, int viewport_size);
-    fixed pixel_coordinate = mul(add(normalized_coordinate, rtof(1.0 + 1/16)), rtof(real'(viewport_size - 1)/2));
+    fixed pixel_coordinate = mul(add(normalized_coordinate, rtof(1.0)), rtof(real'(viewport_size - 1)/2));
     pixel_coordinate = (pixel_coordinate < itof(0)) ? itof(0) : pixel_coordinate;
     pixel_coordinate = (pixel_coordinate > itof(viewport_size - 1)) ? itof(viewport_size - 1) : pixel_coordinate;
     return 10'(ftoi(pixel_coordinate));
