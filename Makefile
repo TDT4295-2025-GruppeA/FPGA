@@ -38,7 +38,7 @@ endif
 
 .PHONY : synth flash test clean rmbuild rmgen rmlogs shell stubs
 
-build/top_$(TARGET).bit: $(VERILOG_SOURCES)
+build/$(TOP)_$(TARGET).bit: $(VERILOG_SOURCES)
 	@echo "Synthesizing and implementing design for target $(TARGET)"
 	mkdir -p build/logs
 	TOP=$(TOP) FPGA_BOARD=$(BOARD) FPGA_TARGET="$(TARGET)" FPGA_PART_LONG="$(PART_LONG)" vivado -mode batch -source scripts/synth.tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
@@ -48,9 +48,9 @@ build/top_$(TARGET).bit: $(VERILOG_SOURCES)
 	[ ! -f "clockInfo.txt" ] || mv clockInfo.txt build/reports
 	[ ! -f "tight_setup_hold_pins.txt" ] || mv tight_setup_hold_pins.txt build/reports
 
-synth: build/top_$(TARGET).bit
+synth: build/$(TOP)_$(TARGET).bit
 
-flash: build/top_$(TARGET).bit
+flash: build/$(TOP)_$(TARGET).bit
 	@echo "Flashing FPGA target $(TARGET)"
 	mkdir -p build/logs
 	TOP=$(TOP) FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" vivado -mode batch -source scripts/flash.tcl -journal "build/logs/flash_$(BUILD_TIME).jou"  -log "build/logs/flash_$(BUILD_TIME).log"

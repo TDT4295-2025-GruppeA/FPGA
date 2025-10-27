@@ -9,7 +9,7 @@ open_hw_target
 current_hw_device [get_hw_devices $part_short]
 
 # Configure program
-set_property PROGRAM.FILE "build${top}_${target}.bit" [get_hw_devices $part_short]
+set_property PROGRAM.FILE "build/${top}_${target}.bit" [get_hw_devices $part_short]
 
 # Program hardware
 program_hw_devices [get_hw_devices $part_short]
