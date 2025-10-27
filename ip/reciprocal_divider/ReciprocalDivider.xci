@@ -57,19 +57,6 @@
         "C_M_AXIS_DOUT_TDATA_WIDTH": [ { "value": "40", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_M_AXIS_DOUT_TUSER_WIDTH": [ { "value": "1", "resolve_type": "generated", "format": "long", "usage": "all" } ]
       },
-      "project_parameters": {
-        "ARCHITECTURE": [ { "value": "artix7" } ],
-        "BASE_BOARD_PART": [ { "value": "" } ],
-        "BOARD_CONNECTIONS": [ { "value": "" } ],
-        "DEVICE": [ { "value": "xc7a35ti" } ],
-        "PACKAGE": [ { "value": "csg324" } ],
-        "PREFHDL": [ { "value": "VERILOG" } ],
-        "SILICON_REVISION": [ { "value": "" } ],
-        "SIMULATOR_LANGUAGE": [ { "value": "MIXED" } ],
-        "SPEEDGRADE": [ { "value": "-1L" } ],
-        "STATIC_POWER": [ { "value": "" } ],
-        "TEMPERATURE_GRADE": [ { "value": "I" } ]
-      },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Flow" } ],
         "IPREVISION": [ { "value": "24" } ],

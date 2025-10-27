@@ -18,8 +18,10 @@ set top $::env(TOP)
 create_project -in_memory -part $part_long
 
 # Load ip cores
-# TODO: Make it so that the ip config file is not dependent on the target part.
 read_ip [ fileutil::findByPattern ip *.*xci ]
+
+# Update ips to use project parameters
+upgrade_ip [get_ips]
 
 # Generate ip cores
 generate_target all [get_ips]
