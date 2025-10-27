@@ -29,8 +29,9 @@ module DepthBuffer #(
     localparam fixed REC_NEAR = rtof(1.0 / NEAR_PLANE);
     localparam fixed REC_FAR  = rtof(1.0 / FAR_PLANE);
 
+    localparam int DECIMATION_FACTOR = 4;
     localparam int HALF_FIXED_WIDTH = TOTAL_WIDTH/2;
-    (* ram_style = "block" *) logic [HALF_FIXED_WIDTH-1:0] z_buffer [0:(BUFFER_WIDTH*BUFFER_HEIGHT)-1];
+    (* ram_style = "block" *) logic signed [HALF_FIXED_WIDTH-1:0] z_buffer [0:(BUFFER_WIDTH*BUFFER_HEIGHT)-1];
 
     //////////////////////////////
     // Stage 1: Input Latching  //
@@ -66,7 +67,7 @@ module DepthBuffer #(
         s2_write_req     <= s1_write_req;
         s2_addr          <= s1_addr;
         s2_pixel         <= s1_pixel;
-        s2_current_depth <= fixed'(z_buffer[s1_addr]);
+        s2_current_depth <= fixed'(z_buffer[s1_addr] <<< DECIMATION_FACTOR);
     end
 
     //////////////////////////////
@@ -97,7 +98,7 @@ module DepthBuffer #(
         if (clear_req)
             z_buffer[clear_addr] <= '0;
         else if (write_en)
-            z_buffer[s2_addr] <= HALF_FIXED_WIDTH'(s2_pixel.depth);
+            z_buffer[s2_addr] <= HALF_FIXED_WIDTH'(s2_pixel.depth >>> DECIMATION_FACTOR);
     end
 
 endmodule

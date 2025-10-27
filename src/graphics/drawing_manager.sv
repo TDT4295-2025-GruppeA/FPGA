@@ -8,8 +8,8 @@ module DrawingManager #(
     parameter int BUFFER_DATA_WIDTH = 12,
     parameter int BUFFER_ADDR_WIDTH = $clog2(BUFFER_WIDTH * BUFFER_HEIGHT),
     parameter string FILE_PATH = "static/models/teapot",
-    parameter int TRIANGLE_COUNT = 160,
-    parameter real NEAR_PLANE = 1.0,
+    parameter int TRIANGLE_COUNT = 900,
+    parameter real NEAR_PLANE = 0.25,
     parameter real FAR_PLANE  = 1000.0
 )(
     input logic clk,
