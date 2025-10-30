@@ -131,7 +131,10 @@ module TrianglePreprocessor (
         triangle.v2.position
     );
 
-    assign small_area = (area_r < 2);
+    // TODO: Remove magic number.
+    // This could probably be calculated based 
+    // on the area of a single pixel
+    assign small_area = (area_r <= 4);
 
     assign bounding_box.top = min(
         triangle.v0.position.y,

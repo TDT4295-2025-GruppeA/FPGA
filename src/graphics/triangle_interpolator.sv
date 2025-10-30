@@ -51,12 +51,22 @@ function automatic logic is_top_left(position_t p0, position_t p1);
     return ((p0.y == p1.y) && (p1.x > p0.x)) || (p0.y > p1.y);
 endfunction
 
+function automatic fixed clamp(fixed value);
+    if (value < rtof(0.0)) begin
+        return rtof(0.0);
+    end else if (value > rtof(1.0)) begin
+        return rtof(1.0);
+    end else begin
+        return value;
+    end
+endfunction
+
 // Steps:
 // 1. Evaluate edge functions.
 // 2. Calculate first two barycentric coordinates.
-// 3. Calculate last barycentric coordinate.
-// 3. Interpolate color and depth.
-// 4. Output pixel data.
+// 3. Infer last barycentric coordinate.
+// 4. Interpolate color and depth.
+// 5. Output pixel data.
 module TriangleInterpolator #(
     parameter int VIEWPORT_WIDTH = 2,
     parameter int VIEWPORT_HEIGHT = 2
@@ -225,9 +235,10 @@ module TriangleInterpolator #(
     );
 
     // Calculate barycentric coordinates.
-    fixed b0_2_c, b1_2_c;
+    fixed b0_2_c, b1_2_c, b2_2_c;
     assign b0_2_c = mul(f12_2_r, a_reciprocal_2_r);
     assign b1_2_c = mul(f20_2_r, a_reciprocal_2_r);
+    assign b2_2_c = mul(f01_2_r, a_reciprocal_2_r);
 
     /////////////
     // Stage 3 //
@@ -238,7 +249,7 @@ module TriangleInterpolator #(
     pixel_coordinate_t pixel_coordinate_3_r;
     pixel_metadata_t pixel_metadata_3_r;
     logic covered_3_r;
-    fixed b0_3_r, b1_3_r;
+    fixed b0_3_r, b1_3_r, b2_3_r;
     fixed pixel_x_3_r, pixel_y_3_r;
 
     logic valid_3_r;
@@ -251,6 +262,7 @@ module TriangleInterpolator #(
             covered_3_r <= '0;
             b0_3_r <= '0;
             b1_3_r <= '0;
+            b2_3_r <= '0;
             pixel_x_3_r <= '0;
             pixel_y_3_r <= '0;
             valid_3_r <= '0;
@@ -261,14 +273,59 @@ module TriangleInterpolator #(
             covered_3_r <= covered_2_c;
             b0_3_r <= b0_2_c;
             b1_3_r <= b1_2_c;
+            b2_3_r <= b2_2_c;
             pixel_x_3_r <= pixel_x_2_r;
             pixel_y_3_r <= pixel_y_2_r;
             valid_3_r <= valid_2_r;
         end
     end
 
-    fixed  b2_3_c;
-    assign b2_3_c = sub(itof(1), add(b0_3_r, b1_3_r));
+    // Clamp 
+    fixed b0_clamped_3_c, b1_clamped_3_c, b2_clamped_3_c;
+    assign b0_clamped_3_c = clamp(b0_3_r);
+    assign b1_clamped_3_c = clamp(b1_3_r);
+    assign b2_clamped_3_c = clamp(b2_3_r);
+
+    fixed normalization_error;
+    assign normalization_error = sub(itof(1), add(add(b0_clamped_3_c, b1_clamped_3_c), b2_clamped_3_c));
+    
+    localparam fixed NORMALIZATION_ERROR_TOLERANCE = rtof(1.0/16.0);
+    logic normalization_error_too_large;
+    assign normalization_error_too_large = (
+        (normalization_error >  NORMALIZATION_ERROR_TOLERANCE) ||
+        (normalization_error < -NORMALIZATION_ERROR_TOLERANCE)
+    );
+
+    fixed b0_3_c, b1_3_c, b2_3_c;
+    always_comb begin
+        if (normalization_error_too_large) begin
+            b0_3_c = rtof(1.0/3.0);
+            b1_3_c = rtof(1.0/3.0);
+            b2_3_c = rtof(1.0/3.0);
+        end else begin
+            b0_3_c = b0_clamped_3_c;
+            b1_3_c = b1_clamped_3_c;
+            b2_3_c = b2_clamped_3_c;
+        end
+    end
+
+    // TODO: Maybe do some (working) normalization correction in stead?
+    // Code from when i tried to do that:
+    // fixed correction;
+    // assign correction = mul(norm_error, rtof(1.0/3.0));
+
+    // fixed b0_corrected_3_c, b1_corrected_3_c, b2_corrected_3_c;
+    // assign b0_corrected_3_c = b0_clamped_3_c + correction;
+    // assign b1_corrected_3_c = b1_clamped_3_c + correction;
+    // assign b2_corrected_3_c = b2_clamped_3_c + correction;
+
+    // fixed b0_3_c, b1_3_c, b2_3_c;
+    // assign b0_3_c = clamp(b0_corrected_3_c);
+    // assign b1_3_c = clamp(b1_corrected_3_c);
+    // assign b2_3_c = clamp(b2_corrected_3_c);
+
+    logic covered_3_c;
+    assign covered_3_c = covered_3_r;
 
     /////////////
     // Stage 4 //
@@ -300,9 +357,9 @@ module TriangleInterpolator #(
             triangle_4_r <= triangle_3_r;
             pixel_coordinate_4_r <= pixel_coordinate_3_r;
             pixel_metadata_4_r <= pixel_metadata_3_r;
-            covered_4_r <= covered_3_r;
-            b0_4_r <= b0_3_r;
-            b1_4_r <= b1_3_r;
+            covered_4_r <= covered_3_c;
+            b0_4_r <= b0_3_c;
+            b1_4_r <= b1_3_c;
             b2_4_r <= b2_3_c;
             pixel_x_4_r <= pixel_x_3_r;
             pixel_y_4_r <= pixel_y_3_r;
