@@ -249,8 +249,11 @@ module Top (
     // SPI //
     /////////
 
+    protocol_transform_t protocol_transform;
+    assign transform = parse_protocol_transform(protocol_transform);
+
     SpiSub #(
-        .WORD_SIZE($bits(transform_t)),
+        .WORD_SIZE($bits(protocol_transform_t)),
         .RX_QUEUE_LENGTH(2),
         .TX_QUEUE_LENGTH(2)
     ) spi_controller (
@@ -267,8 +270,8 @@ module Top (
         // User data interface
         .tx_data_en(1'b1), // Never sending anything.
         .rx_data_en(1'b1), // Always reading.
-        .tx_data(transform), // Sending back received data.
-        .rx_data(transform), // Word to receive.
+        .tx_data(protocol_transform), // Sending back received data.
+        .rx_data(protocol_transform), // Word to receive.
         .tx_ready(), // Ignored.
         .rx_ready(), // Ignored.
         .active() // Ignored.
