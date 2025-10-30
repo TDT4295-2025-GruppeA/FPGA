@@ -78,10 +78,10 @@ async def test_depth_buffer_basic(dut):
     # Write three pixels to the same address (simulate overdraw)
     addr = 10
 
-    pixel_far = make_pixel(1, 1, depth=1/8.0)   # 8m -> 0.125 reciprocal depth
-    pixel_near = make_pixel(1, 1, depth=1/2.0)  # 2m -> 0.5 reciprocal depth
-    pixel_too_far = make_pixel(1, 1, depth=1/11.0)  # 11m -> 0.0909 (too far)
-    pixel_too_near = make_pixel(1, 1, depth=1/0.5)  # 0.5m -> 2.0 (too near)
+    pixel_far = make_pixel(1, 1, depth=1 / 8.0)  # 8m -> 0.125 reciprocal depth
+    pixel_near = make_pixel(1, 1, depth=1 / 2.0)  # 2m -> 0.5 reciprocal depth
+    pixel_too_far = make_pixel(1, 1, depth=1 / 11.0)  # 11m -> 0.0909 (too far)
+    pixel_too_near = make_pixel(1, 1, depth=1 / 0.5)  # 0.5m -> 2.0 (too near)
 
     # Step 1: Write a valid far pixel
     await write_pixel(dut.clk, dut, addr, pixel_far)
@@ -101,9 +101,9 @@ async def test_depth_buffer_basic(dut):
 
     # Check that last written pixel depth matches the near pixel (the closest)
     written_pixel = PixelData.from_logicarray(dut.write_pixel_out.value)
-    assert np.isclose(written_pixel.depth, pixel_near.depth, atol=1e-6), (
-        f"Expected nearest pixel depth {pixel_near.depth}, got {written_pixel.depth}"
-    )
+    assert np.isclose(
+        written_pixel.depth, pixel_near.depth, atol=1e-6
+    ), f"Expected nearest pixel depth {pixel_near.depth}, got {written_pixel.depth}"
 
 
 @cocotb.test(timeout_time=1, timeout_unit="ms")
@@ -124,10 +124,10 @@ async def test_depth_buffer_clipping(dut):
     addr = 5
 
     # Pixel inside frustum
-    pixel_valid = make_pixel(1, 1, depth=1/5.0)   # 5m -> 0.2 (inside range [0.1, 1.0])
+    pixel_valid = make_pixel(1, 1, depth=1 / 5.0)  # 5m -> 0.2 (inside range [0.1, 1.0])
     # Pixel too far and too near
-    pixel_near = make_pixel(1, 1, depth=1/0.5)    # 0.5m -> 2.0 (> 1.0, too near)
-    pixel_far = make_pixel(1, 1, depth=1/12.0)    # 12m -> 0.083 (< 0.1, too far)
+    pixel_near = make_pixel(1, 1, depth=1 / 0.5)  # 0.5m -> 2.0 (> 1.0, too near)
+    pixel_far = make_pixel(1, 1, depth=1 / 12.0)  # 12m -> 0.083 (< 0.1, too far)
 
     # Feed each and check write enable
     for pixel, expected in [
@@ -142,7 +142,7 @@ async def test_depth_buffer_clipping(dut):
         await await_pipeline_latency(dut, cycles=1)
 
         await ReadOnly()
-        
-        assert dut.write_en_out.value == int(expected), (
-            f"Depth {pixel.depth} -> write_en_out={dut.write_en_out.value}, expected {expected}"
-        )
+
+        assert dut.write_en_out.value == int(
+            expected
+        ), f"Depth {pixel.depth} -> write_en_out={dut.write_en_out.value}, expected {expected}"
