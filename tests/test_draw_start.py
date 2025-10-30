@@ -6,10 +6,10 @@ from stubs.top import Top
 VERILOG_MODULE = "Top"
 
 
-@cocotb.test()
+@cocotb.test(timeout_time=1, timeout_unit="ms")
 async def test_startup_signals(dut: Top):
     # 100 MHz clock on clk_ext
-    cocotb.start_soon(Clock(dut.clk_ext, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk_ext, 10, unit="ns").start())
 
     # Assert reset
     dut.reset.value = 1

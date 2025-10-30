@@ -9,7 +9,7 @@ VERILOG_MODULE = "Top"
 
 @cocotb.test()
 async def test_buffer_swap(dut: Top):
-    cocotb.start_soon(Clock(dut.clk_ext, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk_ext, 10, unit="ns").start())
 
     dut.reset.value = 1
     for _ in range(5):

@@ -19,7 +19,7 @@ VERILOG_PARAMETERS = {
 def make_scene(size: int, offset: int = 0) -> list[ModelInstance]:
     scene: list[ModelInstance] = []
     for i in range(1, size + 1):
-        x = i + offset
+        x = float(i + offset)
 
         position = Position(x, x, x)
         rotation = RotationMatrix(*([x] * 9))

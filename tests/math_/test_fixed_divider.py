@@ -4,7 +4,7 @@ from stubs.fixeddivider import Fixeddivider
 from cocotb.triggers import RisingEdge, ReadOnly
 from cocotb.clock import Clock
 
-from utils import quantize, to_fixed, to_float, within_tolerance
+from utils import MAX_VALUE, MIN_VALUE, quantize, to_fixed, to_float, within_tolerance
 from cases import TEST_VALUES
 
 VERILOG_MODULE = "FixedDivider"
@@ -23,6 +23,14 @@ async def test_fixed_divider(dut: Fixeddivider):
     for a in TEST_VALUES:
         for b in TEST_VALUES:
             dut._log.info(f"Testing dividend={a:.5f}, divider={b:.5f}")
+
+            expected_result = quantize(a) / quantize(b) if to_fixed(b) != 0 else 0.0
+
+            if expected_result > MAX_VALUE or expected_result < MIN_VALUE:
+                dut._log.info(
+                    f"Skipping test as result is out of bounds: {expected_result:.6f}"
+                )
+                continue
 
             dut.dividend_s_data.value = to_fixed(a)
             dut.dividend_s_valid.value = 1
@@ -49,7 +57,6 @@ async def test_fixed_divider(dut: Fixeddivider):
                 await RisingEdge(dut.result_m_valid)
 
             result = to_float(dut.result_m_data.value.to_signed())
-            expected_result = quantize(a) / quantize(b) if to_fixed(b) != 0 else 0.0
 
             dut._log.info(f"{a:.6f} / {b:.6f} = {result:.6f}")
 

@@ -50,6 +50,7 @@ write_checkpoint -force $rpt_dir/post_route_checkpoint
 # Generate post-routing reports
 report_power -file $rpt_dir/post_route_power.rpt
 report_utilization -file $rpt_dir/post_route_utilization.rpt
+report_utilization -hierarchical -file $rpt_dir/post_route_utilization_hierarchical.rpt -hierarchical_depth 5
 report_timing -delay_type min_max -max_paths 1 -file $rpt_dir/post_route_timing.rpt
 
 #############

@@ -5,10 +5,14 @@ from cocotb.types import Array, LogicArray
 
 # How many decimals bits are used in the fixed point format.
 # IMPORTANT: This needs to match the fixed point format used in the Verilog code
-DECIMAL_WIDHT = 16
+DECIMAL_WIDTH = 14
+TOTAL_WIDTH = 25
 
 # The smallest representable interval in the fixed point format.
-RESOLUTION = 2**-DECIMAL_WIDHT
+RESOLUTION = 2**-DECIMAL_WIDTH
+
+MAX_VALUE = ((1 << (TOTAL_WIDTH - 1)) - 1) * RESOLUTION
+MIN_VALUE = -(1 << (TOTAL_WIDTH - 1)) * RESOLUTION
 
 # Tolerance for comparisons, in least significant bits (LSBs).
 # Used to determine if two fixed point values are "close enough" to be considered equal.
@@ -36,7 +40,7 @@ def to_fixed(value: float) -> int: ...
 def to_fixed(value: np.ndarray) -> np.ndarray: ...
 def to_fixed(value: float | np.ndarray) -> int | np.ndarray:
     """Convert a float to fixed point."""
-    res = value * (1 << DECIMAL_WIDHT)
+    res = value * (1 << DECIMAL_WIDTH)
 
     # It is important that we round away from zero here
     # as that is what System Verilog does.
@@ -53,7 +57,7 @@ def to_float(value: int) -> float: ...
 def to_float(value: np.ndarray) -> np.ndarray: ...
 def to_float(value: int | np.ndarray) -> float | np.ndarray:
     """Convert a fixed point to float."""
-    return value / (1 << DECIMAL_WIDHT)
+    return value / (1 << DECIMAL_WIDTH)
 
 
 @overload

@@ -2,9 +2,12 @@
 // functions to convert between fixed point and real/int,
 // and functions for basic arithmetic operations.
 
+// For all cases where precision is lost, rounding 
+// shall be done in stead of truncation.
+
 package fixed_pkg;
-    localparam int DECIMAL_WIDTH = 16;
-    localparam int TOTAL_WIDTH = 32;
+    localparam int DECIMAL_WIDTH = 14;
+    localparam int TOTAL_WIDTH = 25;
 
     typedef logic signed [TOTAL_WIDTH-1:0] fixed;
 
@@ -24,7 +27,13 @@ package fixed_pkg;
     endfunction
 
     function automatic int ftoi(fixed f);
-        return int'(f >>> DECIMAL_WIDTH);
+        // Add a bias to round to nearest integer in stead of just truncating.
+        fixed bias = 1 <<< (DECIMAL_WIDTH - 1);
+        // If number is negative, the bias will need to be subtracted.
+        fixed signed_bias = f[TOTAL_WIDTH-1] ? -bias : bias;
+        fixed rounded = f + signed_bias;
+        
+        return int'(rounded) >>> DECIMAL_WIDTH;
     endfunction
 
     function automatic fixed itof(int i);

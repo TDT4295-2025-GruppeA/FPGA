@@ -1,7 +1,8 @@
-from dataclasses import dataclass, Field, field
+from dataclasses import dataclass, Field, field, fields
 from typing import dataclass_transform, Literal
 
-from cocotb.types import LogicArray, Range
+from utils import quantize, to_fixed, to_float
+from cocotb.types import LogicArray, Logic, Range
 
 
 class _LogicType:
@@ -17,6 +18,11 @@ class Int(_LogicType):
 class UInt(_LogicType):
     def __init__(self, size: int):
         super().__init__(size)
+
+
+class Fixed(_LogicType):
+    def __init__(self):
+        super().__init__(25)  # TOTAL_WIDTH
 
 
 class Bytes(_LogicType):
@@ -53,6 +59,8 @@ class _Meta(type):
 class LogicObject(metaclass=_Meta):
     @classmethod
     def from_logicarray(cls, logic_array: LogicArray):
+        if isinstance(logic_array, Logic):
+            logic_array = LogicArray(int(logic_array), Range(0, 0))
         values = {}
         index = 0
         for key in reversed(cls.__dataclass_fields__.keys()):
@@ -66,6 +74,8 @@ class LogicObject(metaclass=_Meta):
                 values[key] = sliced.to_signed()
             elif issubclass(field_type, UInt):
                 values[key] = sliced.to_unsigned()
+            elif issubclass(field_type, Fixed):
+                values[key] = to_float(sliced.to_signed())
             elif issubclass(field_type, Bytes):
                 values[key] = sliced.to_bytes(byteorder="big")  # TODO: expose byteorder
             elif issubclass(field_type, LogicObject):
@@ -82,9 +92,29 @@ class LogicObject(metaclass=_Meta):
             value = getattr(self, key)
             size = self._get_field_size(key)
 
-            if isinstance(value, LogicObject):
-                value = value.to_logicarray()
-            arr = LogicArray(value, Range(size - 1, 0))
+            field_type = self._get_field_type(key)
+            arr_range = Range(size - 1, "downto", 0)
+
+            if issubclass(field_type, Int):
+                arr = LogicArray.from_signed(value, arr_range)
+            elif issubclass(field_type, UInt):
+                arr = LogicArray.from_unsigned(value, arr_range)
+            elif issubclass(field_type, Bytes):
+                raise NotImplemented
+            elif issubclass(field_type, Fixed):
+                value = to_fixed(value)
+                arr = LogicArray.from_signed(value, arr_range)
+            elif issubclass(field_type, LogicObject):
+                if isinstance(value, LogicObject):
+                    value = value.to_logicarray()
+                    arr = LogicArray(value, arr_range)
+                else:
+                    raise TypeError(
+                        f"value is '{type(value)}', not LogicObject when field type is LogicObject."
+                    )
+            else:
+                raise ValueError(f"Invalid field type '{field_type}'")
+
             arrays.append(arr)
 
         if len(arrays) == 0:
@@ -139,6 +169,20 @@ class LogicObject(metaclass=_Meta):
             total_size += field_size
 
         return total_size
+
+    def __post_init__(self):
+        for field in fields(self):
+            value = getattr(self, field.name)
+            logic_type = field.metadata.get("type")
+
+            # Quantize float to fixed point representation.
+            if isinstance(logic_type, Fixed):
+                if not isinstance(value, (int, float)):
+                    raise TypeError(
+                        f"Field '{field.name}' must be of type 'int' or 'float', got '{type(value)}'"
+                    )
+
+                setattr(self, field.name, quantize(value))
 
 
 class LogicField(Field):

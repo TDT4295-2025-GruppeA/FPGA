@@ -1,17 +1,24 @@
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge, FallingEdge
-from stubs.drawingmanager import DrawingManager
+from stubs.drawingmanager import Drawingmanager
 
 
 VERILOG_MODULE = "DrawingManager"
+VERILOG_PARAMETERS = {
+    # We have to specify the filepath here again
+    # as the working directory is different when running
+    # tests than when synthesizing for some reason...
+    "FILE_PATH": '"../static/models/cube"',
+    "TRIANGLE_COUNT": 12,
+}
 
 
-@cocotb.test()
-async def test_drawing_manager_states(dut: DrawingManager):
+@cocotb.test(timeout_time=10, timeout_unit="ms")
+async def test_drawing_manager_states(dut: Drawingmanager):
     """Step through each DrawingManager state transition"""
 
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.rstn.value = 0
     dut.draw_start.value = 0
@@ -56,7 +63,7 @@ async def test_drawing_manager_states(dut: DrawingManager):
 
     assert dut.frame_done.value == 0
     assert dut.bg_draw_start.value == 1
-    cocotb.log.info(" FSM returned to BACKGROUND successfully")
+    cocotb.log.info("FSM returned to BACKGROUND successfully")
 
     # For waveform visualization
     for i in range(100):
