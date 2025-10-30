@@ -6,8 +6,8 @@ from PIL import Image
 
 from types_ import Position, RotationMatrix, Transform
 
-BUFFER_WIDTH = 64
-BUFFER_HEIGHT = 64
+BUFFER_WIDTH = 160
+BUFFER_HEIGHT = 120
 
 VERILOG_MODULE = "DrawingManager"
 VERILOG_PARAMETERS = {
@@ -31,15 +31,9 @@ async def test_graphics_pipeline(dut: Drawingmanager):
     dut.transform_d.value = Transform(
         Position(0, 0, 1.5),
         RotationMatrix(
-            1,
-            0,
-            0,
-            0,
-            -1,
-            0,
-            0,
-            0,
-            1,
+            *(0.5, 0, 0.5),
+            *(0, -1, 0),
+            *(-0.5, 0, 0.5),
         ),
     ).to_logicarray()
     dut.sw_r.value = 0b0010
