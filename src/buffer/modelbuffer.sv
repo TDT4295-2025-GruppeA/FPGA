@@ -2,7 +2,7 @@ import types_pkg::*;
 
 module ModelBuffer #(
     parameter MAX_MODEL_COUNT = 10,
-    parameter MAX_TRIANGLE_COUNT = 100
+    parameter MAX_TRIANGLE_COUNT = 512
 )(
     input clk,
     input rstn,
@@ -64,8 +64,20 @@ module ModelBuffer #(
     model_index_t registry[MAX_MODEL_COUNT];
 
     // This is a buffer to store all triangles for all models.
-    triangle_t model_buffer[MAX_TRIANGLE_COUNT];
+    (* ram_style = "block" *) logic[71:0] model_buffer0[MAX_TRIANGLE_COUNT];
+    (* ram_style = "block" *) logic[71:0] model_buffer1[MAX_TRIANGLE_COUNT];
+    (* ram_style = "block" *) logic[71:0] model_buffer2[MAX_TRIANGLE_COUNT];
+    (* ram_style = "block" *) logic[44:0] model_buffer3[MAX_TRIANGLE_COUNT];
 
+    logic[71:0] read0;
+    logic[71:0] read1;
+    logic[71:0] read2;
+    logic[44:0] read3;
+
+    assign read_out_data[260:189] = read0;
+    assign read_out_data[188:117] = read1;
+    assign read_out_data[116:45] = read2;
+    assign read_out_data[44:0] = read3;
 
     // Read from the registry
     always_comb begin
@@ -91,6 +103,19 @@ module ModelBuffer #(
 
     end
 
+    always_ff @(posedge clk) begin
+        if (write_en) begin
+            model_buffer0[write_addr] <= write_triangle[260:189];
+            model_buffer1[write_addr] <= write_triangle[188:117];
+            model_buffer2[write_addr] <= write_triangle[116:45];
+            model_buffer3[write_addr] <= write_triangle[44:0];
+        end
+        read0 <= model_buffer0[read_addr];
+        read1 <= model_buffer1[read_addr];
+        read2 <= model_buffer2[read_addr];
+        read3 <= model_buffer3[read_addr];
+    end
+
     always_ff @(posedge clk or negedge rstn) begin
         // Mark model as written if we have started writing to another model
         // It is only allowed to write to a model once.
@@ -112,7 +137,6 @@ module ModelBuffer #(
 
                 // Write the triangle and update model states
                 triangle_index <= write_triangle_index; // Update triangle index
-                model_buffer[write_addr] <= write_triangle;
                 registry[write_model_idx].size += 1;
 
                 if (write_triangle_index == 0) begin
@@ -127,7 +151,6 @@ module ModelBuffer #(
 
                 write_prev_model_index <= write_model_idx;
             end
-            read_out_data <= model_buffer[read_addr];
             read_out_valid <= read_in_valid && read_in_ready;
             // Mark last triange in model
             if (read_triangle_index + 1 == registry[read_model_index].size) begin
