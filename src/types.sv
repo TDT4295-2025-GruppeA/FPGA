@@ -18,8 +18,8 @@ package types_pkg;
     } position_t;
 
     typedef struct packed {
-        color_t color;
         position_t position;
+        color_t color;
     } vertex_t;
 
     typedef struct packed {
@@ -105,8 +105,8 @@ package types_pkg;
 
     // Interface from PipelineHead to rest of pipeline
     typedef struct packed {
-        transform_t transform;
         triangle_t triangle;
+        transform_t transform;
     } triangle_tf_t; // Triangle transform pair fed into pipeline
 
     typedef struct packed {

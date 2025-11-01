@@ -22,9 +22,9 @@ class Short(LogicObject):
 
 
 class RGB(LogicObject):
-    r: int = LogicField(UInt(5), default=0)  # type: ignore
-    g: int = LogicField(UInt(6), default=0)  # type: ignore
-    b: int = LogicField(UInt(5), default=0)  # type: ignore
+    r: int = LogicField(UInt(4), default=0)  # type: ignore
+    g: int = LogicField(UInt(4), default=0)  # type: ignore
+    b: int = LogicField(UInt(4), default=0)  # type: ignore
 
 
 class Position(LogicObject):
@@ -106,8 +106,8 @@ class ModelInstanceMeta(LogicObject):
 
 
 class TriangleTransform(LogicObject):
-    transform: Transform = LogicField(Transform)  # type: ignore
     triangle: Triangle = LogicField(Triangle)  # type: ignore
+    transform: Transform = LogicField(Transform)  # type: ignore
 
 
 class TriangleTransformMeta(LogicObject):
