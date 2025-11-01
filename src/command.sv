@@ -38,17 +38,11 @@ module CommandInput(
     localparam byte_t CMD_UPLOAD_TRIANGLE     = byte_t'(8'hA1);
     localparam byte_t CMD_ADD_MODEL_INSTANCE  = byte_t'(8'hB0);
 
-    typedef struct packed {
-        logic[6:0] unused;
-        logic last;
-        modelinstance_t modelinst;
-    } cmd_scene_t;
-
     // Function that returns the length of the command in bytes
     function automatic byte_t command_length_bytes(byte_t cmd);
         case (cmd)
             CMD_BEGIN_MODEL_UPLOAD: return byte_t'(2);
-            CMD_UPLOAD_TRIANGLE: return byte_t'(1 + $bits(triangle_t) / 8);
+            CMD_UPLOAD_TRIANGLE: return byte_t'(1 + $bits(cmd_triangle_t) / 8);
             CMD_ADD_MODEL_INSTANCE: return byte_t'(1 + $bits(cmd_scene_t) / 8);
             default: return byte_t'(1);
         endcase
@@ -67,13 +61,15 @@ module CommandInput(
     wire model_serial_in_valid;
     wire model_serial_in_ready;
     wire byte_t model_serial_in_data;
+    wire cmd_triangle_t tmp_model_out_data;
     assign model_serial_in_valid = (state == STATE_UPLOAD_TRIANGLE) && cmd_in_transaction;
     assign model_serial_in_data = cmd_in_data;
     assign model_out_data.model_id = current_model_idx;
+    assign model_out_data.triangle = cast_triangle(tmp_model_out_data);
 
     SerialToParallelStream #(
         .INPUT_SIZE($bits(byte_t)),
-        .OUTPUT_SIZE($bits(triangle_t))
+        .OUTPUT_SIZE($bits(cmd_triangle_t))
     ) triangle_serializer (
         .clk(clk),
         .rstn(rstn),
@@ -82,7 +78,7 @@ module CommandInput(
         .serial_in_data(model_serial_in_data),
         .parallel_out_ready(model_out_ready),
         .parallel_out_valid(model_out_valid),
-        .parallel_out_data(model_out_data.triangle)
+        .parallel_out_data(tmp_model_out_data)
     );
 
     // Serializing for scene buffer
@@ -93,7 +89,7 @@ module CommandInput(
     assign scene_serial_in_data = cmd_in_data;
 
     wire cmd_scene_t scene_parallel_out_data;
-    assign scene_out_data = scene_parallel_out_data.modelinst;
+    assign scene_out_data = cast_modelinstance(scene_parallel_out_data.modelinst);
     assign scene_out_metadata.last = scene_parallel_out_data.last;
 
     SerialToParallelStream #(

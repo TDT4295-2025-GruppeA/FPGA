@@ -96,9 +96,9 @@ async def test_command(dut: Commandinput):
     assert output_commands == OUTPUTS_CMD
     for (model, _), (model_actual, _) in zip(output_models, OUTPUTS_MODEL):
         assert model.model_id == model_actual.model_id
-        assert model.triangle.a == model_actual.triangle.a
-        assert model.triangle.b == model_actual.triangle.b
-        assert model.triangle.c == model_actual.triangle.c
+        assert model.triangle.v0 == model_actual.triangle.v0
+        assert model.triangle.v1 == model_actual.triangle.v1
+        assert model.triangle.v2 == model_actual.triangle.v2
 
     for idx, ((scene, _), (scene_actual, _)) in enumerate(
         zip(output_scenes, OUTPUTS_SCENE)

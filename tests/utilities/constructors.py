@@ -5,6 +5,7 @@ import cocotb.handle
 from cocotb.types import LogicArray, Range
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
+from utils import to_float, to_fixed
 
 from types_ import (
     Triangle,
@@ -23,16 +24,26 @@ class ClockRstnDevice(Protocol):
     rstn: cocotb.handle.LogicObject
 
 
+def twos_comp(val: int, bits: int) -> int:
+    if (val & (1 << (bits - 1))) != 0:
+        val = val - (1 << bits)
+    return val
+
+
 def make_triangle(i: int) -> Triangle:
-    pos = (i << 24) | (i << 16) | (i << 8) | i
+    # TODO: hardcoded transforms
+    x = (((i << 24) | (i << 16) | (i << 8) | i) >> 2) & 0x1FFFFFF
+    pos = to_float(twos_comp(x, 25))
+
     color = (i << 8) | i
-    rgb = RGB.from_logicarray(LogicArray(color, Range(15, "downto", 0)))
+    rgb = RGB.from_c565(color)
     vertex = Vertex(Position(pos, pos, pos), rgb)
     return Triangle(vertex, vertex, vertex)
 
 
 def make_transform(i: int) -> Transform:
-    pos = (i << 24) | (i << 16) | (i << 8) | i
+    x = (((i << 24) | (i << 16) | (i << 8) | i) >> 2) & 0x1FFFFFF
+    pos = to_float(twos_comp(x, 25))
 
     return Transform(Position(pos, pos, pos), RotationMatrix(*([pos] * 9)))
 

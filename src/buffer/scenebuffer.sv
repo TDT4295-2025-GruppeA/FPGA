@@ -72,12 +72,12 @@ module SceneBuffer #(
 
             // Reading logic
             if (read_out_ready) begin
-                if (read_idx < scenes[scene_idx_read].size) begin
+                if (read_idx < scenes[scene_idx_read].size && scenes[scene_idx_read].ready) begin
                     read_idx <= read_idx + 1;
                     read_out_valid <= 1;
                     read_out_data <= transforms[scene_idx_read][read_idx];
                     read_out_metadata.last <= (read_idx + 1 == scenes[scene_idx_read].size);
-                end else begin
+                end else if (scenes[scene_idx_read].ready) begin
                     // finished scene
                     scenes[scene_idx_read].ready <= 0;
                     if (scene_idx_read == scene_idx_t'(SCENE_COUNT - 1)) begin
@@ -88,6 +88,8 @@ module SceneBuffer #(
                     scenes[scene_idx_read].size <= 0;
                     read_idx <= 0;
                     read_out_valid <= 0;
+                end else begin
+                    // We are waiting for the scene to be populated
                 end
             end
         end

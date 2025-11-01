@@ -10,6 +10,8 @@ package fixed_pkg;
     localparam int TOTAL_WIDTH = 25;
 
     typedef logic signed [TOTAL_WIDTH-1:0] fixed;
+    typedef logic signed [31:0] fixed_q16x16;
+    typedef fixed fixed_q11x14;
 
     //////////////////////////
     // Conversion Functions //
@@ -75,5 +77,10 @@ package fixed_pkg;
         extended denominator = extended'(rhs);
 
         return fixed'(numerator / denominator);
+    endfunction
+
+    function automatic fixed_q11x14 cast_q16x16_q11x14(fixed_q16x16 in);
+        localparam DELTA_DECIMAL_WIDTH = 2;
+        return fixed_q11x14'(in >>> DELTA_DECIMAL_WIDTH);
     endfunction
 endpackage

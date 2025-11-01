@@ -26,6 +26,13 @@ class RGB(LogicObject):
     g: int = LogicField(UInt(4), default=0)  # type: ignore
     b: int = LogicField(UInt(4), default=0)  # type: ignore
 
+    @classmethod
+    def from_c565(cls, color: int) -> "RGB":
+        red = ((color >> 11) >> 1) & 0b1111
+        green = ((color >> 5) >> 2) & 0b1111
+        blue = (color >> 1) & 0b1111
+        return RGB(red, green, blue)
+
 
 class Position(LogicObject):
     x: float = LogicField(Fixed())  # type: ignore

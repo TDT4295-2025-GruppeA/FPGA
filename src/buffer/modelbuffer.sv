@@ -132,6 +132,8 @@ module ModelBuffer #(
             // Mark last triange in model
             if (read_triangle_index + 1 == registry[read_model_index].size) begin
                 read_out_metadata.last <= 1;
+            end else if (read_triangle_index >= registry[read_model_index].size) begin
+                read_out_valid <= 0;
             end else begin
                 read_out_metadata.last <= 0;
             end

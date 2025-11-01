@@ -69,7 +69,7 @@ module SceneReader #(
                     if (model_out_ready && model_out_valid) begin
                         triangle_index <= triangle_index + 1;
                     end
-                    if (model_in_metadata.last) begin
+                    if (model_in_metadata.last && model_in_valid) begin
                         model_out_valid <= 0;
                         state <= IDLE;
                         scene_in_ready <= 1;
