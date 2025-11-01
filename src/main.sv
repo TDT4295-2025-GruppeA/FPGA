@@ -124,6 +124,11 @@ module Top (
 
     transform_t transform;
 
+    wire logic pipe_dm_valid;
+    wire logic pipe_dm_ready;
+    wire pixel_data_t pipe_dm_data;
+    wire pixel_metadata_t pipe_dm_metadata;
+
     DrawingManager #(
         .BUFFER_WIDTH(BUFFER_CONFIG.width),
         .BUFFER_HEIGHT(BUFFER_CONFIG.height),
@@ -139,8 +144,11 @@ module Top (
         .write_addr(dm_write_addr),
         .write_data(dm_write_data),
         .frame_done(dm_frame_done),
-        .buffer_select(buffer_select_sync_sys),
-        .transform(transform)
+
+        .pixel_s_valid(pipe_dm_valid),
+        .pixel_s_ready(pipe_dm_ready),
+        .pixel_s_data(pipe_dm_data),
+        .pixel_s_metadata(pipe_dm_metadata)
     );
 
     ///////////////////////////////////////
@@ -245,12 +253,27 @@ module Top (
         .read_data(disp_read_data)
     );
 
+    ////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////
+    ///////////                                              ///////////
+    ///////////                 Pipeline                     ///////////
+    ///////////                                              ///////////
+    ////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////
     /////////
     // SPI //
     /////////
 
+    wire logic spi_cmd_valid;
+    wire logic spi_cmd_ready;
+    wire byte_t spi_cmd_data;
+
+    wire logic cmd_spi_valid;
+    wire logic cmd_spi_ready;
+    wire byte_t cmd_spi_data;
+
     SpiSub #(
-        .WORD_SIZE($bits(transform_t)),
+        .WORD_SIZE($bits(byte_t)),
         .RX_QUEUE_LENGTH(2),
         .TX_QUEUE_LENGTH(2)
     ) spi_controller (
@@ -265,14 +288,35 @@ module Top (
         .sys_rstn(rstn_system),
 
         // User data interface
-        .tx_in_valid(1'b1),
-        .tx_in_data(transform),
-        .tx_in_ready(),
+        .tx_in_valid(cmd_spi_valid),
+        .tx_in_ready(cmd_spi_ready),
+        .tx_in_data(cmd_spi_data),
 
-        .rx_out_ready(1'b1),
-        .rx_out_data(transform),
-        .rx_out_valid(),
+        .rx_out_ready(spi_cmd_ready),
+        .rx_out_valid(spi_cmd_valid),
+        .rx_out_data(spi_cmd_data),
         .active() // Ignored.
+    );
+
+    Pipeline #(
+        .BUFFER_WIDTH(BUFFER_CONFIG.width),
+        .BUFFER_HEIGHT(BUFFER_CONFIG.height)
+    ) pipeline_inst (
+        .clk(clk_system),
+        .rstn(rstn_system),
+
+        .cmd_in_valid(spi_cmd_valid),
+        .cmd_in_ready(spi_cmd_ready),
+        .cmd_in_data(spi_cmd_data),
+
+        .cmd_out_valid(cmd_spi_valid),
+        .cmd_out_ready(cmd_spi_ready),
+        .cmd_out_data(cmd_spi_data),
+
+        .pixel_m_valid(pipe_dm_valid),
+        .pixel_m_ready(pipe_dm_ready),
+        .pixel_m_data(pipe_dm_data),
+        .pixel_m_metadata(pipe_dm_metadata)
     );
 
     ///////////////////////////////////////

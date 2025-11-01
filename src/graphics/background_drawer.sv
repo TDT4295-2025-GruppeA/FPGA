@@ -11,8 +11,7 @@ module BackgroundDrawer #(
     output logic draw_done,
     output logic write_en,
     output logic [BUFFER_ADDR_WIDTH-1:0] write_addr,
-    output logic [BUFFER_DATA_WIDTH-1:0] write_data,
-    input  logic buffer_select
+    output logic [BUFFER_DATA_WIDTH-1:0] write_data
 );
 
     localparam logic [BUFFER_DATA_WIDTH-1:0] COLOR_ABOVE = 12'h0AF; // light blue
