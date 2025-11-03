@@ -19,29 +19,69 @@ module PipelineTail #(
     input pixel_data_t pixel_data_s_data,
     input pixel_metadata_t pixel_data_s_metadata,
 
-    // debug
-    input logic [3:0] sw
+    // VGA out
+    output logic vga_hsync,
+    output logic vga_vsync,
+    output logic [3:0] vga_red,
+    output logic [3:0] vga_green,
+    output logic [3:0] vga_blue,
 
+    // debug
+    input  logic [3:0]     sw
 );
 
+    ///////////////////////////////////////
+    ////////////// INTERNAL NETS //////////
+    ///////////////////////////////////////
+
+    // Buffer select (display domain)
+    logic buffer_select;
+
+    // CDC: buffer_select → system domain
+    logic buffer_select_sync_sys, buffer_select_sync_sys_d;
+
+    // Frame buffer A
+    logic [BUFFER_CONFIG.addr_width-1:0] fb_a_read_addr;
+    logic [BUFFER_CONFIG.data_width-1:0] fb_a_read_data;
+    logic                                 fb_a_write_en;
+    logic [BUFFER_CONFIG.addr_width-1:0] fb_a_write_addr;
+    logic [BUFFER_CONFIG.data_width-1:0] fb_a_write_data;
+
+    // Frame buffer B
+    logic [BUFFER_CONFIG.addr_width-1:0] fb_b_read_addr;
+    logic [BUFFER_CONFIG.data_width-1:0] fb_b_read_data;
+    logic                                 fb_b_write_en;
+    logic [BUFFER_CONFIG.addr_width-1:0] fb_b_write_addr;
+    logic [BUFFER_CONFIG.data_width-1:0] fb_b_write_data;
+
+    // Display side address/data (from Display to FBs)
+    logic [BUFFER_CONFIG.addr_width-1:0] disp_read_addr;
+    logic [BUFFER_CONFIG.data_width-1:0] disp_read_data;
+
+    // DrawingManager interface
+    logic                                dm_write_en;
+    logic [BUFFER_CONFIG.addr_width-1:0] dm_write_addr;
+    logic [BUFFER_CONFIG.data_width-1:0] dm_write_data;
+    logic                                dm_frame_done;
+    logic                                draw_ack;
+
+    // Sync & swap
+    logic vga_vsync_d;
+    logic vga_vsync_blank_edge_start;
+    logic dm_frame_done_sync;
+    logic swap_req;
 
     ///////////////////////////////////////
     ////////////// BUFFER ROUTING /////////
     ///////////////////////////////////////
 
-    logic buffer_select;  // lives in display clock domain
-
+    // Buffer select toggles in display domain on swap_req
     always_ff @(posedge clk_display or negedge rstn_display) begin
         if (!rstn_display)
             buffer_select <= 1'b0;
         else if (swap_req)
             buffer_select <= !buffer_select;
     end
-
-
-    // Synchronize buffer_select to system domain to generate draw_start
-    logic buffer_select_sync_sys;
-    logic buffer_select_sync_sys_d;
 
     // Synchronize buffer_select to system clock domain
     SingleBitSync buffer_select_sync_inst (
@@ -59,22 +99,6 @@ module PipelineTail #(
             buffer_select_sync_sys_d <= buffer_select_sync_sys;
         end
     end
-    
-     // Frame Buffer A
-    logic [BUFFER_CONFIG.addr_width-1:0] fb_a_read_addr;
-    logic [BUFFER_CONFIG.data_width-1:0] fb_a_read_data;
-    logic fb_a_write_en;
-    logic [BUFFER_CONFIG.addr_width-1:0] fb_a_write_addr;
-    logic [BUFFER_CONFIG.data_width-1:0] fb_a_write_data;
-
-    // Frame Buffer B
-    logic [BUFFER_CONFIG.addr_width-1:0] fb_b_read_addr;
-    logic [BUFFER_CONFIG.data_width-1:0] fb_b_read_data;
-    logic fb_b_write_en;
-    logic [BUFFER_CONFIG.addr_width-1:0] fb_b_write_addr;
-    logic [BUFFER_CONFIG.data_width-1:0] fb_b_write_data;
-
-    
     // Display reads from the ACTIVE buffer
     // The Display module drives disp_read_addr
     assign fb_a_read_addr = disp_read_addr;
@@ -92,13 +116,11 @@ module PipelineTail #(
     assign fb_b_write_addr = dm_write_addr;
     assign fb_b_write_data = dm_write_data;
 
-
     ///////////////////////////////////////
     //////////// CLOCK DOMAIN CROSSING ////
     ///////////////////////////////////////
 
     // Capture edge of vga_vsync in display clock domain
-    logic vga_vsync_d;
     always_ff @(posedge clk_display or negedge rstn_display) begin
         if (!rstn_display) begin
             vga_vsync_d <= 1'b0;
@@ -108,16 +130,16 @@ module PipelineTail #(
     end
 
     // Detect vga_vsync blanking edge start
-    logic vga_vsync_blank_edge_start;
-    if (VIDEO_MODE.v_sync_pol) begin
-        assign vga_vsync_blank_edge_start = vga_vsync && !vga_vsync_d;
-    end else begin
-        assign vga_vsync_blank_edge_start = !vga_vsync && vga_vsync_d;
-    end
+    generate
+        if (VIDEO_MODE.v_sync_pol) begin
+            assign vga_vsync_blank_edge_start = (vga_vsync && !vga_vsync_d);
+        end else begin
+            assign vga_vsync_blank_edge_start = (!vga_vsync && vga_vsync_d);
+        end
+    endgenerate
+
 
     // Synchronize dm_frame_done signal from drawing_manager from system domain to display domain
-    logic dm_frame_done_sync;
-    
     SingleBitSync dm_frame_done_sync_inst (
         .clk_dst(clk_display),
         .rst_dst_n(rstn_display),
@@ -126,7 +148,6 @@ module PipelineTail #(
     );
 
     // Request a buffer swap when VSync blanking interval starts and frame is done
-    logic swap_req;
     assign swap_req = vga_vsync_blank_edge_start && dm_frame_done_sync;
 
     // Use pulse synchronizer to send acknowledgment back to drawing manager in system clock domain

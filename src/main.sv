@@ -117,6 +117,12 @@ module Top (
         .cmd_out_ready(cmd_spi_ready),
         .cmd_out_data(cmd_spi_data),
 
+        .vga_vsync(vga_vsync),
+        .vga_hsync(vga_hsync),
+        .vga_red(vga_red),
+        .vga_green(vga_green),
+        .vga_blue(vga_blue),
+
         // debug
         .sw(sw)
     );

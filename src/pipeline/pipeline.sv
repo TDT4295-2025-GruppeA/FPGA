@@ -24,6 +24,12 @@ module Pipeline #(
     input logic cmd_out_ready,
     output byte_t cmd_out_data,
 
+    output logic vga_hsync,
+    output logic vga_vsync,
+    output logic[3:0] vga_red,
+    output logic[3:0] vga_green,
+    output logic[3:0] vga_blue,
+
     // debug
     input logic [3:0] sw
 
@@ -88,6 +94,12 @@ module Pipeline #(
         .pixel_data_s_valid(math_tail_valid),
         .pixel_data_s_data(math_tail_data),
         .pixel_data_s_metadata(math_tail_metadata),
+
+        .vga_hsync(vga_hsync),
+        .vga_vsync(vga_vsync),
+        .vga_red(vga_red),
+        .vga_green(vga_green),
+        .vga_blue(vga_blue),
 
         .sw(sw)
     );
