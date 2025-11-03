@@ -20,10 +20,11 @@ _Metadata = TypeVar("_Metadata", bound=LogicObject)
 
 
 class PipelineBase(abc.ABC):
-    def __init__(self, dut: PipelineDut, name: str, type: str):
+    def __init__(self, dut: PipelineDut, name: str, type: str, clock_name: str = "clk"):
         self._dut = dut
         self._name = name
         self._type = type
+        self._clock_name = clock_name
 
     def _get_signal(self, name: str) -> cocotb.handle.ValueObjectBase:
         signal_name = f"{self._name}_{self._type}_{name}"
@@ -52,6 +53,10 @@ class PipelineBase(abc.ABC):
     def _metadata(self):
         return self._get_signal("metadata")
 
+    @property
+    def _clk(self):
+        return getattr(self._dut, self._clock_name)
+
     async def run(self):
         """Run the pipeline handler"""
         cocotb.start_soon(self._run_loop())
@@ -67,9 +72,10 @@ class Producer(PipelineBase, Generic[_Data, _Metadata]):
         name: str,
         has_metadata: bool = False,
         signal_style: str = "inout",
+        clock_name: str = "clk",
     ):
         type = "in" if signal_style == "inout" else "s"
-        super().__init__(dut, name, type)
+        super().__init__(dut, name, type, clock_name=clock_name)
         self._has_metadata = has_metadata
         self._input_queue: Queue[tuple[_Data, _Metadata | None]] = Queue()
 
@@ -119,9 +125,10 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
         data_type: Type[_Data],
         metadata_type: Type[_Metadata] | None = None,
         signal_style: str = "inout",
+        clock_name: str = "clk",
     ):
         type = "out" if signal_style == "inout" else "m"
-        super().__init__(dut, name, type)
+        super().__init__(dut, name, type, clock_name=clock_name)
 
         # Store the output type so we can use them to convert LogicArray
         # to the output type
