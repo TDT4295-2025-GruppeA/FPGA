@@ -12,7 +12,6 @@ module DrawingManager #(
 )(
     input logic clk,
     input logic rstn,
-    input logic draw_start,
     input logic draw_ack,
 
     output logic write_en,
@@ -20,8 +19,8 @@ module DrawingManager #(
     output logic [BUFFER_DATA_WIDTH-1:0] write_data,
     output logic frame_done,
 
-    input logic pixel_s_valid,
     output logic pixel_s_ready,
+    input logic pixel_s_valid,
     input pixel_data_t pixel_s_data,
     input pixel_metadata_t pixel_s_metadata,
 
@@ -29,7 +28,6 @@ module DrawingManager #(
     input logic [3:0] sw // Used for selecting colors
 );
     typedef enum {
-        IDLE,
         BACKGROUND,
         GRAPHICS,
         FRAMERATE,
@@ -75,7 +73,6 @@ module DrawingManager #(
     logic [BUFFER_ADDR_WIDTH-1:0] depth_write_addr;
     pixel_data_t depth_write_pixel;
 
-    assign pixel_s_ready = 1; // We pretend depthbuffer is always ready
     DepthBuffer #(
     .BUFFER_WIDTH(BUFFER_WIDTH),
     .BUFFER_HEIGHT(BUFFER_HEIGHT),
@@ -103,12 +100,13 @@ module DrawingManager #(
     ///////////////////
 
     pipeline_state_t state, next_state;
+    assign pixel_s_ready = state == GRAPHICS; // We pretend depthbuffer is always ready
 
     logic framerate_indicator, frame_indicator_next;
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
-            state <= IDLE;
+            state <= BACKGROUND;
             framerate_indicator <= 1'b0;
             sw_r <= '0;
         end else begin
@@ -135,11 +133,6 @@ module DrawingManager #(
         frame_indicator_next = framerate_indicator;
 
         case (state)
-            IDLE: begin
-                if (draw_start) begin
-                    next_state = BACKGROUND;
-                end
-            end
             BACKGROUND: begin
                 bg_draw_start = 1'b1;
                 write_en = bg_write_en;

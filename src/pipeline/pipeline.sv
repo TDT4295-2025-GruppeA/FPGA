@@ -1,14 +1,20 @@
+import video_modes_pkg::*;
+import buffer_config_pkg::*;
+
 // This module is a collection conneting parts of the pipeline together.
 // These parts are:
 // Pipeline head - command handling, model/scene storage, feed pipeline
 // Pipeline math - Main calculations, transform, projection, rasterizer etc..
 // Pipeline tail - put rendered pixels in framebuffer and output vga
 module Pipeline #(
-    parameter BUFFER_WIDTH = 160,
-    parameter BUFFER_HEIGHT = 120
+    parameter buffer_config_t BUFFER_CONFIG = BUFFER_160x120x12,
+    parameter video_mode_t VIDEO_MODE = VMODE_640x480p60
 )(
-    input clk,
-    input rstn,
+    input clk_system,
+    input rstn_system,
+
+    input clk_display,
+    input rstn_display,
 
     input logic cmd_in_valid,
     output logic cmd_in_ready,
@@ -18,11 +24,9 @@ module Pipeline #(
     input logic cmd_out_ready,
     output byte_t cmd_out_data,
 
-    // VGA output
-    output logic pixel_m_valid,
-    input logic pixel_m_ready,
-    output pixel_data_t pixel_m_data,
-    output pixel_metadata_t pixel_m_metadata
+    // debug
+    input logic [3:0] sw
+
 );
 
     wire logic head_math_valid;
@@ -30,8 +34,8 @@ module Pipeline #(
     wire triangle_tf_t head_math_data;
     wire triangle_tf_meta_t head_math_metadata;
     PipelineHead pipeline_head(
-        .clk(clk),
-        .rstn(rstn),
+        .clk(clk_system),
+        .rstn(rstn_system),
 
         .cmd_in_valid(cmd_in_valid),
         .cmd_in_ready(cmd_in_ready),
@@ -53,11 +57,11 @@ module Pipeline #(
     wire pixel_metadata_t math_tail_metadata;
 
     PipelineMath #(
-        .BUFFER_WIDTH(BUFFER_WIDTH),
-        .BUFFER_HEIGHT(BUFFER_HEIGHT)
-    ) pipelinemath_inst (
-        .clk(clk),
-        .rstn(rstn),
+        .BUFFER_WIDTH(BUFFER_CONFIG.width),
+        .BUFFER_HEIGHT(BUFFER_CONFIG.height)
+    ) pipeline_math (
+        .clk(clk_system),
+        .rstn(rstn_system),
 
         .triangle_tf_s_ready(head_math_ready),
         .triangle_tf_s_valid(head_math_valid),
@@ -69,11 +73,23 @@ module Pipeline #(
         .pixel_data_m_data(math_tail_data),
         .pixel_data_m_metadata(math_tail_metadata)
     );
-    assign pixel_m_valid = math_tail_valid;
-    assign math_tail_ready = pixel_m_ready;
-    assign pixel_m_data = math_tail_data;
-    assign pixel_m_metadata = math_tail_metadata;
-    // PipelineTail pipeline_tail (
 
-    // );
+    PipelineTail #(
+        .BUFFER_CONFIG(BUFFER_CONFIG),
+        .VIDEO_MODE(VIDEO_MODE)
+    ) pipeline_tail (
+        .clk_system(clk_system),
+        .rstn_system(rstn_system),
+
+        .clk_display(clk_display),
+        .rstn_display(rstn_display),
+
+        .pixel_data_s_ready(math_tail_ready),
+        .pixel_data_s_valid(math_tail_valid),
+        .pixel_data_s_data(math_tail_data),
+        .pixel_data_s_metadata(math_tail_metadata),
+
+        .sw(sw)
+    );
+
 endmodule

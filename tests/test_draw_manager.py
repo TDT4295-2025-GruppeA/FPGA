@@ -5,13 +5,6 @@ from stubs.drawingmanager import Drawingmanager
 
 
 VERILOG_MODULE = "DrawingManager"
-VERILOG_PARAMETERS = {
-    # We have to specify the filepath here again
-    # as the working directory is different when running
-    # tests than when synthesizing for some reason...
-    "FILE_PATH": '"../static/models/cube"',
-    "TRIANGLE_COUNT": 12,
-}
 
 
 @cocotb.test(timeout_time=10, timeout_unit="ms")
@@ -21,21 +14,14 @@ async def test_drawing_manager_states(dut: Drawingmanager):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.rstn.value = 0
-    dut.draw_start.value = 0
     dut.bg_draw_done.value = 0
     dut.draw_ack.value = 0
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
 
     dut.rstn.value = 1
-    cocotb.log.info("Reset released, expecting IDLE")
+    cocotb.log.info("Reset released, expecting BACKGROUND state")
 
-    # --- Step 1: IDLE → DRAWING_BACKGROUND ---
-    dut.draw_start.value = 1
-    await RisingEdge(dut.clk)
-    dut.draw_start.value = 0
-    await RisingEdge(dut.clk)
-    cocotb.log.info("FSM should be in DRAWING_BACKGROUND (bg_draw_start asserted)")
 
     assert dut.bg_draw_start.value == 1, "FSM did not enter DRAWING_BACKGROUND"
 
@@ -45,9 +31,6 @@ async def test_drawing_manager_states(dut: Drawingmanager):
     dut.bg_draw_done.value = 0
 
     await RisingEdge(dut.frame_done)
-    cocotb.log.info("FSM entered FRAME_DONE")
-
-    assert dut.frame_done.value == 1, "FSM did not enter FRAME_DONE"
 
     # For waveform visualization
     for i in range(100):
