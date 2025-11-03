@@ -110,10 +110,12 @@ module ModelBuffer #(
             model_buffer2[write_addr] <= write_triangle[116:45];
             model_buffer3[write_addr] <= write_triangle[44:0];
         end
-        read0 <= model_buffer0[read_addr];
-        read1 <= model_buffer1[read_addr];
-        read2 <= model_buffer2[read_addr];
-        read3 <= model_buffer3[read_addr];
+        if (read_in_ready && read_in_valid) begin
+            read0 <= model_buffer0[read_addr];
+            read1 <= model_buffer1[read_addr];
+            read2 <= model_buffer2[read_addr];
+            read3 <= model_buffer3[read_addr];
+        end
     end
 
     always_ff @(posedge clk or negedge rstn) begin
@@ -123,6 +125,7 @@ module ModelBuffer #(
         if (!rstn) begin // Reset control signals
             addr_next <= 0;
             write_prev_model_index <= -1;
+            read_out_valid <= 0;
             for (int i = 0; i < MAX_MODEL_COUNT; i++) begin
                 registry[i].state = STATE_EMPTY;
                 registry[i].size = 0;
@@ -151,7 +154,16 @@ module ModelBuffer #(
 
                 write_prev_model_index <= write_model_idx;
             end
-            read_out_valid <= read_in_valid && read_in_ready;
+
+            if (read_out_valid && read_out_ready) begin
+                read_out_valid <= 0; // Set low if we do not have more triangles
+            end
+
+            if (read_in_valid && read_in_ready) begin
+                read_out_valid <= 1;
+            end
+
+
             // Mark last triange in model
             if (read_triangle_index + 1 == registry[read_model_index].size) begin
                 read_out_metadata.last <= 1;

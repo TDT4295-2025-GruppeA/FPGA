@@ -31,6 +31,7 @@ INPUTS = [
     CMD_UPLOAD_TRIANGLE, *([10] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([11] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([12] * 14 * 3),  # Upload a triangle
+    CMD_ADD_MODEL_INSTANCE, 0x01, 0x01, *([5] * 48),  # Add transform, last in scene
     CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([1] * 48),  # Add transform
     CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([2] * 48),  # Add transform
     CMD_ADD_MODEL_INSTANCE, 0x01, 0x00, *([3] * 48),  # Add transform, last in scene
@@ -47,6 +48,12 @@ T3 = make_transform(3)
 T4 = make_transform(4)
 T5 = make_transform(5)
 OUTPUTS_PIPE = [
+    (TriangleTransform(make_triangle(7), T5), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(make_triangle(8), T5), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(make_triangle(9), T5), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(make_triangle(10), T5), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(make_triangle(11), T5), TriangleTransformMeta(1, 0)),
+    (TriangleTransform(make_triangle(12), T5), TriangleTransformMeta(1, 1)),
     (TriangleTransform(make_triangle(1), T1), TriangleTransformMeta(0, 0)),
     (TriangleTransform(make_triangle(2), T1), TriangleTransformMeta(0, 0)),
     (TriangleTransform(make_triangle(3), T1), TriangleTransformMeta(0, 0)),
@@ -87,11 +94,12 @@ async def test_pipehead(dut):
     consumer = Consumer(dut, "triangle_tf", TriangleTransform, TriangleTransformMeta)
 
     await producer.run()
-    await consumer.run()
 
     for cmd in INPUTS:
         await producer.produce(Byte(cmd))
 
+    await ClockCycles(dut.clk, 1000)
+    await consumer.run()
     await ClockCycles(dut.clk, 1000)
 
     outputs = await consumer.consume_all()
