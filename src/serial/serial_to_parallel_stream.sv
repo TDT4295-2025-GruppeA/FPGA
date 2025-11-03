@@ -10,6 +10,9 @@ module SerialToParallelStream #(
     input  logic clk,
     input  logic rstn,
 
+    // Synchronization signal to reset internal counter
+    input logic synchronize,
+
     // Serial input stream
     output logic                   serial_in_ready,
     input  logic                   serial_in_valid,
@@ -49,21 +52,23 @@ module SerialToParallelStream #(
             // Accept serial data
             if (serial_in_valid && serial_in_ready) begin
                 buffer <= {buffer[OUTPUT_SIZE-INPUT_SIZE-1:0], serial_in_data};
-                
-                if (element_count == element_count_t'(ELEMENT_COUNT) - 1) begin
-                    element_count <= element_count_t'(ELEMENT_COUNT);
-                end else begin
-                    element_count <= element_count + 1;
-                end
+                // This won't overflow because serial_in_ready
+                // is low until element counter is reset.
+                element_count <= element_count + 1;
             end
 
-            // Output ready
-            if (parallel_out_valid && parallel_out_ready) begin
-                element_count <= 0;
+            // Reset element counter on output accept or synchronize signal
+            // If parallel output is valid we ignore the synchronize signal
+            // as the next serial input will be the first element anyway
+            if (parallel_out_valid && parallel_out_ready || synchronize && !parallel_out_valid) begin
                 if (serial_in_valid && serial_in_ready) begin
+                    // Reset to 1 if we accept new data immediately.
                     element_count <= 1;
+                end else begin
+                    // Reset to 0 otherwise.
+                    element_count <= 0;
                 end
-            end
+            end 
         end
     end
 endmodule

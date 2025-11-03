@@ -71,11 +71,12 @@ module DrawingManager #(
     //////////////////////
     // Depth (Z) Buffer //
     //////////////////////
+    
     logic depth_write_en;
     logic [BUFFER_ADDR_WIDTH-1:0] depth_write_addr;
     pixel_data_t depth_write_pixel;
 
-    assign pixel_s_ready = 1; // We pretend depthbuffer is always ready
+    assign pixel_s_ready = state == GRAPHICS;
     DepthBuffer #(
     .BUFFER_WIDTH(BUFFER_WIDTH),
     .BUFFER_HEIGHT(BUFFER_HEIGHT),

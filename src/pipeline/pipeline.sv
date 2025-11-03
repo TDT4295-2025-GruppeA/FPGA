@@ -73,6 +73,7 @@ module Pipeline #(
     assign math_tail_ready = pixel_m_ready;
     assign pixel_m_data = math_tail_data;
     assign pixel_m_metadata = math_tail_metadata;
+
     // PipelineTail pipeline_tail (
 
     // );

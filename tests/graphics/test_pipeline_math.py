@@ -1,6 +1,6 @@
 import cocotb
 from cocotb.clock import Clock
-from stubs.drawingmanager import Drawingmanager
+from stubs.pipelinemath import Pipelinemath
 import numpy as np
 from PIL import Image
 
@@ -9,20 +9,19 @@ from types_ import Position, RotationMatrix, Transform
 BUFFER_WIDTH = 64
 BUFFER_HEIGHT = 64
 
-VERILOG_MODULE = "DrawingManager"
+VERILOG_MODULE = "PipelineMath"
 VERILOG_PARAMETERS = {
     # We have to specify the filepath here again
     # as the working directory is different when running
     # tests than when synthesizing for some reason...
     "BUFFER_WIDTH": BUFFER_WIDTH,
     "BUFFER_HEIGHT": BUFFER_HEIGHT,
-    "FILE_PATH": '"../static/models/teapot-low-poly"',
-    "TRIANGLE_COUNT": 160,
+    # "FILE_PATH": '"../static/models/teapot-low-poly"',
+    # "TRIANGLE_COUNT": 160,
 }
 
-
 @cocotb.test(timeout_time=100, timeout_unit="ms")
-async def test_graphics_pipeline(dut: Drawingmanager):
+async def test_pipeline_math(dut: Pipelinemath):
     clock = Clock(dut.clk, 1, "ns")
     cocotb.start_soon(clock.start())
 
