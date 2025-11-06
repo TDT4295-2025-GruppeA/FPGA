@@ -5,6 +5,7 @@ import cocotb
 import cocotb.handle
 from cocotb.triggers import RisingEdge
 from cocotb.queue import Queue
+from cocotb.handle import Force
 
 from logic_object import LogicObject
 
@@ -98,23 +99,23 @@ class Producer(PipelineBase, Generic[_Data, _Metadata]):
 
             # If metadata is enabled, we want to set the metadata signal
             if self._has_metadata and metadata is not None:
-                self._metadata.value = metadata.to_logicarray()
+                self._metadata.value = Force(metadata.to_logicarray())
 
             # Set the data, and mark the data as valid
-            self._data.value = data.to_logicarray()
-            self._valid.value = 1
+            self._data.value = Force(data.to_logicarray())
+            self._valid.value = Force(1)
 
             # Make sure the data actually makes it to the DUT
-            await RisingEdge(self._dut.clk)
+            await RisingEdge(self._clk)
 
             # Wait for item to be consumed
             while not self._ready.value:
-                await RisingEdge(self._dut.clk)
+                await RisingEdge(self._clk)
 
             # Set data as invalid if we do not have more items
             if self._input_queue.empty():
-                self._valid.value = 0
-                await RisingEdge(self._dut.clk)
+                self._valid.value = Force(0)
+                await RisingEdge(self._clk)
 
 
 class Consumer(PipelineBase, Generic[_Data, _Metadata]):
@@ -154,7 +155,7 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
 
         while True:
             # Wait for the data to become valid
-            await RisingEdge(self._dut.clk)
+            await RisingEdge(self._clk)
             if not self._valid.value:
                 continue
 

@@ -16,6 +16,7 @@ VERILOG_PARAMETERS = {
     "BUFFER_HEIGHT": 64,
 }
 
+
 async def send_pixel(dut: Drawingmanager, pixel: PixelData, last: bool = False):
     # Send a single pixel
     while not dut.pixel_s_ready.value:
@@ -58,31 +59,31 @@ async def test_drawing_manager_states(dut: Drawingmanager):
 
     # --- Step 1.5: DRAWING_BACKGROUND -> GRAPHICS ---
     cocotb.log.info("Sending pixel data")
-    await send_pixel(dut, PixelData(
-        covered=1,
-        depth=10,
-        color=RGB(3, 7, 15),
-        coordinate=PixelCoordinate(31, 31)
-    ))
-    await send_pixel(dut, PixelData(
-        covered=1,
-        depth=10,
-        color=RGB(7, 3, 15),
-        coordinate=PixelCoordinate(32, 31)
-    ))
-    await send_pixel(dut, PixelData(
-        covered=1,
-        depth=10,
-        color=RGB(15, 3, 7),
-        coordinate=PixelCoordinate(31, 32)
-    ))
-    await send_pixel(dut, PixelData(
-        covered=1,
-        depth=10,
-        color=RGB(15, 7, 3),
-        coordinate=PixelCoordinate(32, 32)
-    ), last=True)
-
+    await send_pixel(
+        dut,
+        PixelData(
+            covered=1, depth=10, color=RGB(3, 7, 15), coordinate=PixelCoordinate(31, 31)
+        ),
+    )
+    await send_pixel(
+        dut,
+        PixelData(
+            covered=1, depth=10, color=RGB(7, 3, 15), coordinate=PixelCoordinate(32, 31)
+        ),
+    )
+    await send_pixel(
+        dut,
+        PixelData(
+            covered=1, depth=10, color=RGB(15, 3, 7), coordinate=PixelCoordinate(31, 32)
+        ),
+    )
+    await send_pixel(
+        dut,
+        PixelData(
+            covered=1, depth=10, color=RGB(15, 7, 3), coordinate=PixelCoordinate(32, 32)
+        ),
+        last=True,
+    )
 
     # --- Step 2: GRAPHICS → FRAME_DONE ---
     dut.bg_draw_done.value = 1

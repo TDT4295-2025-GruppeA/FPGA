@@ -96,6 +96,7 @@ def create_test(
                     "-DSIMULATION",
                     "--trace",
                     "--trace-structs",
+                    "--public-flat-rw",
                 ],
                 waves=True,
                 build_dir=build_dir,
