@@ -47,7 +47,6 @@ async def test_drawing_manager_states(dut: Drawingmanager):
     dut.rstn.value = 1
     cocotb.log.info("Reset released, expecting BACKGROUND state")
 
-
     assert dut.bg_draw_start.value == 1, "FSM did not enter DRAWING_BACKGROUND"
 
     # --- Step 1.5: DRAWING_BACKGROUND -> GRAPHICS ---
