@@ -50,7 +50,7 @@ module SceneReader #(
     assign triangle_tf_out_data.transform = current_model.transform;
     assign triangle_tf_out_data.triangle = model_in_data;
     assign triangle_tf_out_metadata.triangle_last = model_in_metadata.last;
-    assign triangle_tf_out_metadata.model_last = current_model_metadata;
+    assign triangle_tf_out_metadata.model_last = current_model_metadata.last;
     assign triangle_tf_out_valid = model_in_valid;
     assign model_in_ready = triangle_tf_out_ready;
 
