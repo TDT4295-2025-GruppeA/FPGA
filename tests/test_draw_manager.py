@@ -39,21 +39,13 @@ async def test_drawing_manager_states(dut: Drawingmanager):
     cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
 
     dut.rstn.value = 0
-    dut.draw_start.value = 0
     dut.bg_draw_done.value = 0
     dut.draw_ack.value = 0
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
 
     dut.rstn.value = 1
-    cocotb.log.info("Reset released, expecting IDLE")
-
-    # --- Step 1: IDLE → DRAWING_BACKGROUND ---
-    dut.draw_start.value = 1
-    await RisingEdge(dut.clk)
-    dut.draw_start.value = 0
-    await RisingEdge(dut.clk)
-    cocotb.log.info("FSM should be in DRAWING_BACKGROUND (bg_draw_start asserted)")
+    cocotb.log.info("Reset released, expecting BACKGROUND state")
 
     assert dut.bg_draw_start.value == 1, "FSM did not enter DRAWING_BACKGROUND"
 
