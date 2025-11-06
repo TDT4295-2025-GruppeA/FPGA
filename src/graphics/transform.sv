@@ -203,6 +203,6 @@ module Transform #(
     assign triangle_m_data.v0 = v0_out;
     assign triangle_m_data.v1 = v1_out;
     assign triangle_m_data.v2 = v2_out;
-    assign triangle_m_metadata = m_reg;
+    assign triangle_m_metadata.last = m_reg;
 
 endmodule

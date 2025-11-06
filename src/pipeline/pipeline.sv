@@ -31,6 +31,7 @@ module Pipeline #(
     output logic[3:0] vga_blue,
 
     // debug
+    input logic [3:0] led,
     input logic [3:0] sw
 
 );
@@ -54,7 +55,9 @@ module Pipeline #(
         .triangle_tf_out_valid(head_math_valid),
         .triangle_tf_out_ready(head_math_ready),
         .triangle_tf_out_data(head_math_data),
-        .triangle_tf_out_metadata(head_math_metadata)
+        .triangle_tf_out_metadata(head_math_metadata),
+
+        .led(led)
     );
 
     wire logic math_tail_ready;

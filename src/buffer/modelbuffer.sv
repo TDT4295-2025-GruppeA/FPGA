@@ -36,13 +36,16 @@ module ModelBuffer #(
         logic [1:0] state;    // State of the model
     } model_index_t;
 
+    // Write input data
     wire model_idx_t write_model_idx;
     wire triangle_t write_triangle;
-    wire logic write_en;
     assign write_model_idx = model_idx_t'(write_in_data.model_id);
     assign write_triangle = write_in_data.triangle;
-    assign write_en = write_in_valid && write_in_ready;
 
+    // Writing happens to bram, so we can always accept data
+    assign write_in_ready = 1;
+
+    // Read input data
     wire model_idx_t read_model_index;
     wire triangle_idx_t read_triangle_index;
     assign read_model_index = model_idx_t'(read_in_data.model_index);
@@ -53,7 +56,7 @@ module ModelBuffer #(
     triangle_idx_t write_addr;
 
     triangle_idx_t write_triangle_index;
-    triangle_idx_t triangle_index;
+    triangle_idx_t previous_write_triangle_index;
     model_idx_t write_prev_model_index; // used to detect model change
 
     // Highest addr used in the buffer
@@ -79,16 +82,18 @@ module ModelBuffer #(
     assign read_out_data[116:45] = read2;
     assign read_out_data[44:0] = read3;
 
+    logic write_en;
+
     // Read from the registry
     always_comb begin
         read_addr = registry[read_model_index].index + read_triangle_index;
-        write_in_ready = 1;
+        write_en = write_in_valid && write_in_ready;
         read_in_ready = ~read_out_valid | read_out_ready;
 
         if (write_model_idx != write_prev_model_index) begin
             write_triangle_index = 0;
         end else begin
-            write_triangle_index = triangle_index + 1;
+            write_triangle_index = previous_write_triangle_index + 1;
         end
 
 
@@ -98,7 +103,7 @@ module ModelBuffer #(
             write_addr = registry[write_model_idx].index + write_triangle_index;
         end else begin
             write_addr = 0;
-            write_in_ready = 0; // Refuse to write to already written model
+            write_en = 0; // Refuse to write to already written model
         end
 
     end
@@ -131,15 +136,16 @@ module ModelBuffer #(
                 registry[i].size = 0;
                 registry[i].index = 0;
             end
+            read_out_metadata.last <= 0;
         end else begin
             if (write_en) begin
-                if (write_in_ready && (write_model_idx != write_prev_model_index)) begin
+                if (write_model_idx != write_prev_model_index) begin
                     if (registry[write_prev_model_index].state == STATE_WRITING)
                         registry[write_prev_model_index].state <= STATE_WRITTEN;
                 end
 
                 // Write the triangle and update model states
-                triangle_index <= write_triangle_index; // Update triangle index
+                previous_write_triangle_index <= write_triangle_index; // Update triangle index
                 registry[write_model_idx].size += 1;
 
                 if (write_triangle_index == 0) begin
@@ -160,17 +166,10 @@ module ModelBuffer #(
             end
 
             if (read_in_valid && read_in_ready) begin
-                read_out_valid <= 1;
-            end
-
-
-            // Mark last triange in model
-            if (read_triangle_index + 1 == registry[read_model_index].size) begin
-                read_out_metadata.last <= 1;
-            end else if (read_triangle_index >= registry[read_model_index].size) begin
-                read_out_valid <= 0;
-            end else begin
-                read_out_metadata.last <= 0;
+                // Only set output valid high if triangle index is within size
+                read_out_valid <= read_triangle_index < registry[read_model_index].size;
+                // Mark triangle as last
+                read_out_metadata.last <= read_triangle_index + 1 >= registry[read_model_index].size;
             end
         end
 

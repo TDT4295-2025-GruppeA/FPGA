@@ -23,7 +23,10 @@ module CommandInput(
     output logic            scene_out_valid,
     input  logic            scene_out_ready,
     output modelinstance_t  scene_out_data,
-    output modelinstance_meta_t  scene_out_metadata
+    output modelinstance_meta_t  scene_out_metadata,
+
+    // Debugging output
+    output logic [1:0] current_state
 );
     // The states we can be in
     typedef enum logic [1:0] {
@@ -55,6 +58,8 @@ module CommandInput(
     wire cmd_in_transaction;
     assign cmd_in_transaction = cmd_in_valid && cmd_in_ready;
 
+    assign current_state = state;
+
     // Signal to ensure that the parallelizers are
     // always in sync when we start receiving data.
     logic serial_to_parallel_synchronize;
@@ -82,7 +87,7 @@ module CommandInput(
         .serial_in_ready(model_serial_in_ready),
         .serial_in_valid(model_serial_in_valid),
         .serial_in_data(model_serial_in_data),
-        .parallel_out_ready(model_out_ready),
+        .parallel_out_ready(1),
         .parallel_out_valid(model_out_valid),
         .parallel_out_data(tmp_model_out_data)
     );
@@ -108,7 +113,7 @@ module CommandInput(
         .serial_in_ready(scene_serial_in_ready),
         .serial_in_valid(scene_serial_in_valid),
         .serial_in_data(scene_serial_in_data),
-        .parallel_out_ready(scene_out_ready),
+        .parallel_out_ready(1),
         .parallel_out_valid(scene_out_valid),
         .parallel_out_data(scene_parallel_out_data)
     );

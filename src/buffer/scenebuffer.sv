@@ -59,8 +59,7 @@ module SceneBuffer #(
     transform_idx_t  write_idx, read_idx;
 
     // Flags
-    assign write_in_ready = !(scenes[scene_idx_write].ready ||
-                        (write_idx == COUNT_TRANSFORM));
+    assign write_in_ready = !(scenes[scene_idx_write].ready || (write_idx == COUNT_TRANSFORM));
 
     assign addr_write = transform_idx_t'(scene_idx_write) * COUNT_TRANSFORM + write_idx;
     assign addr_read = transform_idx_t'(scene_idx_read) * COUNT_TRANSFORM + read_idx;

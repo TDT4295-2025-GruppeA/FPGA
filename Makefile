@@ -50,7 +50,7 @@ build/$(TOP)_$(TARGET).bit: $(VERILOG_SOURCES)
 
 synth: build/$(TOP)_$(TARGET).bit
 
-flash: build/$(TOP)_$(TARGET).bit
+flash:
 	@echo "Flashing FPGA target $(TARGET)"
 	mkdir -p build/logs
 	TOP=$(TOP) FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" vivado -mode batch -source scripts/flash.tcl -journal "build/logs/flash_$(BUILD_TIME).jou"  -log "build/logs/flash_$(BUILD_TIME).log"
