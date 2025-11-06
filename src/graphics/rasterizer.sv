@@ -25,7 +25,7 @@ module Rasterizer #(
     output logic triangle_s_ready,
     input logic triangle_s_valid,
     input triangle_t triangle_s_data,
-    input triangle_metadata_t triangle_s_metadata,
+    input triangle_meta_t triangle_s_metadata,
 
     input logic pixel_data_m_ready,
     output logic pixel_data_m_valid,
@@ -41,7 +41,7 @@ module Rasterizer #(
     rasterizer_state state;
 
     attributed_triangle_t attributed_triangle;
-    triangle_metadata_t attributed_triangle_metadata;
+    triangle_meta_t attributed_triangle_metadata;
     logic attributed_triangle_valid;
 
     // We consider the rasterizer ready when it is IDLE and

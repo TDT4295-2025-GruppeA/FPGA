@@ -41,12 +41,12 @@ module TrianglePreprocessor (
     output logic triangle_s_ready,
     input logic triangle_s_valid,
     input triangle_t triangle_s_data,
-    input triangle_metadata_t triangle_s_metadata,
+    input triangle_meta_t triangle_s_metadata,
 
     input logic attributed_triangle_m_ready,
     output logic attributed_triangle_m_valid,
     output attributed_triangle_t attributed_triangle_m_data,
-    output triangle_metadata_t attributed_triangle_m_metadata
+    output triangle_meta_t attributed_triangle_m_metadata
 );
     typedef enum {
         IDLE,                 // Waiting for a new triangle.
@@ -62,7 +62,7 @@ module TrianglePreprocessor (
     assign attributed_triangle_m_valid = (state == DONE);
 
     triangle_t triangle;
-    triangle_metadata_t triangle_metadata;
+    triangle_meta_t triangle_metadata;
     fixed area_c, area_r, area_inv;
     logic area_inv_valid;
     logic small_area;

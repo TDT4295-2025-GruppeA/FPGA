@@ -21,6 +21,10 @@ module Top (
     input logic spi_mosi,
     output logic spi_miso,
 
+    // input logic cmd_in_valid,
+    // output logic cmd_in_ready,
+    // input logic[7:0] cmd_in_data,
+
     // VGA control
     output logic vga_hsync,
     output logic vga_vsync,
@@ -308,6 +312,9 @@ module Top (
         .cmd_in_valid(spi_cmd_valid),
         .cmd_in_ready(spi_cmd_ready),
         .cmd_in_data(spi_cmd_data),
+        // .cmd_in_valid(cmd_in_valid),
+        // .cmd_in_ready(cmd_in_ready),
+        // .cmd_in_data(cmd_in_data),
 
         .cmd_out_valid(cmd_spi_valid),
         .cmd_out_ready(cmd_spi_ready),
