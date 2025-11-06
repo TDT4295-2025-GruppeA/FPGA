@@ -10,6 +10,7 @@ PART_A7100T_LONG := xc7a100ticsg324-1L
 
 TARGET ?= 35t
 BOARD ?= arty7
+TOP ?= Top
 
 ifeq ($(TARGET),35t)
 	PART_LONG = $(PART_A735T_LONG)
@@ -37,22 +38,22 @@ endif
 
 .PHONY : synth flash test clean rmbuild rmgen rmlogs shell stubs
 
-build/top_$(TARGET).bit: $(VERILOG_SOURCES)
+build/$(TOP)_$(TARGET).bit: $(VERILOG_SOURCES)
 	@echo "Synthesizing and implementing design for target $(TARGET)"
 	mkdir -p build/logs
-	FPGA_BOARD=$(BOARD) FPGA_TARGET="$(TARGET)" FPGA_PART_LONG="$(PART_LONG)" vivado -mode batch -source scripts/synth.tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
+	TOP=$(TOP) FPGA_BOARD=$(BOARD) FPGA_TARGET="$(TARGET)" FPGA_PART_LONG="$(PART_LONG)" vivado -mode batch -source scripts/synth.tcl -journal "build/logs/synth_$(BUILD_TIME).jou"  -log "build/logs/synth_$(BUILD_TIME).log"
 	rm -f build/lastlog.*
 	ln -s logs/synth_$(BUILD_TIME).jou build/lastlog.jou
 	ln -s logs/synth_$(BUILD_TIME).log build/lastlog.log
 	[ ! -f "clockInfo.txt" ] || mv clockInfo.txt build/reports
 	[ ! -f "tight_setup_hold_pins.txt" ] || mv tight_setup_hold_pins.txt build/reports
 
-synth: build/top_$(TARGET).bit
+synth: build/$(TOP)_$(TARGET).bit
 
-flash: build/top_$(TARGET).bit
+flash:
 	@echo "Flashing FPGA target $(TARGET)"
 	mkdir -p build/logs
-	FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" vivado -mode batch -source scripts/flash.tcl -journal "build/logs/flash_$(BUILD_TIME).jou"  -log "build/logs/flash_$(BUILD_TIME).log"
+	TOP=$(TOP) FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" vivado -mode batch -source scripts/flash.tcl -journal "build/logs/flash_$(BUILD_TIME).jou"  -log "build/logs/flash_$(BUILD_TIME).log"
 
 script:
 	@echo "Running tcl script"

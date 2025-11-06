@@ -19,15 +19,15 @@ module Projection #(
     input  logic        clk,
     input  logic        rstn,
 
-    input  triangle_t   triangle_s_data,
-    input  logic        triangle_s_metadata,
-    input  logic        triangle_s_valid,
-    output logic        triangle_s_ready,
+    input  triangle_t       triangle_s_data,
+    input  triangle_meta_t  triangle_s_metadata,
+    input  logic            triangle_s_valid,
+    output logic            triangle_s_ready,
 
-    output triangle_t   projected_triangle_m_data,
-    output logic        projected_triangle_m_valid,
-    output logic        projected_triangle_m_metadata,
-    input  logic        projected_triangle_m_ready
+    output triangle_t       projected_triangle_m_data,
+    output logic            projected_triangle_m_valid,
+    output triangle_meta_t  projected_triangle_m_metadata,
+    input  logic            projected_triangle_m_ready
 );
     localparam fixed FOCAL_LENGTH_X = rtof(FOCAL_LENGTH / ASPECT_RATIO);
     localparam fixed FOCAL_LENGTH_Y = rtof(FOCAL_LENGTH);
@@ -50,7 +50,8 @@ module Projection #(
     // Input regs
     triangle_t triangle_in;
     triangle_t triangle_projected;
-    logic      metadata_in, m_stage1, m_stage2;
+    triangle_meta_t metadata_in;
+    logic m_stage1, m_stage2;
 
     fixed rec_z0, rec_z1, rec_z2;
     fixed current_z;

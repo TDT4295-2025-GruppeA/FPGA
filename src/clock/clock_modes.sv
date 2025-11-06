@@ -20,4 +20,5 @@ package clock_modes_pkg;
     localparam clock_config_t CLK_100_50_MHZ     = '{rtof(10.0), rtof(6.0), 1, rtof(12.0)};
     localparam clock_config_t CLK_100_40_MHZ     = '{rtof(10.0), rtof(6.0), 1, 15};
     localparam clock_config_t CLK_100_25_175_MHZ = '{rtof(10.0), rtof(9.0), 1, rtof(35.75)};
+    localparam clock_config_t CLK_100_10_MHZ     = '{rtof(10.0), rtof(6.0), 1, rtof(60.0)};
 endpackage

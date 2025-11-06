@@ -42,9 +42,7 @@ module PipelineToolsTester #(
                 data <= stage_in_data;
                 metadata <= stage_in_metadata;
                 valid <= 1;
-            end
-
-            if (stage_out_valid && stage_out_ready) begin
+            end else begin
                 valid <= 0;
             end
         end

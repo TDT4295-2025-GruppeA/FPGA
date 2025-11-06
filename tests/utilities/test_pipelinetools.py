@@ -2,7 +2,7 @@ import cocotb
 from tools.pipeline import Producer, Consumer
 
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, ClockCycles
 from logic_object import LogicObject, UInt, LogicField
 from stubs.pipelinetoolstester import Pipelinetoolstester
 
@@ -47,13 +47,11 @@ async def test_producer_consumer(dut: Pipelinetoolstester):
     for data, metadata in input_data:
         await producer.produce(data, metadata)
 
-    for _ in range(10):
-        await RisingEdge(dut.stage_out_valid)
-        dut._log.info("Out valid got high")
+    await ClockCycles(dut.clk, 20)
 
-    output_data: list[tuple[OutputData, OutputMetadata | None]] = []
-    for _ in range(10):
-        output_data.append(await consumer.consume())
+    output_data = await consumer.consume_all()
+
+    assert len(output_data) == 10
 
 
 @cocotb.test(timeout_time=10 * 1000, timeout_unit="ns")
@@ -69,13 +67,11 @@ async def test_no_metadata(dut: Pipelinetoolstester):
     for data, metadata in input_data:
         await producer.produce(data, metadata)
 
-    for _ in range(10):
-        await RisingEdge(dut.stage_out_valid)
-        dut._log.info("Out valid got high")
+    await ClockCycles(dut.clk, 20)
 
-    output_data: list[tuple[OutputData, None]] = []
-    for _ in range(10):
-        output_data.append(await consumer.consume())
+    output_data = await consumer.consume_all()
+
+    assert len(output_data) == 10
 
     for i in range(10):
         i_data, _ = input_data[i]

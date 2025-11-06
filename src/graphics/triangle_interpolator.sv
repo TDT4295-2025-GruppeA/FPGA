@@ -77,7 +77,7 @@ module TriangleInterpolator #(
     output logic attributed_triangle_s_ready,
     input logic attributed_triangle_s_valid,
     input attributed_triangle_t attributed_triangle_s_data,
-    input triangle_metadata_t attributed_triangle_s_metadata,
+    input triangle_meta_t attributed_triangle_s_metadata,
 
     output logic pixel_coordinate_s_ready,
     input logic pixel_coordinate_s_valid,
@@ -115,7 +115,7 @@ module TriangleInterpolator #(
 
     // Registers to store input data.
     triangle_t triangle_1_r;
-    triangle_metadata_t triangle_metadata_1_r;
+    triangle_meta_t triangle_metadata_1_r;
     fixed a_reciprocal_1_r;
     logic small_1_r;
     pixel_coordinate_t pixel_coordinate_1_r;

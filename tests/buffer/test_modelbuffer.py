@@ -1,191 +1,96 @@
-from typing import Iterable
-
 import cocotb
-from cocotb.triggers import RisingEdge
-from cocotb.clock import Clock
+from cocotb.triggers import ClockCycles
 
 from stubs.modelbuffer import Modelbuffer
-from types_ import Vertex, Triangle, RGB, Position
+from types_ import (
+    Triangle,
+    ModelBufferWrite,
+    ModelBufferRead,
+    TriangleMeta,
+)
+from tools.pipeline import Producer, Consumer
+from utilities.constructors import make_triangle, make_clock
 
 VERILOG_MODULE = "ModelBuffer"
 
 VERILOG_PARAMETERS = {
-    "MAX_TRIANGLE_COUNT": 10,
+    "MAX_TRIANGLE_COUNT": 100,
     "MAX_MODEL_COUNT": 10,
 }
 
 
-async def make_clock(dut: Modelbuffer):
-    cocotb.start_soon(Clock(dut.clk, 10, unit="ns").start())
-    dut.rstn.value = 1
+INPUTS = [
+    ModelBufferWrite(0, make_triangle(1)),
+    ModelBufferWrite(0, make_triangle(2)),
+    ModelBufferWrite(0, make_triangle(3)),
+    ModelBufferWrite(1, make_triangle(4)),
+    ModelBufferWrite(1, make_triangle(5)),
+    ModelBufferWrite(1, make_triangle(6)),
+    ModelBufferWrite(1, make_triangle(7)),
+    ModelBufferWrite(1, make_triangle(8)),
+    ModelBufferWrite(2, make_triangle(9)),
+    ModelBufferWrite(3, make_triangle(10)),
+    ModelBufferWrite(3, make_triangle(11)),
+    ModelBufferWrite(3, make_triangle(12)),
+]
 
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
+READ_INPUTS = [
+    ModelBufferRead(0, 0),
+    ModelBufferRead(0, 1),
+    ModelBufferRead(0, 2),
+    ModelBufferRead(1, 0),
+    ModelBufferRead(1, 1),
+    ModelBufferRead(1, 2),
+    ModelBufferRead(1, 3),
+    ModelBufferRead(1, 4),
+    ModelBufferRead(2, 0),
+    ModelBufferRead(3, 0),
+    ModelBufferRead(3, 1),
+    ModelBufferRead(3, 2),
+]
 
-
-@cocotb.test()
-async def test_write_single_triangle(dut: Modelbuffer):
-    await make_clock(dut)
-
-    triangle = Triangle(
-        Vertex(Position(1, 2, 3), RGB(4, 5, 6)),
-        Vertex(Position(7, 8, 9), RGB(1, 2, 3)),
-        Vertex(Position(10, 11, 12), RGB(1, 2, 3)),
-    )
-
-    dut.write_en.value = 1
-    dut.write_model_index.value = 0
-    dut.write_triangle.value = triangle.to_logicarray()
-    dut.write_triangle_index.value = 0
-
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-
-    triangle_out = Triangle.from_logicarray(dut.model_buffer.value[0])
-
-    assert triangle_out == triangle
-
-
-async def write_model(
-    dut: Modelbuffer, model_index: int, triangles: Iterable[Triangle]
-):
-    dut.write_model_index.value = model_index
-    dut.write_en.value = 1
-
-    # Write a set of triangles to the buffer
-    for i, triangle in enumerate(triangles):
-        dut.write_triangle.value = triangle.to_logicarray()
-        dut.write_triangle_index.value = i
-
-        await RisingEdge(dut.clk)
-
-    # Disable the input
-    dut.write_en.value = 0
-    dut.write_triangle_index.value = 0
-    dut.write_triangle.value = 0
-
-    # Need extra clock cycle to write last triangle
-    await RisingEdge(dut.clk)
-
-
-async def read_model(dut: Modelbuffer, model_index: int) -> list[Triangle]:
-    i = 0
-    result: list[Triangle] = []
-    dut.read_model_index.value = model_index
-    while not dut.read_last_index.value:
-        dut.read_triangle_index.value = i
-        await RisingEdge(dut.clk)
-        result.append(Triangle.from_logicarray(dut.read_triangle.value))
-        i += 1
-
-    dut.read_triangle_index.value = 0
-    dut.read_model_index.value = 0
-    await RisingEdge(dut.clk)
-
-    return result
+READ_OUTPUTS = [
+    (make_triangle(1), TriangleMeta(0)),
+    (make_triangle(2), TriangleMeta(0)),
+    (make_triangle(3), TriangleMeta(1)),
+    (make_triangle(4), TriangleMeta(0)),
+    (make_triangle(5), TriangleMeta(0)),
+    (make_triangle(6), TriangleMeta(0)),
+    (make_triangle(7), TriangleMeta(0)),
+    (make_triangle(8), TriangleMeta(1)),
+    (make_triangle(9), TriangleMeta(1)),
+    (make_triangle(10), TriangleMeta(0)),
+    (make_triangle(11), TriangleMeta(0)),
+    (make_triangle(12), TriangleMeta(1)),
+]
 
 
 @cocotb.test()
 async def test_write_model(dut: Modelbuffer):
     await make_clock(dut)
 
-    model = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(1, 6)
-    ]
-    await write_model(dut, 0, model)
+    write = Producer(dut, "write")
+    read_producer = Producer(dut, "read")
+    read_consumer = Consumer(dut, "read", Triangle, TriangleMeta)
+    await write.run()
+    await read_producer.run()
+    await read_consumer.run()
 
-    model_result = await read_model(dut, 0)
+    for data in INPUTS:
+        await write.produce(data)
 
-    assert model == model_result
+    await ClockCycles(dut.clk, 20)
 
+    for data in READ_INPUTS:
+        await read_producer.produce(data)
 
-@cocotb.test()
-async def test_multimodel(dut: Modelbuffer, create_clock: bool = True):
-    if create_clock:
-        await make_clock(dut)
+    await ClockCycles(dut.clk, 100)
 
-    model1 = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(1, 4)
-    ]
-    model2 = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(4, 7)
-    ]
-    model3 = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(7, 10)
-    ]
+    triangles = await read_consumer.consume_all()
 
-    await write_model(dut, 0, model1)
-    await write_model(dut, 1, model2)
-    await write_model(dut, 2, model3)
+    assert len(triangles) == len(
+        READ_OUTPUTS
+    ), f"Incorrect number of triangles produced."
 
-    model1_result = await read_model(dut, 0)
-    model2_result = await read_model(dut, 1)
-    model3_result = await read_model(dut, 2)
-
-    assert model1 == model1_result
-    assert model2 == model2_result
-    assert model3 == model3_result
-
-
-@cocotb.test()
-async def test_no_overwrite(dut: Modelbuffer):
-    """Test that its not possible to redefine a module"""
-    await make_clock(dut)
-
-    model1 = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(1, 4)
-    ]
-    model2 = [
-        Triangle(
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-            Vertex(Position(i, i, i), RGB(i, i, i)),
-        )
-        for i in range(4, 7)
-    ]
-
-    await write_model(dut, 0, model1)
-    await write_model(dut, 1, model1)
-    await write_model(dut, 0, model2)
-
-    model1_result = await read_model(dut, 0)
-
-    assert model1 == model1_result
-
-
-@cocotb.test()
-async def test_reset(dut: Modelbuffer):
-    """Test reset behaviour"""
-    await make_clock(dut)
-    await test_multimodel.func(dut, create_clock=False)
-    dut.rstn.value = 0
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    dut.rstn.value = 1
-    await test_multimodel.func(dut)
+    for i, (triangle, actual_triangle) in enumerate(zip(triangles, READ_OUTPUTS)):
+        assert triangle == actual_triangle, f"Failed assertion on index {i}."

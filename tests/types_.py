@@ -13,15 +13,25 @@ from logic_object import Fixed, LogicObject, UInt, LogicField
 # type-ignored.
 
 
-class Bit(LogicObject):
-    bit: int = LogicField(UInt(1))  # type: ignore
+class Byte(LogicObject):
+    byte: int = LogicField(UInt(8))  # type: ignore
+
+
+class Short(LogicObject):
+    short: int = LogicField(UInt(16))  # type: ignore
 
 
 class RGB(LogicObject):
     r: int = LogicField(UInt(4), default=0)  # type: ignore
     g: int = LogicField(UInt(4), default=0)  # type: ignore
     b: int = LogicField(UInt(4), default=0)  # type: ignore
-    reserved: int = LogicField(UInt(4), default=0)  # type: ignore
+
+    @classmethod
+    def from_c565(cls, color: int) -> "RGB":
+        red = ((color >> 11) >> 1) & 0b1111
+        green = ((color >> 5) >> 2) & 0b1111
+        blue = (color >> 1) & 0b1111
+        return RGB(red, green, blue)
 
 
 class Position(LogicObject):
@@ -62,11 +72,6 @@ class Transform(LogicObject):
     rotation: RotationMatrix = LogicField(RotationMatrix)  # type: ignore
 
 
-class TriangleTransform(LogicObject):
-    triangle: Triangle = LogicField(Triangle)  # type: ignore
-    transform: Transform = LogicField(Transform)  # type: ignore
-
-
 class ModelInstance(LogicObject):
     model_id: int = LogicField(UInt(8))  # type: ignore
     transform: Transform = LogicField(Transform)  # type: ignore
@@ -86,3 +91,32 @@ class PixelData(LogicObject):
 
 class PixelDataMetadata(LogicObject):
     last: int = LogicField(UInt(1))  # type: ignore
+
+
+# Types in pipeline head
+class ModelBufferWrite(LogicObject):
+    model_id: int = LogicField(UInt(8))  # type: ignore
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+
+
+class ModelBufferRead(LogicObject):
+    model_index: int = LogicField(UInt(8))  # type: ignore
+    triangle_index: int = LogicField(UInt(16))  # type: ignore
+
+
+class TriangleMeta(LogicObject):
+    last: int = LogicField(UInt(1))  # type: ignore
+
+
+class ModelInstanceMeta(LogicObject):
+    last: int = LogicField(UInt(1))  # type: ignore
+
+
+class TriangleTransform(LogicObject):
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+    transform: Transform = LogicField(Transform)  # type: ignore
+
+
+class TriangleTransformMeta(LogicObject):
+    model_last: int = LogicField(UInt(1))  # type: ignore
+    triangle_last: int = LogicField(UInt(1))  # type: ignore

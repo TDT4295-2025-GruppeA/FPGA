@@ -5,6 +5,7 @@ import cocotb
 import cocotb.handle
 from cocotb.triggers import RisingEdge
 from cocotb.queue import Queue
+from cocotb.handle import Force
 
 from logic_object import LogicObject
 
@@ -20,10 +21,11 @@ _Metadata = TypeVar("_Metadata", bound=LogicObject)
 
 
 class PipelineBase(abc.ABC):
-    def __init__(self, dut: PipelineDut, name: str, type: str):
+    def __init__(self, dut: PipelineDut, name: str, type: str, clock_name: str = "clk"):
         self._dut = dut
         self._name = name
         self._type = type
+        self._clock_name = clock_name
 
     def _get_signal(self, name: str) -> cocotb.handle.ValueObjectBase:
         signal_name = f"{self._name}_{self._type}_{name}"
@@ -52,6 +54,10 @@ class PipelineBase(abc.ABC):
     def _metadata(self):
         return self._get_signal("metadata")
 
+    @property
+    def _clk(self):
+        return getattr(self._dut, self._clock_name)
+
     async def run(self):
         """Run the pipeline handler"""
         cocotb.start_soon(self._run_loop())
@@ -67,9 +73,10 @@ class Producer(PipelineBase, Generic[_Data, _Metadata]):
         name: str,
         has_metadata: bool = False,
         signal_style: str = "inout",
+        clock_name: str = "clk",
     ):
         type = "in" if signal_style == "inout" else "s"
-        super().__init__(dut, name, type)
+        super().__init__(dut, name, type, clock_name=clock_name)
         self._has_metadata = has_metadata
         self._input_queue: Queue[tuple[_Data, _Metadata | None]] = Queue()
 
@@ -92,23 +99,23 @@ class Producer(PipelineBase, Generic[_Data, _Metadata]):
 
             # If metadata is enabled, we want to set the metadata signal
             if self._has_metadata and metadata is not None:
-                self._metadata.value = metadata.to_logicarray()
+                self._metadata.value = Force(metadata.to_logicarray())
 
             # Set the data, and mark the data as valid
-            self._data.value = data.to_logicarray()
-            self._valid.value = 1
+            self._data.value = Force(data.to_logicarray())
+            self._valid.value = Force(1)
 
             # Make sure the data actually makes it to the DUT
-            await RisingEdge(self._dut.clk)
+            await RisingEdge(self._clk)
 
             # Wait for item to be consumed
             while not self._ready.value:
-                await RisingEdge(self._dut.clk)
+                await RisingEdge(self._clk)
 
-            # Set data as invalid
-            # Only required if we do not have more items to produce.
-            self._valid.value = 0
-            await RisingEdge(self._dut.clk)
+            # Set data as invalid if we do not have more items
+            if self._input_queue.empty():
+                self._valid.value = Force(0)
+                await RisingEdge(self._clk)
 
 
 class Consumer(PipelineBase, Generic[_Data, _Metadata]):
@@ -119,9 +126,10 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
         data_type: Type[_Data],
         metadata_type: Type[_Metadata] | None = None,
         signal_style: str = "inout",
+        clock_name: str = "clk",
     ):
         type = "out" if signal_style == "inout" else "m"
-        super().__init__(dut, name, type)
+        super().__init__(dut, name, type, clock_name=clock_name)
 
         # Store the output type so we can use them to convert LogicArray
         # to the output type
@@ -134,6 +142,12 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
         """Retrieve a transaction from the DUT."""
         return await self._output_queue.get()
 
+    async def consume_all(self) -> list[tuple[_Data, _Metadata | None]]:
+        items = []
+        while not self._output_queue.empty():
+            items.append(await self._output_queue.get())
+        return items
+
     async def _run_loop(self):
         # TODO: expose this to the user so they can control when to
         # consume?
@@ -141,7 +155,7 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
 
         while True:
             # Wait for the data to become valid
-            await RisingEdge(self._dut.clk)
+            await RisingEdge(self._clk)
             if not self._valid.value:
                 continue
 

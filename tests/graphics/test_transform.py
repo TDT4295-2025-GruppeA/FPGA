@@ -3,7 +3,6 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 
 from tools.pipeline import Producer, Consumer
-from logic_object import LogicObject, LogicField, UInt
 from types_ import (
     Transform,
     TriangleTransform,
@@ -12,6 +11,8 @@ from types_ import (
     Position,
     RotationMatrix,
     RGB,
+    TriangleMetadata,
+    TriangleTransformMeta,
 )
 
 VERILOG_MODULE = "Transform"
@@ -250,11 +251,8 @@ async def test_transform_metadata_passthrough(dut):
     """Verify that metadata (1-bit) is correctly latched and passed through the Transform module."""
     await make_clock(dut)
 
-    class Bit(LogicObject):
-        bit: int = LogicField(UInt(1))  # type: ignore
-
     producer = Producer(dut, "triangle_tf", has_metadata=True, signal_style="ms")
-    consumer = Consumer(dut, "triangle", Triangle, Bit, signal_style="ms")
+    consumer = Consumer(dut, "triangle", Triangle, TriangleMetadata, signal_style="ms")
     await producer.run()
     await consumer.run()
 
@@ -279,24 +277,31 @@ async def test_transform_metadata_passthrough(dut):
         Vertex(Position(3, 3, 3), RGB(3, 3, 3)),
     )
 
-    for metadata_in in [0, 1, 0, 1, 1]:
+    for meta_triangle, meta_model in [(0, 0), (1, 0), (0, 1), (1, 1)]:
         triangle_expected = triangle_in
-        metadata_expected = metadata_in
+        metadata_expected = meta_triangle and meta_model
+        dut._log.info("Doing stuff")
 
         await producer.produce(
             TriangleTransform(triangle=triangle_in, transform=transform),
-            Bit(metadata_in),
+            TriangleTransformMeta(meta_model, meta_triangle),
         )
 
         await RisingEdge(dut.triangle_m_valid)
-        triangle_out, metadata_out = await consumer.consume()
+        triangle_out, out_meta = await consumer.consume()
 
-        assert metadata_out is not None, "Expected metadata but got None"
+        assert out_meta is not None, f"metadata out was None"
 
         assert (
             triangle_out == triangle_expected
         ), f"Triangle changed under identity transform!\nExpected: {triangle_expected}\nGot: {triangle_out}"
 
         assert (
-            metadata_out.bit == metadata_expected
-        ), f"Metadata mismatch!\nExpected: {metadata_expected}\nGot: {metadata_out.bit}"
+            out_meta.last == metadata_expected
+        ), f"Metadata mismatch!\nExpected: {metadata_expected}\nGot: {out_meta.last}"
+
+        prev_meta = int(dut.triangle_m_metadata.value)
+        await RisingEdge(dut.clk)
+        assert (
+            int(dut.triangle_m_metadata.value) == prev_meta
+        ), "Metadata changed while valid asserted!"

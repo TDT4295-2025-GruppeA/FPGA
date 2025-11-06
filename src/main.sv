@@ -21,6 +21,10 @@ module Top (
     input logic spi_mosi,
     output logic spi_miso,
 
+    // input logic cmd_in_valid,
+    // output logic cmd_in_ready,
+    // input logic[7:0] cmd_in_data,
+
     // VGA control
     output logic vga_hsync,
     output logic vga_vsync,
@@ -124,6 +128,11 @@ module Top (
 
     transform_t transform;
 
+    wire logic pipe_dm_valid;
+    wire logic pipe_dm_ready;
+    wire pixel_data_t pipe_dm_data;
+    wire pixel_metadata_t pipe_dm_metadata;
+
     DrawingManager #(
         .BUFFER_WIDTH(BUFFER_CONFIG.width),
         .BUFFER_HEIGHT(BUFFER_CONFIG.height),
@@ -139,8 +148,11 @@ module Top (
         .write_addr(dm_write_addr),
         .write_data(dm_write_data),
         .frame_done(dm_frame_done),
-        .buffer_select(buffer_select_sync_sys),
-        .transform(transform)
+
+        .pixel_s_valid(pipe_dm_valid),
+        .pixel_s_ready(pipe_dm_ready),
+        .pixel_s_data(pipe_dm_data),
+        .pixel_s_metadata(pipe_dm_metadata)
     );
 
     ///////////////////////////////////////
@@ -245,15 +257,27 @@ module Top (
         .read_data(disp_read_data)
     );
 
+    ////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////
+    ///////////                                              ///////////
+    ///////////                 Pipeline                     ///////////
+    ///////////                                              ///////////
+    ////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////
     /////////
     // SPI //
     /////////
 
-    protocol_transform_t protocol_transform;
-    assign transform = parse_protocol_transform(protocol_transform);
+    wire logic spi_cmd_valid;
+    wire logic spi_cmd_ready;
+    wire byte_t spi_cmd_data;
+
+    wire logic cmd_spi_valid;
+    wire logic cmd_spi_ready;
+    wire byte_t cmd_spi_data;
 
     SpiSub #(
-        .WORD_SIZE($bits(protocol_transform_t)),
+        .WORD_SIZE($bits(byte_t)),
         .RX_QUEUE_LENGTH(2),
         .TX_QUEUE_LENGTH(2)
     ) spi_controller (
@@ -268,13 +292,40 @@ module Top (
         .sys_rstn(rstn_system),
 
         // User data interface
-        .tx_data_en(1'b1), // Never sending anything.
-        .rx_data_en(1'b1), // Always reading.
-        .tx_data(protocol_transform), // Sending back received data.
-        .rx_data(protocol_transform), // Word to receive.
-        .tx_ready(), // Ignored.
-        .rx_ready(), // Ignored.
+        .tx_in_valid(cmd_spi_valid),
+        .tx_in_ready(cmd_spi_ready),
+        .tx_in_data(cmd_spi_data),
+
+        .rx_out_ready(spi_cmd_ready),
+        .rx_out_valid(spi_cmd_valid),
+        .rx_out_data(spi_cmd_data),
         .active() // Ignored.
+    );
+
+    Pipeline #(
+        .BUFFER_WIDTH(BUFFER_CONFIG.width),
+        .BUFFER_HEIGHT(BUFFER_CONFIG.height)
+    ) pipeline_inst (
+        .clk(clk_system),
+        .rstn(rstn_system),
+
+        .cmd_in_valid(spi_cmd_valid),
+        .cmd_in_ready(spi_cmd_ready),
+        .cmd_in_data(spi_cmd_data),
+        // .cmd_in_valid(cmd_in_valid),
+        // .cmd_in_ready(cmd_in_ready),
+        // .cmd_in_data(cmd_in_data),
+
+        .cmd_out_valid(cmd_spi_valid),
+        .cmd_out_ready(cmd_spi_ready),
+        .cmd_out_data(cmd_spi_data),
+
+        .pixel_m_valid(pipe_dm_valid),
+        .pixel_m_ready(pipe_dm_ready),
+        .pixel_m_data(pipe_dm_data),
+        .pixel_m_metadata(pipe_dm_metadata),
+
+        .led(led)
     );
 
     ///////////////////////////////////////
