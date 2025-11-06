@@ -103,10 +103,24 @@ To set up a t virtual environment with the required packages the following comma
     python3 -m pip install -r requirements.txt
 
 #### calc_display_clk_config.py
-Probably smarter to use clock wizard to calculate values. But this exists too. It currently assumes it can use a float for last clock division, which is only the case for clock 0 in `MMCME2_BASE`. Should be modified in the future to use integers.
+Probably smarter to use clock wizard to calculate values, but this exists too. It currently assumes it can use a float for last clock division, which is only the case for clock 0 in `MMCME2_BASE`. Should be modified in the future to use integers.
 
 #### convert_img_to_mem.py
-Convers an image (any format supported by PIL) to a format that can be read by `$readmemh` in verilog. This is used to initialize block ram with an image.
+Converts an image (any format supported by PIL) to a format that can be read by `$readmemh` in verilog. This is used to initialize block ram with an image.
 
-Images should be stored in `static` with the name `<IMAGE_NAME>_<RES_H>x<RES_V>p<COLOR_WIDTH>.mem`. For example `banana_640x480p12.mem` for a `640x480` image of a banana with 12-bit colors (`RGB444`)
+Images should be stored in `static/images` with the name `<IMAGE_NAME>_<RES_H>x<RES_V>p<COLOR_WIDTH>.mem`. For example `banana_640x480p12.mem` for a `640x480` image of a banana with 12-bit colors (`RGB444`)
 
+Example usage:
+```bash
+python tools/convert_img_to_mem.py banana.png static/images/banana.mem
+```
+
+#### convert_stl_to_mem.py
+Converts a 3D STL model into our custom format. The script applies random colors to each vertex and applies a uniform winding order to all the tirangles. It produces one `.mem` file containing the entire model data and a folder with the same name as the file containing the data split into five 72 bit `.mem` files. The latter is required as Vivado did not want to synthesize BRAM with wordsizes larger than 72.
+
+The converted models should be stored in `static/models` with the name `<MODEL_NAME>.mem`. 
+
+Example usage:
+```bash
+python tools/convert_stl_to_mem.py suzanne.stl static/models/suzanne.mem
+```
