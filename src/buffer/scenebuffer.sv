@@ -25,27 +25,8 @@ module SceneBuffer #(
     localparam scene_idx_t COUNT_SCENE = scene_idx_t'(SCENE_COUNT);
     localparam transform_idx_t COUNT_TRANSFORM = transform_idx_t'(TRANSFORM_COUNT);
 
-    (* ram_style = "block" *) logic[71:0] transforms0 [SCENE_COUNT * TRANSFORM_COUNT];
-    (* ram_style = "block" *) logic[71:0] transforms1 [SCENE_COUNT * TRANSFORM_COUNT];
-    (* ram_style = "block" *) logic[71:0] transforms2 [SCENE_COUNT * TRANSFORM_COUNT];
-    (* ram_style = "block" *) logic[71:0] transforms3 [SCENE_COUNT * TRANSFORM_COUNT];
-    (* ram_style = "block" *) logic[19:0] transforms4 [SCENE_COUNT * TRANSFORM_COUNT];
-
-    logic[71:0] read0;
-    logic[71:0] read1;
-    logic[71:0] read2;
-    logic[71:0] read3;
-    logic[19:0] read4;
-
-    assign read_out_data[307:236] = read0;
-    assign read_out_data[235:164] = read1;
-    assign read_out_data[163:92] = read2;
-    assign read_out_data[91:20] = read3;
-    assign read_out_data[19:0] = read4;
-
     transform_idx_t addr_write;
     transform_idx_t addr_read;
-
 
     typedef struct {
         transform_idx_t size;  // Total size of scene
@@ -64,25 +45,20 @@ module SceneBuffer #(
     assign addr_write = transform_idx_t'(scene_idx_write) * COUNT_TRANSFORM + write_idx;
     assign addr_read = transform_idx_t'(scene_idx_read) * COUNT_TRANSFORM + read_idx;
 
-    always_ff @(posedge clk) begin
-        if (write_in_valid && write_in_ready) begin
-            transforms0[addr_write] <= write_in_data[307:236];
-            transforms1[addr_write] <= write_in_data[235:164];
-            transforms2[addr_write] <= write_in_data[163:92];
-            transforms3[addr_write] <= write_in_data[91:20];
-            transforms4[addr_write] <= write_in_data[19:0];
-        end
+    Bram #(
+        .ENTRY_COUNT(SCENE_COUNT * TRANSFORM_COUNT),
+        .DATA_WIDTH($bits(modelinstance_t))
+    ) bram (
+        .clk(clk),
+        
+        .write_enable(write_in_valid && write_in_ready),
+        .write_address(addr_write),
+        .write_data(write_in_data),
 
-        if (read_out_ready) begin
-            if (read_idx < scenes[scene_idx_read].size && scenes[scene_idx_read].ready) begin
-                read0 <= transforms0[addr_read];
-                read1 <= transforms1[addr_read];
-                read2 <= transforms2[addr_read];
-                read3 <= transforms3[addr_read];
-                read4 <= transforms4[addr_read];
-            end
-        end
-    end
+        .read_enable(read_out_ready && (read_idx < scenes[scene_idx_read].size) && scenes[scene_idx_read].ready),
+        .read_address(addr_read),
+        .read_data(read_out_data)
+    );
 
     // Sequential logic
     always_ff @(posedge clk or negedge rstn) begin

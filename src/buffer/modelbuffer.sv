@@ -66,22 +66,6 @@ module ModelBuffer #(
     // and their start index and size.
     model_index_t registry[MAX_MODEL_COUNT];
 
-    // This is a buffer to store all triangles for all models.
-    (* ram_style = "block" *) logic[71:0] model_buffer0[MAX_TRIANGLE_COUNT];
-    (* ram_style = "block" *) logic[71:0] model_buffer1[MAX_TRIANGLE_COUNT];
-    (* ram_style = "block" *) logic[71:0] model_buffer2[MAX_TRIANGLE_COUNT];
-    (* ram_style = "block" *) logic[44:0] model_buffer3[MAX_TRIANGLE_COUNT];
-
-    logic[71:0] read0;
-    logic[71:0] read1;
-    logic[71:0] read2;
-    logic[44:0] read3;
-
-    assign read_out_data[260:189] = read0;
-    assign read_out_data[188:117] = read1;
-    assign read_out_data[116:45] = read2;
-    assign read_out_data[44:0] = read3;
-
     logic write_en;
 
     // Read from the registry
@@ -108,20 +92,20 @@ module ModelBuffer #(
 
     end
 
-    always_ff @(posedge clk) begin
-        if (write_en) begin
-            model_buffer0[write_addr] <= write_triangle[260:189];
-            model_buffer1[write_addr] <= write_triangle[188:117];
-            model_buffer2[write_addr] <= write_triangle[116:45];
-            model_buffer3[write_addr] <= write_triangle[44:0];
-        end
-        if (read_in_ready && read_in_valid) begin
-            read0 <= model_buffer0[read_addr];
-            read1 <= model_buffer1[read_addr];
-            read2 <= model_buffer2[read_addr];
-            read3 <= model_buffer3[read_addr];
-        end
-    end
+    Bram #(
+        .ENTRY_COUNT(MAX_TRIANGLE_COUNT),
+        .DATA_WIDTH($bits(triangle_t))
+    ) bram (
+        .clk(clk),
+        
+        .write_enable(write_en),
+        .write_address(write_addr),
+        .write_data(write_triangle),
+
+        .read_enable(read_in_ready && read_in_valid),
+        .read_address(read_addr),
+        .read_data(read_out_data)
+    );
 
     always_ff @(posedge clk or negedge rstn) begin
         // Mark model as written if we have started writing to another model
