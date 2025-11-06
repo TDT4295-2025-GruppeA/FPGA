@@ -31,7 +31,7 @@ module Pipeline #(
     output logic[3:0] vga_blue,
 
     // debug
-    input logic [3:0] led,
+    output logic [3:0] led,
     input logic [3:0] sw
 
 );
