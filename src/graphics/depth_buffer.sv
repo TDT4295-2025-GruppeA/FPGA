@@ -29,9 +29,9 @@ module DepthBuffer #(
     localparam fixed REC_NEAR = rtof(1.0 / NEAR_PLANE);
     localparam fixed REC_FAR  = rtof(1.0 / FAR_PLANE);
 
-    localparam int DECIMATION_FACTOR = 4;
-    localparam int HALF_FIXED_WIDTH = TOTAL_WIDTH/2;
-    (* ram_style = "block" *) logic signed [HALF_FIXED_WIDTH-1:0] z_buffer [0:(BUFFER_WIDTH*BUFFER_HEIGHT)-1];
+    localparam int DECIMATION_OFFSET = 0;
+    localparam int DECIMATION_WIDTH = 18; // Hardocded to 18 as that is one of the word sizes for BRAM.
+    (* ram_style = "block" *) logic signed [DECIMATION_WIDTH-1:0] z_buffer [0:(BUFFER_WIDTH*BUFFER_HEIGHT)-1];
 
     //////////////////////////////
     // Stage 1: Input Latching  //
@@ -57,14 +57,14 @@ module DepthBuffer #(
     // Stage 2: Read current depth value //
     ///////////////////////////////////////
 
-    logic [HALF_FIXED_WIDTH-1:0] read_data;
+    logic [DECIMATION_WIDTH-1:0] read_data;
 
     logic                         s2_write_req;
     logic [BUFFER_ADDR_WIDTH-1:0] s2_addr;
     pixel_data_t                  s2_pixel;
     fixed                         s2_current_depth;
     
-    assign s2_current_depth = fixed'(read_data) << DECIMATION_FACTOR;
+    assign s2_current_depth = fixed'(read_data) << DECIMATION_OFFSET;
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
@@ -102,11 +102,11 @@ module DepthBuffer #(
 
     logic write_en;
     logic [BUFFER_ADDR_WIDTH-1:0] write_addr;
-    logic [HALF_FIXED_WIDTH-1:0] write_data;
+    logic [DECIMATION_WIDTH-1:0] write_data;
 
     assign write_en = clear_req || write_en_out;
     assign write_addr = clear_req ? clear_addr : s2_addr;
-    assign write_data = clear_req ? '0 : HALF_FIXED_WIDTH'(s2_pixel.depth >>> DECIMATION_FACTOR);
+    assign write_data = clear_req ? '0 : DECIMATION_WIDTH'(s2_pixel.depth >>> DECIMATION_OFFSET);
 
     always_ff @(posedge clk) begin
         read_data <= z_buffer[s1_addr];
