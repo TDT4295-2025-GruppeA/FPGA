@@ -39,6 +39,9 @@ module SceneReader #(
     modelinstance_meta_t current_model_metadata;
     short_t triangle_index;
     logic triangle_index_valid;
+
+    assign triangle_index_valid = state == PROCESSING;
+    assign scene_in_ready = state == IDLE;
     
     assign model_out_data.model_index = current_model.model_id;
     assign model_out_data.triangle_index = triangle_index;
@@ -54,22 +57,14 @@ module SceneReader #(
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
-            scene_in_ready <= 0;
-            triangle_index_valid <= 0;
             state <= IDLE;
         end else begin
             case (state)
                 IDLE: begin
                     if (scene_in_valid && scene_in_ready) begin
-                        scene_in_ready <= 0;
                         current_model <= scene_in_data;
                         current_model_metadata <= scene_in_metadata;
                         state <= PROCESSING;
-                        triangle_index <= 0;
-                        triangle_index_valid <= 1;
-                    end else begin
-                        scene_in_ready <= 1;
-                        triangle_index_valid <= 0;
                     end
                 end
                 PROCESSING: begin
@@ -78,8 +73,7 @@ module SceneReader #(
                     end
                     if (model_in_metadata.last && model_in_valid && model_out_ready && model_in_ready && model_out_valid) begin // TODO: FIX ME
                         state <= IDLE;
-                        scene_in_ready <= 1;
-                        triangle_index_valid <= 0;
+                        triangle_index <= 0;
                     end
                 end
                 default: begin

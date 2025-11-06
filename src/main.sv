@@ -323,7 +323,9 @@ module Top (
         .pixel_m_valid(pipe_dm_valid),
         .pixel_m_ready(pipe_dm_ready),
         .pixel_m_data(pipe_dm_data),
-        .pixel_m_metadata(pipe_dm_metadata)
+        .pixel_m_metadata(pipe_dm_metadata),
+
+        .led(led)
     );
 
     ///////////////////////////////////////
