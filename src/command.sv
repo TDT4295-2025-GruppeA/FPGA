@@ -55,6 +55,11 @@ module CommandInput(
     wire cmd_in_transaction;
     assign cmd_in_transaction = cmd_in_valid && cmd_in_ready;
 
+    // Signal to ensure that the parallelizers are
+    // always in sync when we start receiving data.
+    logic serial_to_parallel_synchronize;
+    assign serial_to_parallel_synchronize = state == STATE_IDLE;
+
     // Serializing for model buffer
     byte_t current_model_idx;
 
@@ -73,6 +78,7 @@ module CommandInput(
     ) triangle_serializer (
         .clk(clk),
         .rstn(rstn),
+        .synchronize(serial_to_parallel_synchronize),
         .serial_in_ready(model_serial_in_ready),
         .serial_in_valid(model_serial_in_valid),
         .serial_in_data(model_serial_in_data),
@@ -98,6 +104,7 @@ module CommandInput(
     ) modelinstance_serializer (
         .clk(clk),
         .rstn(rstn),
+        .synchronize(serial_to_parallel_synchronize),
         .serial_in_ready(scene_serial_in_ready),
         .serial_in_valid(scene_serial_in_valid),
         .serial_in_data(scene_serial_in_data),
@@ -138,8 +145,8 @@ module CommandInput(
                     // Set number of bytes left in command
                     // Subtract one because we have already read one
                     bytes_left <= command_length_bytes(cmd_in_data) - 1;
-    
-                    // choose next state based on command
+
+                    // Choose next state based on command
                     if (cmd_in_data == CMD_BEGIN_MODEL_UPLOAD) begin
                         state <= STATE_BEGIN_MODEL_UPLOAD;
                     end else if (cmd_in_data == CMD_UPLOAD_TRIANGLE) begin

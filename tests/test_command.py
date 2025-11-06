@@ -20,7 +20,7 @@ CMD_UPLOAD_TRIANGLE = 0xA1
 CMD_ADD_MODEL_INSTANCE = 0xB0
 
 # fmt: off
-INPUTS = [
+INPUTS_IDEAL = [
     CMD_BEGIN_UPLOAD, 0x00,  # Start upload model 0
     CMD_UPLOAD_TRIANGLE, *([1] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([2] * 14 * 3),  # Upload a triangle
@@ -41,6 +41,33 @@ INPUTS = [
     CMD_ADD_MODEL_INSTANCE, 0x00, 0x01, *([4] * 48),  # Add transform
     CMD_ADD_MODEL_INSTANCE, 0x01, 0x01, *([5] * 48),  # Add transform, last in scene
 ]
+
+INPUTS_FUCKED = [
+    CMD_BEGIN_UPLOAD, 0x00,  # Start upload model 0
+    0x00, # Whops, a zero too much!
+    CMD_UPLOAD_TRIANGLE, *([1] * 14 * 3),  # Upload a triangle
+    0x69, # Nice
+    CMD_UPLOAD_TRIANGLE, *([2] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([3] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([4] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([5] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([6] * 14 * 3),  # Upload a triangle
+    CMD_BEGIN_UPLOAD, 0x01,  # Start upload model 1
+    CMD_UPLOAD_TRIANGLE, *([7] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([8] * 14 * 3),  # Upload a triangle
+    0xAA, 0xAA, 0xAA, 0xAA, # Looks like someone accidentally connected the clock?
+    CMD_UPLOAD_TRIANGLE, *([9] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([10] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([11] * 14 * 3),  # Upload a triangle
+    CMD_UPLOAD_TRIANGLE, *([12] * 14 * 3),  # Upload a triangle
+    CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([1] * 48),  # Add transform
+    CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([2] * 48),  # Add transform
+    CMD_ADD_MODEL_INSTANCE, 0x01, 0x00, *([3] * 48),  # Add transform, last in scene
+    CMD_ADD_MODEL_INSTANCE, 0x00, 0x01, *([4] * 48),  # Add transform
+    0x83, 0x87, 0x17,  # Ups, some noise
+    CMD_ADD_MODEL_INSTANCE, 0x01, 0x01, *([5] * 48),  # Add transform, last in scene
+]
+
 # fmt: on
 
 
@@ -68,8 +95,9 @@ OUTPUTS_SCENE = [
 ]
 
 
-@cocotb.test()
-async def test_command(dut: Commandinput):
+@cocotb.test(timeout_time=1, timeout_unit="ms")
+@cocotb.parametrize(cmd_data=[INPUTS_IDEAL, INPUTS_FUCKED])
+async def test_command(dut: Commandinput, cmd_data: list[int]):
     await make_clock(dut)
     cmd_in = Producer(dut, "cmd")
     cmd_out = Consumer(dut, "cmd", Byte)
@@ -81,7 +109,7 @@ async def test_command(dut: Commandinput):
     await model_out.run()
     await scene_out.run()
 
-    for byte in INPUTS:
+    for byte in cmd_data:
         await cmd_in.produce(Byte(byte))
 
     await ClockCycles(dut.clk, 1000)  # wait plenty cycles
