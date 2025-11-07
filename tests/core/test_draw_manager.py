@@ -7,7 +7,6 @@ from core.types.types_ import (
     PixelCoordinate,
     PixelData,
     PixelDataMetadata,
-    Position,
 )
 
 
