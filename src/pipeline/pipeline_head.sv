@@ -32,10 +32,7 @@ module PipelineHead(
     output logic                triangle_tf_out_valid,
     input  logic                triangle_tf_out_ready,
     output triangle_tf_t        triangle_tf_out_data,
-    output triangle_tf_meta_t   triangle_tf_out_metadata,
-
-    // Debugging output
-    output logic [3:0] led
+    output triangle_tf_meta_t   triangle_tf_out_metadata
 );
     localparam MAX_MODEL_COUNT = 10;
     localparam MAX_TRIANGLE_COUNT = 512;
@@ -67,9 +64,7 @@ module PipelineHead(
         .scene_out_valid(cmd_scene_valid),
         .scene_out_ready(cmd_scene_ready),
         .scene_out_data(cmd_scene_data),
-        .scene_out_metadata(cmd_scene_metadata),
-
-        .current_state(led)
+        .scene_out_metadata(cmd_scene_metadata)
     );
 
     // Modelbuffer

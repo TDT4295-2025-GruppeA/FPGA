@@ -5,7 +5,7 @@ from stubs.rasterizer import Rasterizer
 import numpy as np
 from PIL import Image
 
-from types_ import (
+from core.types.types_ import (
     RGB,
     PixelData,
     PixelDataMetadata,

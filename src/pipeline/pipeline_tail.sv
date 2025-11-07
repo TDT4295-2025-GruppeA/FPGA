@@ -42,26 +42,26 @@ module PipelineTail #(
 
     // Frame buffer A
     logic [BUFFER_CONFIG.addr_width-1:0] fb_a_read_addr;
-    logic [BUFFER_CONFIG.data_width-1:0] fb_a_read_data;
+    color_t                         fb_a_read_data;
     logic                                 fb_a_write_en;
     logic [BUFFER_CONFIG.addr_width-1:0] fb_a_write_addr;
-    logic [BUFFER_CONFIG.data_width-1:0] fb_a_write_data;
+    color_t                        fb_a_write_data;
 
     // Frame buffer B
     logic [BUFFER_CONFIG.addr_width-1:0] fb_b_read_addr;
-    logic [BUFFER_CONFIG.data_width-1:0] fb_b_read_data;
+    color_t fb_b_read_data;
     logic                                 fb_b_write_en;
     logic [BUFFER_CONFIG.addr_width-1:0] fb_b_write_addr;
-    logic [BUFFER_CONFIG.data_width-1:0] fb_b_write_data;
+    color_t                        fb_b_write_data;
 
     // Display side address/data (from Display to FBs)
     logic [BUFFER_CONFIG.addr_width-1:0] disp_read_addr;
-    logic [BUFFER_CONFIG.data_width-1:0] disp_read_data;
+    color_t                        disp_read_data;
 
     // DrawingManager interface
     logic                                dm_write_en;
     logic [BUFFER_CONFIG.addr_width-1:0] dm_write_addr;
-    logic [BUFFER_CONFIG.data_width-1:0] dm_write_data;
+    color_t                        dm_write_data;
     logic                                dm_frame_done;
     logic                                draw_ack;
 
@@ -167,7 +167,6 @@ module PipelineTail #(
    DrawingManager #(
         .BUFFER_WIDTH(BUFFER_CONFIG.width),
         .BUFFER_HEIGHT(BUFFER_CONFIG.height),
-        .BUFFER_DATA_WIDTH(BUFFER_CONFIG.data_width),
         .BUFFER_ADDR_WIDTH(BUFFER_CONFIG.addr_width)
     ) drawing_manager_inst (
         .clk(clk_system),
