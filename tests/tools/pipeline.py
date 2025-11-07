@@ -3,7 +3,7 @@ from typing import Protocol, Type, TypeVar, Generic
 
 import cocotb
 import cocotb.handle
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, ClockCycles
 from cocotb.queue import Queue
 from cocotb.handle import Force
 
@@ -127,6 +127,7 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
         metadata_type: Type[_Metadata] | None = None,
         signal_style: str = "inout",
         clock_name: str = "clk",
+        processing_time: int = 1,
     ):
         type = "out" if signal_style == "inout" else "m"
         super().__init__(dut, name, type, clock_name=clock_name)
@@ -137,6 +138,12 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
         self._metadata_type = metadata_type
 
         self._output_queue: Queue[tuple[_Data, _Metadata | None]] = Queue()
+
+        if processing_time < 1:
+            raise ValueError(
+                f"{processing_time} is not a valid processing time. Must be 1 or higher."
+            )
+        self._processing_time = processing_time
 
     async def consume(self) -> tuple[_Data, _Metadata | None]:
         """Retrieve a transaction from the DUT."""
@@ -149,15 +156,17 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
         return items
 
     async def _run_loop(self):
-        # TODO: expose this to the user so they can control when to
-        # consume?
-        self._ready.value = 1
-
         while True:
-            # Wait for the data to become valid
-            await RisingEdge(self._clk)
-            if not self._valid.value:
-                continue
+            # Sleep for processing_time clock cycles
+            self._ready.value = 0
+            if self._processing_time > 1:
+                await ClockCycles(self._clk, self._processing_time - 1)
+            self._ready.value = 1
+            await ClockCycles(self._clk, 1)
+
+            # Wait for data to become valid
+            while not self._valid.value:
+                await ClockCycles(self._clk, 1)
 
             # Read the output data
             data = self._data_type.from_logicarray(self._data.value)
