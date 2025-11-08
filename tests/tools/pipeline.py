@@ -74,11 +74,18 @@ class Producer(PipelineBase, Generic[_Data, _Metadata]):
         has_metadata: bool = False,
         signal_style: str = "inout",
         clock_name: str = "clk",
+        processing_time: int = 1,
     ):
         type = "in" if signal_style == "inout" else "s"
         super().__init__(dut, name, type, clock_name=clock_name)
         self._has_metadata = has_metadata
         self._input_queue: Queue[tuple[_Data, _Metadata | None]] = Queue()
+
+        if processing_time < 1:
+            raise ValueError(
+                f"{processing_time} is not a valid processing time. Must be 1 or higher."
+            )
+        self._processing_time = processing_time
 
     async def produce(self, data: _Data, metadata: _Metadata | None = None):
         """Push a transaction into the DUT (with optional metadata)."""
@@ -111,6 +118,12 @@ class Producer(PipelineBase, Generic[_Data, _Metadata]):
             # Wait for item to be consumed
             while not self._ready.value:
                 await RisingEdge(self._clk)
+
+            # Wait fake "processing_time" to produce next item
+            # (simulate pipeline bubble)
+            if self._processing_time > 1:
+                self._valid.value = Force(0)
+                await ClockCycles(self._clk, self._processing_time - 1)
 
             # Set data as invalid if we do not have more items
             if self._input_queue.empty():
