@@ -1,10 +1,6 @@
-import math
 import cocotb
 from cocotb.triggers import RisingEdge, Timer
 from cocotb.clock import Clock
-from types import SimpleNamespace
-
-from types import SimpleNamespace
 
 from core.types.types_ import (
     Position,

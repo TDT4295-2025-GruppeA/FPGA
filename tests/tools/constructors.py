@@ -2,10 +2,9 @@ from typing import Protocol
 
 import cocotb
 import cocotb.handle
-from cocotb.types import LogicArray, Range
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
-from tools.utils import to_float, to_fixed
+from tools.utils import to_float
 
 from core.types.types_ import (
     Triangle,

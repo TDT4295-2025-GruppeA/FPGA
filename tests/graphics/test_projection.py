@@ -2,9 +2,8 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 
-from tools.utils import TOTAL_WIDTH, to_fixed, within_tolerance
+from tools.utils import within_tolerance
 from tools.pipeline import Producer, Consumer
-from tools.logic_object import LogicObject, LogicField, UInt
 from core.types.types_ import Triangle, Vertex, Position, RGB
 
 FOCAL_LENGTH = 0.10
