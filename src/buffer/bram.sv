@@ -1,10 +1,13 @@
 module Bram #(
-    parameter int ENTRY_COUNT = 36,
-    parameter int DATA_WIDTH  = 192
+    parameter int ENTRY_COUNT = 1024,
+    parameter int DATA_WIDTH  = 32,
+    parameter int BLOCK_WIDTH = -1
 ) (
     // System ports
     input logic clk,
-    
+
+    // TODO: Use handshake for read and write.
+
     // Write ports
     input logic write_enable,
     input logic [$clog2(ENTRY_COUNT)-1:0] write_address,
@@ -15,13 +18,12 @@ module Bram #(
     input logic [$clog2(ENTRY_COUNT)-1:0] read_address,
     output logic [DATA_WIDTH-1:0] read_data
 );
-    // The maximum width of a single BRAM block.
-    // This is limited by the actual hardware.
-    localparam int MAX_DATA_WIDTH = 72;
+    // Use the data width as the block width if no block width is specified.
+    localparam int MAX_DATA_WIDTH = (BLOCK_WIDTH > 0) ? BLOCK_WIDTH : DATA_WIDTH;
 
     // Calculate how many blocks we'll need.
     localparam int BLOCK_COUNT = (DATA_WIDTH + MAX_DATA_WIDTH - 1) / MAX_DATA_WIDTH;
-    localparam int LAST_WIDTH = DATA_WIDTH - (BLOCK_COUNT-1)*MAX_DATA_WIDTH;
+    localparam int LAST_WIDTH = DATA_WIDTH - (BLOCK_COUNT - 1) * MAX_DATA_WIDTH;
 
     // Generate one BRAM per block.
 

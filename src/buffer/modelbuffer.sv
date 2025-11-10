@@ -27,7 +27,8 @@ module ModelBuffer #(
         STATE_WRITTEN = 2'b10
     } state_t;
 
-    typedef logic [$clog2(MAX_TRIANGLE_COUNT) - 1:0] triangle_idx_t;
+    // Increment max triangle count by one to distinguish between full and empty.
+    typedef logic [$clog2(MAX_TRIANGLE_COUNT + 1) - 1:0] triangle_idx_t;
     typedef logic [$clog2(MAX_MODEL_COUNT) - 1:0] model_idx_t;
 
     typedef struct packed {
@@ -60,18 +61,21 @@ module ModelBuffer #(
     model_idx_t write_prev_model_index; // used to detect model change
 
     // Highest addr used in the buffer
-    triangle_idx_t addr_next = 0;
+    triangle_idx_t addr_next;
 
     // This is a table keeping track of which models exist in the memory,
     // and their start index and size.
     model_index_t registry[MAX_MODEL_COUNT];
+
+    logic full;
+    assign full = (addr_next == MAX_TRIANGLE_COUNT);
 
     logic write_en;
 
     // Read from the registry
     always_comb begin
         read_addr = registry[read_model_index].index + read_triangle_index;
-        write_en = write_in_valid && write_in_ready;
+        write_en = write_in_valid && write_in_ready && ~full;
         read_in_ready = ~read_out_valid | read_out_ready;
 
         if (write_model_idx != write_prev_model_index) begin
@@ -115,6 +119,7 @@ module ModelBuffer #(
             addr_next <= 0;
             write_prev_model_index <= -1;
             read_out_valid <= 0;
+            full <= 0;
             for (int i = 0; i < MAX_MODEL_COUNT; i++) begin
                 registry[i].state = STATE_EMPTY;
                 registry[i].size = 0;
