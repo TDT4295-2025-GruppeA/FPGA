@@ -35,6 +35,32 @@ module Top (
     ////////////// CLOCK GENERATION ////////////////
     ////////////////////////////////////////////////
 
+    // Logic to ensure that the reset signal from the command
+    // module is held for a sufficient number of cycles.
+    localparam CMD_RESET_HOLD_CYCLES = 128;
+
+    logic cmd_reset, cmd_reset_d;
+    logic [$clog2(CMD_RESET_HOLD_CYCLES)-1:0] cmd_reset_counter;
+
+    always_ff @(posedge clk_ext or posedge reset) begin
+        if (reset) begin
+            cmd_reset_d <= 1'b0;
+            cmd_reset_counter <= '0;
+        end else begin
+            if (cmd_reset && !cmd_reset_d) begin
+                // Start the reset pulse if we get signal from command module.
+                cmd_reset_d <= 1'b1;
+                cmd_reset_counter <= CMD_RESET_HOLD_CYCLES - 1;
+            end else if (cmd_reset_counter) begin
+                // Decrement the reset counter while it's non zero.
+                cmd_reset_counter <= cmd_reset_counter - 1;
+            end else if (!cmd_reset && cmd_reset_d) begin
+                // When counter has reached zero, deassert the reset signal.
+                cmd_reset_d <= 1'b0;
+            end
+        end
+    end
+
     logic clk_display;
     logic rstn_display;
 
@@ -46,7 +72,7 @@ module Top (
         .CLK_SYSTEM(CLK_100_50_MHZ)
     ) clock_manager_inst (
         .clk_ext(clk_ext),
-        .reset(reset),
+        .reset(reset | cmd_reset_d),
         .clk_system(clk_system),
         .rstn_system(rstn_system),
         .clk_display(clk_display),
@@ -91,9 +117,9 @@ module Top (
         .active() // Ignored.
     );
 
-    //////////////////
-    //// Pipeline ////
-    //////////////////
+    //////////////
+    // Pipeline //
+    //////////////
 
     Pipeline #(
         .BUFFER_CONFIG(BUFFER_CONFIG),
@@ -108,13 +134,12 @@ module Top (
         .cmd_in_valid(spi_cmd_valid),
         .cmd_in_ready(spi_cmd_ready),
         .cmd_in_data(spi_cmd_data),
-        // .cmd_in_valid(cmd_in_valid),
-        // .cmd_in_ready(cmd_in_ready),
-        // .cmd_in_data(cmd_in_data),
 
         .cmd_out_valid(cmd_spi_valid),
         .cmd_out_ready(cmd_spi_ready),
         .cmd_out_data(cmd_spi_data),
+
+        .cmd_reset(cmd_reset),
 
         .vga_vsync(vga_vsync),
         .vga_hsync(vga_hsync),

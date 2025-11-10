@@ -28,6 +28,9 @@ module PipelineHead(
     output logic  cmd_out_valid,
     output byte_t cmd_out_data,
 
+    // Command system reset signal
+    output logic cmd_reset,
+
     // To graphics pipeline
     output logic                triangle_tf_out_valid,
     input  logic                triangle_tf_out_ready,
@@ -35,7 +38,7 @@ module PipelineHead(
     output triangle_tf_meta_t   triangle_tf_out_metadata
 );
     localparam MAX_MODEL_COUNT = 10;
-    localparam MAX_TRIANGLE_COUNT = 1024;
+    localparam MAX_TRIANGLE_COUNT = 2024;
 
     wire modelbuf_write_t cmd_model_data;
     wire logic cmd_model_valid;
@@ -56,6 +59,8 @@ module PipelineHead(
         .cmd_out_ready(cmd_out_ready),
         .cmd_out_valid(cmd_out_valid),
         .cmd_out_data(cmd_out_data),
+
+        .cmd_reset(cmd_reset),
 
         .model_out_valid(cmd_model_valid),
         .model_out_ready(cmd_model_ready),

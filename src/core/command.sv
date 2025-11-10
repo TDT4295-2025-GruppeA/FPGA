@@ -6,7 +6,7 @@ import types_pkg::*;
 import types_pkg::*;
 
 module CommandInput(
-    input  logic clk,
+    input  logic clk,   
     input  logic rstn,
 
     // Command input
@@ -20,25 +20,33 @@ module CommandInput(
     output byte_t cmd_out_data,
 
     // ModelBuffer comms
-    output logic            model_out_valid,
-    input  logic            model_out_ready,
+    output logic             model_out_valid,
+    input  logic             model_out_ready,
     output modelbuf_write_t  model_out_data,
 
     // SceneBuffer comms
-    output logic            scene_out_valid,
-    input  logic            scene_out_ready,
-    output modelinstance_t  scene_out_data,
-    output modelinstance_meta_t  scene_out_metadata
+    output logic                scene_out_valid,
+    input  logic                scene_out_ready,
+    output modelinstance_t      scene_out_data,
+    output modelinstance_meta_t scene_out_metadata,
+
+    // Reset signal for the entire system
+    output logic cmd_reset,
+
+    // Debugging output
+    output logic [1:0] current_state
 );
     // The states we can be in
-    typedef enum logic [1:0] {
-        STATE_IDLE               = 2'd0,
-        STATE_BEGIN_MODEL_UPLOAD = 2'd1,
-        STATE_UPLOAD_TRIANGLE    = 2'd2,
-        STATE_ADD_MODELINSTANCE  = 2'd3
+    typedef enum logic [2:0] {
+        STATE_IDLE               = 3'd0,
+        STATE_RESET              = 3'd1,
+        STATE_BEGIN_MODEL_UPLOAD = 3'd2,
+        STATE_UPLOAD_TRIANGLE    = 3'd3,
+        STATE_ADD_MODELINSTANCE  = 3'd4
     } state_t;
 
     // Commands we have implemented
+    localparam byte_t CMD_RESET               = byte_t'(8'h55);
     localparam byte_t CMD_BEGIN_MODEL_UPLOAD  = byte_t'(8'hA0);
     localparam byte_t CMD_UPLOAD_TRIANGLE     = byte_t'(8'hA1);
     localparam byte_t CMD_ADD_MODEL_INSTANCE  = byte_t'(8'hB0);
@@ -46,6 +54,7 @@ module CommandInput(
     // Function that returns the length of the command in bytes
     function automatic byte_t command_length_bytes(byte_t cmd);
         case (cmd)
+            CMD_RESET: return byte_t'(1);
             CMD_BEGIN_MODEL_UPLOAD: return byte_t'(2);
             CMD_UPLOAD_TRIANGLE: return byte_t'(1 + $bits(cmd_triangle_t) / 8);
             CMD_ADD_MODEL_INSTANCE: return byte_t'(1 + $bits(cmd_scene_t) / 8);
@@ -119,8 +128,8 @@ module CommandInput(
     );
 
     // Currently the cmd_out interface is not used.
-    assign cmd_out_valid = 1'b0;
-    assign cmd_out_data  = byte_t'(0);
+    assign cmd_out_valid = cmd_in_data;
+    assign cmd_out_data  = byte_t'(1);
 
     // We set cmd_in_ready based on the state of the receiving element.
     // Some of them will always ready be ready, while some of them depend
@@ -128,6 +137,7 @@ module CommandInput(
     always_comb begin
         case (state)
             STATE_IDLE:                cmd_in_ready = 1'b1;
+            STATE_RESET:               cmd_in_ready = 1'b1;
             STATE_BEGIN_MODEL_UPLOAD:  cmd_in_ready = 1'b1; // accept model index byte
             STATE_UPLOAD_TRIANGLE:     cmd_in_ready = model_serial_in_ready; // accept triangle bytes when serializer ready
             STATE_ADD_MODELINSTANCE:   cmd_in_ready = scene_serial_in_ready; // accept modelinstance bytes when serializer ready
@@ -142,6 +152,7 @@ module CommandInput(
             bytes_left <= 0;
             current_cmd <= 0;
             current_model_idx <= 0;
+            cmd_reset <= 1'b0;
         end else begin
             if (cmd_in_transaction) begin
                 // If we are currently IDLE and see a command byte, init the command transaction
@@ -152,22 +163,39 @@ module CommandInput(
                     bytes_left <= command_length_bytes(cmd_in_data) - 1;
 
                     // Choose next state based on command
-                    if (cmd_in_data == CMD_BEGIN_MODEL_UPLOAD) begin
-                        state <= STATE_BEGIN_MODEL_UPLOAD;
-                    end else if (cmd_in_data == CMD_UPLOAD_TRIANGLE) begin
-                        state <= STATE_UPLOAD_TRIANGLE;
-                    end else if (cmd_in_data == CMD_ADD_MODEL_INSTANCE) begin
-                        state <= STATE_ADD_MODELINSTANCE;
-                    end else begin // Ignore. TODO: Send invalid response?
-                        state <= STATE_IDLE;
-                    end
+                    case (cmd_in_data)
+                        CMD_RESET: begin
+                            state <= STATE_RESET;
+                        end
+                        CMD_BEGIN_MODEL_UPLOAD: begin 
+                            state <= STATE_BEGIN_MODEL_UPLOAD;
+                        end
+                        CMD_UPLOAD_TRIANGLE: begin
+                            state <= STATE_UPLOAD_TRIANGLE;
+                        end
+                        CMD_ADD_MODEL_INSTANCE: begin
+                            state <= STATE_ADD_MODELINSTANCE;
+                        end
+                        default: begin 
+                            // Ignore. TODO: Send invalid response?
+                        end
+                    endcase
+
                 end else begin
                     // Decrement bytes left for every byte we receive
                     if (bytes_left > 0) begin
                         bytes_left <= bytes_left - 1;
                     end
-                    if (bytes_left - 1 == 0) begin
+
+                    if (bytes_left <= 1) begin
                         state <= STATE_IDLE;
+                    end
+
+                    // Reset command needs to be repeated for reset to occur.
+                    // Set cmd_reset only if second byte is also reset command.
+                    if (state == STATE_RESET && cmd_in_data == CMD_RESET) begin
+                        // The reset signal
+                        cmd_reset <= 1'b1;
                     end
 
                     if (state == STATE_BEGIN_MODEL_UPLOAD) begin
