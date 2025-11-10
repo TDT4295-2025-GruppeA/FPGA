@@ -63,4 +63,6 @@ report_timing -delay_type min_max -max_paths 1 -file $rpt_dir/post_route_timing.
 # Ensure build directory exists
 exec mkdir -p build
 
+set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]
+
 write_bitstream -force build/${top}_${target}.bit

@@ -19,7 +19,7 @@ This repository contains the code for the fpga in our TDT4295 project.
 * run `make synth`
   * optionally specify target with `make synth TARGET=100t`. Currently supported targets are `100t` and `35t`
   * You can also specify board `make synth BOARD=arty7`. Currently only supports `arty7`.
-* run `make flash` (again optional `TARGET=100t`)
+* run `make flash` (again optional `TARGET=100t`, to write to flash set `FLASH_MODE=flash`)
 
 NOTE: if using a on-board framebuffer of `12` bit color,`640x480`, the design will be too large to fit on a`Artix 7A35t`
 

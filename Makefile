@@ -36,6 +36,10 @@ else
     TESTDEPS = 
 endif
 
+# Whether to flash to ram or flash memory
+# Possible values: ram, flash
+FLASH_MODE ?= ram
+
 .PHONY : synth flash test clean rmbuild rmgen rmlogs shell stubs
 
 build/$(TOP)_$(TARGET).bit: $(VERILOG_SOURCES)
@@ -53,7 +57,7 @@ synth: build/$(TOP)_$(TARGET).bit
 flash:
 	@echo "Flashing FPGA target $(TARGET)"
 	mkdir -p build/logs
-	TOP=$(TOP) FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" vivado -mode batch -source scripts/flash.tcl -journal "build/logs/flash_$(BUILD_TIME).jou"  -log "build/logs/flash_$(BUILD_TIME).log"
+	TOP=$(TOP) FPGA_TARGET="$(TARGET)" FPGA_PART_SHORT="$(PART_SHORT)" FLASH_MODE="$(FLASH_MODE)" vivado -mode batch -source scripts/flash.tcl -journal "build/logs/flash_$(BUILD_TIME).jou"  -log "build/logs/flash_$(BUILD_TIME).log"
 
 script:
 	@echo "Running tcl script"
