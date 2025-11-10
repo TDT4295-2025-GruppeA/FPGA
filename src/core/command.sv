@@ -1,6 +1,10 @@
 import cmd_types_pkg::*;
 import types_pkg::*;
 
+// required for byte_t type - verilator does not recognize that it also
+// comes through cmd_types_pkg
+import types_pkg::*;
+
 module CommandInput(
     input  logic clk,
     input  logic rstn,
