@@ -14,12 +14,14 @@ from stubs.commandinput import Commandinput
 VERILOG_MODULE = "CommandInput"
 
 
+CMD_RESET = 0x55
 CMD_BEGIN_UPLOAD = 0xA0
 CMD_UPLOAD_TRIANGLE = 0xA1
 CMD_ADD_MODEL_INSTANCE = 0xB0
 
 # fmt: off
 INPUTS_IDEAL = [
+    CMD_RESET, CMD_RESET, # Reset command
     CMD_BEGIN_UPLOAD, 0x00,  # Start upload model 0
     CMD_UPLOAD_TRIANGLE, *([1] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([2] * 14 * 3),  # Upload a triangle
@@ -42,6 +44,8 @@ INPUTS_IDEAL = [
 ]
 
 INPUTS_FUCKED = [
+    0x00, 0x00, 0x00, 0x00, # Someone started the clock started too early...
+    CMD_RESET, CMD_RESET, # Reset command
     CMD_BEGIN_UPLOAD, 0x00,  # Start upload model 0
     0x00, # Whops, a zero too much!
     CMD_UPLOAD_TRIANGLE, *([1] * 14 * 3),  # Upload a triangle
