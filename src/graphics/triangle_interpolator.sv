@@ -51,16 +51,6 @@ function automatic logic is_top_left(position_t p0, position_t p1);
     return ((p0.y == p1.y) && (p1.x > p0.x)) || (p0.y > p1.y);
 endfunction
 
-function automatic fixed clamp(fixed value);
-    if (value < rtof(0.0)) begin
-        return rtof(0.0);
-    end else if (value > rtof(1.0)) begin
-        return rtof(1.0);
-    end else begin
-        return value;
-    end
-endfunction
-
 // Steps:
 // 1. Evaluate edge functions.
 // 2. Calculate first two barycentric coordinates.

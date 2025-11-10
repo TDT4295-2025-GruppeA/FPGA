@@ -54,17 +54,21 @@ module Projection #(
     logic m_stage1, m_stage2;
 
     fixed rec_z0, rec_z1, rec_z2;
-    fixed current_z;
+    fixed current_z, current_z_clamped;
     logic divisor_valid, divisor_ready, z_reciprocal_valid, z_reciprocal_ready;
     fixed z_reciprocal;
 
+    // Clamp z to be within the near and far plane.
+    // Not proper way to handle this, but hey, it works...
+    // TODO: Use FAR_PLANE and NEAR_PLANE parameters.
+    assign current_z_clamped = clamp(current_z, rtof(1.0), rtof(1000.0));
     
     FixedReciprocalDivider divider (
         .clk(clk),
 
         .divisor_s_ready(divisor_ready),
         .divisor_s_valid(divisor_valid),
-        .divisor_s_data(current_z),
+        .divisor_s_data(current_z_clamped),
 
         .result_m_ready(z_reciprocal_ready),
         .result_m_valid(z_reciprocal_valid),
