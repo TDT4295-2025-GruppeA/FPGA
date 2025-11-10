@@ -1,4 +1,5 @@
 import cmd_types_pkg::*;
+import types_pkg::*;
 
 module CommandInput(
     input  logic clk,
