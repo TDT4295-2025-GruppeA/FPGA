@@ -1,7 +1,6 @@
 import cocotb
-from cocotb.triggers import ClockCycles
 
-from tools.pipeline import Producer, Consumer
+from tools.pipeline import PipelineTester
 from core.types.types_ import (
     ModelBufferWrite,
     ModelInstance,
@@ -95,48 +94,26 @@ OUTPUTS_SCENE = [
 ]
 
 
-@cocotb.test(timeout_time=1, timeout_unit="ms")
+@cocotb.test()
 @cocotb.parametrize(cmd_data=[INPUTS_IDEAL, INPUTS_FUCKED])
 async def test_command(dut: Commandinput, cmd_data: list[int]):
     await make_clock(dut)
-    cmd_in = Producer(dut, "cmd")
-    cmd_out = Consumer(dut, "cmd", Byte)
-
-    model_out = Consumer(dut, "model", ModelBufferWrite)
-    scene_out = Consumer(dut, "scene", ModelInstance, ModelInstanceMeta)
-    await cmd_in.run()
-    await cmd_out.run()
-    await model_out.run()
-    await scene_out.run()
-
-    for byte in cmd_data:
-        await cmd_in.produce(Byte(byte))
-
-    await ClockCycles(dut.clk, 1000)  # wait plenty cycles
-
-    output_commands = await cmd_out.consume_all()
-    output_models = await model_out.consume_all()
-    output_scenes = await scene_out.consume_all()
-
-    assert len(output_commands) == len(OUTPUTS_CMD)
-    assert len(output_models) == len(OUTPUTS_MODEL)
-    assert len(output_scenes) == len(OUTPUTS_SCENE)
-    assert output_commands == OUTPUTS_CMD
-    for (model, _), (model_actual, _) in zip(output_models, OUTPUTS_MODEL):
-        assert model.model_id == model_actual.model_id
-        assert model.triangle.v0 == model_actual.triangle.v0
-        assert model.triangle.v1 == model_actual.triangle.v1
-        assert model.triangle.v2 == model_actual.triangle.v2
-
-    for idx, ((scene, _), (scene_actual, _)) in enumerate(
-        zip(output_scenes, OUTPUTS_SCENE)
-    ):
-        assert (
-            scene.model_id == scene_actual.model_id
-        ), f"Model ID did not match in index {idx}"
-        assert (
-            scene.transform.position == scene_actual.transform.position
-        ), f"Transform did not match in index {idx}"
-        assert (
-            scene.transform.rotation == scene_actual.transform.rotation
-        ), f"Rotation did not match in index {idx}"
+    tester = PipelineTester(dut)
+    await tester.add_input_stream(
+        "cmd",
+        [Byte(byte) for byte in cmd_data],
+        signal_style="inout",
+        processing_time=1,
+    )
+    data, metadata = zip(*OUTPUTS_SCENE)
+    # NOTE: be careful changing processing_time values in this test.
+    # The module is designed to drop data if the scenebuffer is not ready
+    # to receive.
+    await tester.add_output_stream(
+        "scene", data, metadata, signal_style="inout", processing_time=1
+    )
+    data, metadata = zip(*OUTPUTS_MODEL)
+    await tester.add_output_stream(
+        "model", data, metadata, signal_style="inout", processing_time=10
+    )
+    await tester.run_test(1000)
