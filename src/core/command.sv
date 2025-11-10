@@ -31,10 +31,7 @@ module CommandInput(
     output modelinstance_meta_t scene_out_metadata,
 
     // Reset signal for the entire system
-    output logic cmd_reset,
-
-    // Debugging output
-    output logic [1:0] current_state
+    output logic cmd_reset
 );
     // The states we can be in
     typedef enum logic [2:0] {
@@ -54,7 +51,7 @@ module CommandInput(
     // Function that returns the length of the command in bytes
     function automatic byte_t command_length_bytes(byte_t cmd);
         case (cmd)
-            CMD_RESET: return byte_t'(1);
+            CMD_RESET: return byte_t'(2);
             CMD_BEGIN_MODEL_UPLOAD: return byte_t'(2);
             CMD_UPLOAD_TRIANGLE: return byte_t'(1 + $bits(cmd_triangle_t) / 8);
             CMD_ADD_MODEL_INSTANCE: return byte_t'(1 + $bits(cmd_scene_t) / 8);
@@ -127,9 +124,9 @@ module CommandInput(
         .parallel_out_data(scene_parallel_out_data)
     );
 
-    // Currently the cmd_out interface is not used.
-    assign cmd_out_valid = cmd_in_data;
-    assign cmd_out_data  = byte_t'(1);
+    // For debugging send the received commands.
+    assign cmd_out_valid = cmd_in_transaction;
+    assign cmd_out_data  = cmd_in_data;
 
     // We set cmd_in_ready based on the state of the receiving element.
     // Some of them will always ready be ready, while some of them depend

@@ -68,7 +68,7 @@ module ModelBuffer #(
     model_index_t registry[MAX_MODEL_COUNT];
 
     logic full;
-    assign full = (addr_next == MAX_TRIANGLE_COUNT);
+    assign full = (addr_next == triangle_idx_t'(MAX_TRIANGLE_COUNT));
 
     logic write_en;
 
@@ -119,7 +119,6 @@ module ModelBuffer #(
             addr_next <= 0;
             write_prev_model_index <= -1;
             read_out_valid <= 0;
-            full <= 0;
             for (int i = 0; i < MAX_MODEL_COUNT; i++) begin
                 registry[i].state = STATE_EMPTY;
                 registry[i].size = 0;
