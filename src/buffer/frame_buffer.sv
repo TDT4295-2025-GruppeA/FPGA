@@ -9,15 +9,14 @@ module FrameBuffer #(
     input logic clk_read,
     
     input logic[BUFFER_CONFIG.addr_width-1:0] read_addr,
-    output logic[BUFFER_CONFIG.data_width-1:0] read_data,
+    output color_t read_data,
 
     input logic write_en,
     input logic[BUFFER_CONFIG.addr_width-1:0] write_addr,
-    input logic[BUFFER_CONFIG.data_width-1:0] write_data
+    input color_t write_data
 );
-    localparam int BUFFER_SIZE = BUFFER_CONFIG.width * BUFFER_CONFIG.height;
 
-    (* ram_style = "block" *) logic[BUFFER_CONFIG.data_width-1:0] memory[BUFFER_SIZE];
+    (* ram_style = "block" *) logic[$bits(color_t)-1:0] memory[BUFFER_CONFIG.size];
 
     always_ff @(posedge clk_write) begin
         if (write_en) begin
@@ -29,12 +28,12 @@ module FrameBuffer #(
         read_data <= memory[read_addr];
     end
 
-     initial begin
+    initial begin
         // Hardcoded 12-bit R4G4B4 format: RRRR GGGG BBBB
         // Full Red (1111), Zero Green (0000), Zero Blue (0000)
-        localparam logic[11:0] INITIAL_RED_VALUE = 12'hF00;
+        localparam logic[11:0] INITIAL_RED_VALUE = color_t'('hF00);
         
-        for (int i = 0; i < BUFFER_SIZE; i++) begin
+        for (int i = 0; i < BUFFER_CONFIG.size; i++) begin
             memory[i] = INITIAL_RED_VALUE;
         end
     end

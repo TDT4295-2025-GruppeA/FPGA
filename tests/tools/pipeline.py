@@ -7,7 +7,7 @@ from cocotb.triggers import RisingEdge
 from cocotb.queue import Queue
 from cocotb.handle import Force
 
-from logic_object import LogicObject
+from tools.logic_object import LogicObject
 
 
 class PipelineDut(Protocol):

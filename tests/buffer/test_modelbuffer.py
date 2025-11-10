@@ -2,14 +2,14 @@ import cocotb
 from cocotb.triggers import ClockCycles
 
 from stubs.modelbuffer import Modelbuffer
-from types_ import (
+from core.types.types_ import (
     Triangle,
     ModelBufferWrite,
     ModelBufferRead,
     TriangleMeta,
 )
 from tools.pipeline import Producer, Consumer
-from utilities.constructors import make_triangle, make_clock
+from tools.constructors import make_triangle, make_clock
 
 VERILOG_MODULE = "ModelBuffer"
 

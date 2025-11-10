@@ -6,7 +6,7 @@ from types import SimpleNamespace
 
 from types import SimpleNamespace
 
-from types_ import (
+from core.types.types_ import (
     Position,
     Vertex,
     Triangle,

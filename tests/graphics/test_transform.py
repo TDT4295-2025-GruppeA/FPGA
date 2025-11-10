@@ -3,7 +3,7 @@ from cocotb.clock import Clock
 from cocotb.triggers import RisingEdge
 
 from tools.pipeline import Producer, Consumer
-from types_ import (
+from core.types.types_ import (
     Transform,
     TriangleTransform,
     Vertex,

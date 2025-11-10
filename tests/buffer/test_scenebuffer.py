@@ -2,9 +2,9 @@ import cocotb
 from cocotb.triggers import ClockCycles
 
 from stubs.scenebuffer import Scenebuffer
-from types_ import ModelInstance, ModelInstanceMeta
+from core.types.types_ import ModelInstance, ModelInstanceMeta
 from tools.pipeline import Producer, Consumer
-from utilities.constructors import make_clock, make_scene
+from tools.constructors import make_clock, make_scene
 
 VERILOG_MODULE = "SceneBuffer"
 
