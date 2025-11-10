@@ -24,6 +24,8 @@ module Pipeline #(
     input logic cmd_out_ready,
     output byte_t cmd_out_data,
 
+    output logic cmd_reset,
+
     output logic vga_hsync,
     output logic vga_vsync,
     output logic[3:0] vga_red,
@@ -51,6 +53,8 @@ module Pipeline #(
         .cmd_out_valid(cmd_out_valid),
         .cmd_out_ready(cmd_out_ready),
         .cmd_out_data(cmd_out_data),
+
+        .cmd_reset(cmd_reset),
         
         .triangle_tf_out_valid(head_math_valid),
         .triangle_tf_out_ready(head_math_ready),

@@ -79,8 +79,22 @@ package fixed_pkg;
         return fixed'(numerator / denominator);
     endfunction
 
+    ///////////////////////
+    // Utility Functions //
+    ///////////////////////
+
     function automatic fixed_q11x14 cast_q16x16_q11x14(fixed_q16x16 in);
         localparam DELTA_DECIMAL_WIDTH = 2;
         return fixed_q11x14'(in >>> DELTA_DECIMAL_WIDTH);
+    endfunction
+
+    function automatic fixed clamp(fixed value, fixed min = rtof(0.0), fixed max = rtof(1.0));
+        if (value < min) begin
+            return min;
+        end else if (value > max) begin
+            return max;
+        end else begin
+            return value;
+        end
     endfunction
 endpackage
