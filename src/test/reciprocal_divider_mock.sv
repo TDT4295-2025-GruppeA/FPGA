@@ -5,7 +5,7 @@ import fixed_pkg::*;
 // Sadly, verilator only supports (System) Verilog so we have to
 // mock the Xilinx Divider IP Core as its source code is in VHDL.
 module ReciprocalDivider #(
-    parameter int DELAY = 5
+    parameter int DELAY = 36
 ) (
     input logic aclk,
 
