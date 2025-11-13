@@ -10,25 +10,25 @@ module CommandInput(
     input  logic rstn,
 
     // Command input
-    input  logic  cmd_in_valid,
-    output logic  cmd_in_ready,
-    input  byte_t cmd_in_data,
+    input  logic  cmd_s_valid,
+    output logic  cmd_s_ready,
+    input  byte_t cmd_s_data,
 
     // Command response
-    output logic  cmd_out_valid,
-    input  logic  cmd_out_ready,
-    output byte_t cmd_out_data,
+    output logic  cmd_m_valid,
+    input  logic  cmd_m_ready,
+    output byte_t cmd_m_data,
 
     // ModelBuffer comms
-    output logic             model_out_valid,
-    input  logic             model_out_ready,
-    output modelbuf_write_t  model_out_data,
+    output logic             model_m_valid,
+    input  logic             model_m_ready,
+    output modelbuf_write_t  model_m_data,
 
     // SceneBuffer comms
-    output logic                scene_out_valid,
-    input  logic                scene_out_ready,
-    output modelinstance_t      scene_out_data,
-    output modelinstance_meta_t scene_out_metadata,
+    output logic                scene_m_valid,
+    input  logic                scene_m_ready,
+    output modelinstance_t      scene_m_data,
+    output modelinstance_meta_t scene_m_metadata,
 
     // Reset signal for the entire system
     output logic cmd_reset
@@ -63,8 +63,8 @@ module CommandInput(
     state_t state;
     byte_t bytes_left;
     byte_t current_cmd;
-    wire cmd_in_transaction;
-    assign cmd_in_transaction = cmd_in_valid && cmd_in_ready;
+    wire cmd_s_transaction;
+    assign cmd_s_transaction = cmd_s_valid && cmd_s_ready;
 
     // Signal to ensure that the parallelizers are
     // always in sync when we start receiving data.
@@ -74,14 +74,14 @@ module CommandInput(
     // Serializing for model buffer
     byte_t current_model_idx;
 
-    wire model_serial_in_valid;
-    wire model_serial_in_ready;
-    wire byte_t model_serial_in_data;
-    wire cmd_triangle_t tmp_model_out_data;
-    assign model_serial_in_valid = (state == STATE_UPLOAD_TRIANGLE) && cmd_in_transaction;
-    assign model_serial_in_data = cmd_in_data;
-    assign model_out_data.model_id = current_model_idx;
-    assign model_out_data.triangle = cast_triangle(tmp_model_out_data);
+    wire model_serial_s_valid;
+    wire model_serial_s_ready;
+    wire byte_t model_serial_s_data;
+    wire cmd_triangle_t tmp_model_m_data;
+    assign model_serial_s_valid = (state == STATE_UPLOAD_TRIANGLE) && cmd_s_transaction;
+    assign model_serial_s_data = cmd_s_data;
+    assign model_m_data.model_id = current_model_idx;
+    assign model_m_data.triangle = cast_triangle(tmp_model_m_data);
 
     SerialToParallelStream #(
         .INPUT_SIZE($bits(byte_t)),
@@ -90,24 +90,24 @@ module CommandInput(
         .clk(clk),
         .rstn(rstn),
         .synchronize(serial_to_parallel_synchronize),
-        .serial_in_ready(model_serial_in_ready),
-        .serial_in_valid(model_serial_in_valid),
-        .serial_in_data(model_serial_in_data),
-        .parallel_out_ready(1),
-        .parallel_out_valid(model_out_valid),
-        .parallel_out_data(tmp_model_out_data)
+        .serial_s_ready(model_serial_s_ready),
+        .serial_s_valid(model_serial_s_valid),
+        .serial_s_data(model_serial_s_data),
+        .parallel_m_ready(1),
+        .parallel_m_valid(model_m_valid),
+        .parallel_m_data(tmp_model_m_data)
     );
 
     // Serializing for scene buffer
-    wire scene_serial_in_valid;
-    wire scene_serial_in_ready;
-    wire byte_t scene_serial_in_data;
-    assign scene_serial_in_valid = (state == STATE_ADD_MODELINSTANCE) && cmd_in_transaction;
-    assign scene_serial_in_data = cmd_in_data;
+    wire scene_serial_s_valid;
+    wire scene_serial_s_ready;
+    wire byte_t scene_serial_s_data;
+    assign scene_serial_s_valid = (state == STATE_ADD_MODELINSTANCE) && cmd_s_transaction;
+    assign scene_serial_s_data = cmd_s_data;
 
-    wire cmd_scene_t scene_parallel_out_data;
-    assign scene_out_data = cast_modelinstance(scene_parallel_out_data.modelinst);
-    assign scene_out_metadata.last = scene_parallel_out_data.last;
+    wire cmd_scene_t scene_parallel_m_data;
+    assign scene_m_data = cast_modelinstance(scene_parallel_m_data.modelinst);
+    assign scene_m_metadata.last = scene_parallel_m_data.last;
 
     SerialToParallelStream #(
         .INPUT_SIZE($bits(byte_t)),
@@ -116,29 +116,29 @@ module CommandInput(
         .clk(clk),
         .rstn(rstn),
         .synchronize(serial_to_parallel_synchronize),
-        .serial_in_ready(scene_serial_in_ready),
-        .serial_in_valid(scene_serial_in_valid),
-        .serial_in_data(scene_serial_in_data),
-        .parallel_out_ready(1),
-        .parallel_out_valid(scene_out_valid),
-        .parallel_out_data(scene_parallel_out_data)
+        .serial_s_ready(scene_serial_s_ready),
+        .serial_s_valid(scene_serial_s_valid),
+        .serial_s_data(scene_serial_s_data),
+        .parallel_m_ready(1),
+        .parallel_m_valid(scene_m_valid),
+        .parallel_m_data(scene_parallel_m_data)
     );
 
     // For debugging send the received commands.
-    assign cmd_out_valid = cmd_in_transaction;
-    assign cmd_out_data  = cmd_in_data;
+    assign cmd_m_valid = cmd_s_transaction;
+    assign cmd_m_data  = cmd_s_data;
 
-    // We set cmd_in_ready based on the state of the receiving element.
+    // We set cmd_s_ready based on the state of the receiving element.
     // Some of them will always ready be ready, while some of them depend
     // on downstream logic.
     always_comb begin
         case (state)
-            STATE_IDLE:                cmd_in_ready = 1'b1;
-            STATE_RESET:               cmd_in_ready = 1'b1;
-            STATE_BEGIN_MODEL_UPLOAD:  cmd_in_ready = 1'b1; // accept model index byte
-            STATE_UPLOAD_TRIANGLE:     cmd_in_ready = model_serial_in_ready; // accept triangle bytes when serializer ready
-            STATE_ADD_MODELINSTANCE:   cmd_in_ready = scene_serial_in_ready; // accept modelinstance bytes when serializer ready
-            default:                   cmd_in_ready = 1'b0;
+            STATE_IDLE:                cmd_s_ready = 1'b1;
+            STATE_RESET:               cmd_s_ready = 1'b1;
+            STATE_BEGIN_MODEL_UPLOAD:  cmd_s_ready = 1'b1; // accept model index byte
+            STATE_UPLOAD_TRIANGLE:     cmd_s_ready = model_serial_s_ready; // accept triangle bytes when serializer ready
+            STATE_ADD_MODELINSTANCE:   cmd_s_ready = scene_serial_s_ready; // accept modelinstance bytes when serializer ready
+            default:                   cmd_s_ready = 1'b0;
         endcase
     end
 
@@ -151,16 +151,16 @@ module CommandInput(
             current_model_idx <= 0;
             cmd_reset <= 1'b0;
         end else begin
-            if (cmd_in_transaction) begin
+            if (cmd_s_transaction) begin
                 // If we are currently IDLE and see a command byte, init the command transaction
                 if (state == STATE_IDLE) begin
-                    current_cmd <= cmd_in_data;
+                    current_cmd <= cmd_s_data;
                     // Set number of bytes left in command
                     // Subtract one because we have already read one
-                    bytes_left <= command_length_bytes(cmd_in_data) - 1;
+                    bytes_left <= command_length_bytes(cmd_s_data) - 1;
 
                     // Choose next state based on command
-                    case (cmd_in_data)
+                    case (cmd_s_data)
                         CMD_RESET: begin
                             state <= STATE_RESET;
                         end
@@ -190,13 +190,13 @@ module CommandInput(
 
                     // Reset command needs to be repeated for reset to occur.
                     // Set cmd_reset only if second byte is also reset command.
-                    if (state == STATE_RESET && cmd_in_data == CMD_RESET) begin
+                    if (state == STATE_RESET && cmd_s_data == CMD_RESET) begin
                         // The reset signal
                         cmd_reset <= 1'b1;
                     end
 
                     if (state == STATE_BEGIN_MODEL_UPLOAD) begin
-                        current_model_idx <= cmd_in_data;
+                        current_model_idx <= cmd_s_data;
                     end
                 end
             end

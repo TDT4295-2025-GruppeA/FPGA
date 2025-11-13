@@ -31,7 +31,7 @@ OUTPUTS = [
 @cocotb.test()
 async def test_scenebuffer(dut: Scenebuffer):
     await make_clock(dut)
-    producer = Producer(dut, "write", True)
+    producer = Producer(dut, "write")
     consumer = Consumer(dut, "read", ModelInstance, ModelInstanceMeta)
 
     await producer.run()

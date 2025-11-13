@@ -9,16 +9,16 @@ module PipelineToolsTester #(
     input  logic rstn,
 
     // Input interface
-    input  logic                       stage_in_valid,
-    output logic                       stage_in_ready,
-    input  logic [WIDTH-1:0]           stage_in_data,
-    input  logic [METADATA_WIDTH-1:0]  stage_in_metadata,
+    input  logic                       stage_s_valid,
+    output logic                       stage_s_ready,
+    input  logic [WIDTH-1:0]           stage_s_data,
+    input  logic [METADATA_WIDTH-1:0]  stage_s_metadata,
 
     // Output interface
-    output logic                       stage_out_valid,
-    input  logic                       stage_out_ready,
-    output logic [WIDTH-1:0]           stage_out_data,
-    output logic [METADATA_WIDTH-1:0]  stage_out_metadata
+    output logic                       stage_m_valid,
+    input  logic                       stage_m_ready,
+    output logic [WIDTH-1:0]           stage_m_data,
+    output logic [METADATA_WIDTH-1:0]  stage_m_metadata
 );
 
     // Latch input when valid & ready
@@ -26,10 +26,10 @@ module PipelineToolsTester #(
     logic [METADATA_WIDTH-1:0] metadata;
     logic valid;
 
-    assign stage_in_ready = ~valid | stage_out_ready;
-    assign stage_out_valid = valid;
-    assign stage_out_data = data;
-    assign stage_out_metadata = metadata;
+    assign stage_s_ready = ~valid | stage_m_ready;
+    assign stage_m_valid = valid;
+    assign stage_m_data = data;
+    assign stage_m_metadata = metadata;
 
 
     always_ff @(posedge clk or negedge rstn) begin
@@ -38,13 +38,13 @@ module PipelineToolsTester #(
             metadata <= '0;
             valid <= 0;
         end else begin
-            if (stage_out_valid && stage_out_ready) begin
+            if (stage_m_valid && stage_m_ready) begin
                 valid <= 0; // data is no longer valid
             end
 
-            if (stage_in_valid && stage_in_ready) begin
-                data <= stage_in_data;
-                metadata <= stage_in_metadata;
+            if (stage_s_valid && stage_s_ready) begin
+                data <= stage_s_data;
+                metadata <= stage_s_metadata;
                 valid <= 1;
             end
         end

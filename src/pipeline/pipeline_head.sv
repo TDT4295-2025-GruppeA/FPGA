@@ -19,23 +19,23 @@ module PipelineHead(
     input rstn,
 
     // Command input
-    input  logic  cmd_in_valid,
-    output logic  cmd_in_ready,
-    input  byte_t cmd_in_data,
+    input  logic  cmd_s_valid,
+    output logic  cmd_s_ready,
+    input  byte_t cmd_s_data,
 
     // Command response
-    input  logic  cmd_out_ready,
-    output logic  cmd_out_valid,
-    output byte_t cmd_out_data,
+    input  logic  cmd_m_ready,
+    output logic  cmd_m_valid,
+    output byte_t cmd_m_data,
 
     // Command system reset signal
     output logic cmd_reset,
 
     // To graphics pipeline
-    output logic                triangle_tf_out_valid,
-    input  logic                triangle_tf_out_ready,
-    output triangle_tf_t        triangle_tf_out_data,
-    output triangle_tf_meta_t   triangle_tf_out_metadata
+    output logic                triangle_tf_m_valid,
+    input  logic                triangle_tf_m_ready,
+    output triangle_tf_t        triangle_tf_m_data,
+    output triangle_tf_meta_t   triangle_tf_m_metadata
 );
     localparam MAX_MODEL_COUNT = 10;
     localparam MAX_TRIANGLE_COUNT = 2024;
@@ -52,24 +52,24 @@ module PipelineHead(
         .clk(clk),
         .rstn(rstn),
 
-        .cmd_in_valid(cmd_in_valid),
-        .cmd_in_ready(cmd_in_ready),
-        .cmd_in_data(cmd_in_data),
+        .cmd_s_valid(cmd_s_valid),
+        .cmd_s_ready(cmd_s_ready),
+        .cmd_s_data(cmd_s_data),
 
-        .cmd_out_ready(cmd_out_ready),
-        .cmd_out_valid(cmd_out_valid),
-        .cmd_out_data(cmd_out_data),
+        .cmd_m_ready(cmd_m_ready),
+        .cmd_m_valid(cmd_m_valid),
+        .cmd_m_data(cmd_m_data),
 
         .cmd_reset(cmd_reset),
 
-        .model_out_valid(cmd_model_valid),
-        .model_out_ready(cmd_model_ready),
-        .model_out_data(cmd_model_data),
+        .model_m_valid(cmd_model_valid),
+        .model_m_ready(cmd_model_ready),
+        .model_m_data(cmd_model_data),
 
-        .scene_out_valid(cmd_scene_valid),
-        .scene_out_ready(cmd_scene_ready),
-        .scene_out_data(cmd_scene_data),
-        .scene_out_metadata(cmd_scene_metadata)
+        .scene_m_valid(cmd_scene_valid),
+        .scene_m_ready(cmd_scene_ready),
+        .scene_m_data(cmd_scene_data),
+        .scene_m_metadata(cmd_scene_metadata)
     );
 
     // Modelbuffer
@@ -89,18 +89,18 @@ module PipelineHead(
         .clk(clk),
         .rstn(rstn),
 
-        .write_in_valid(cmd_model_valid),
-        .write_in_ready(cmd_model_ready),
-        .write_in_data(cmd_model_data),
+        .write_s_valid(cmd_model_valid),
+        .write_s_ready(cmd_model_ready),
+        .write_s_data(cmd_model_data),
 
-        .read_in_valid(read_model_valid),
-        .read_in_ready(read_model_ready),
-        .read_in_data(read_model_data),
+        .read_s_valid(read_model_valid),
+        .read_s_ready(read_model_ready),
+        .read_s_data(read_model_data),
 
-        .read_out_valid(model_read_valid),
-        .read_out_ready(model_read_ready),
-        .read_out_data(model_read_data),
-        .read_out_metadata(model_read_metadata)
+        .read_m_valid(model_read_valid),
+        .read_m_ready(model_read_ready),
+        .read_m_data(model_read_data),
+        .read_m_metadata(model_read_metadata)
     );
     // Scenebuffer
     wire scene_read_valid;
@@ -114,15 +114,15 @@ module PipelineHead(
         .clk(clk),
         .rstn(rstn),
 
-        .write_in_valid(cmd_scene_valid),
-        .write_in_ready(cmd_scene_ready),
-        .write_in_data(cmd_scene_data),
-        .write_in_metadata(cmd_scene_metadata),
+        .write_s_valid(cmd_scene_valid),
+        .write_s_ready(cmd_scene_ready),
+        .write_s_data(cmd_scene_data),
+        .write_s_metadata(cmd_scene_metadata),
 
-        .read_out_valid(scene_read_valid),
-        .read_out_ready(scene_read_ready),
-        .read_out_data(scene_read_data),
-        .read_out_metadata(scene_read_metadata)
+        .read_m_valid(scene_read_valid),
+        .read_m_ready(scene_read_ready),
+        .read_m_data(scene_read_data),
+        .read_m_metadata(scene_read_metadata)
     );
 
     SceneReader #(
@@ -132,23 +132,23 @@ module PipelineHead(
         .clk(clk),
         .rstn(rstn),
 
-        .scene_in_valid(scene_read_valid),
-        .scene_in_ready(scene_read_ready),
-        .scene_in_data(scene_read_data),
-        .scene_in_metadata(scene_read_metadata),
+        .scene_s_valid(scene_read_valid),
+        .scene_s_ready(scene_read_ready),
+        .scene_s_data(scene_read_data),
+        .scene_s_metadata(scene_read_metadata),
 
-        .model_out_valid(read_model_valid),
-        .model_out_ready(read_model_ready),
-        .model_out_data(read_model_data),
+        .model_m_valid(read_model_valid),
+        .model_m_ready(read_model_ready),
+        .model_m_data(read_model_data),
 
-        .model_in_valid(model_read_valid),
-        .model_in_ready(model_read_ready),
-        .model_in_data(model_read_data),
-        .model_in_metadata(model_read_metadata),
+        .model_s_valid(model_read_valid),
+        .model_s_ready(model_read_ready),
+        .model_s_data(model_read_data),
+        .model_s_metadata(model_read_metadata),
 
-        .triangle_tf_out_valid(triangle_tf_out_valid),
-        .triangle_tf_out_ready(triangle_tf_out_ready),
-        .triangle_tf_out_data(triangle_tf_out_data),
-        .triangle_tf_out_metadata(triangle_tf_out_metadata)
+        .triangle_tf_m_valid(triangle_tf_m_valid),
+        .triangle_tf_m_ready(triangle_tf_m_ready),
+        .triangle_tf_m_data(triangle_tf_m_data),
+        .triangle_tf_m_metadata(triangle_tf_m_metadata)
     );
 endmodule
