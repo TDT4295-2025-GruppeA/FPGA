@@ -31,6 +31,10 @@ package types_pkg;
     } triangle_metadata_t;
 
     typedef struct packed {
+        logic last;
+    } last_t;
+
+    typedef struct packed {
         fixed m00;
         fixed m01;
         fixed m02;
@@ -48,9 +52,20 @@ package types_pkg;
     } transform_t;
 
     typedef struct packed {
+        transform_t camera_transform;
+        logic last;
+    } camera_tf_last_t;
+
+    typedef struct packed {
         byte_t model_id;
         transform_t transform;
     } modelinstance_t;
+
+    typedef struct packed {
+        byte_t model_id;
+        transform_t model_transform;
+        transform_t camera_transform;
+    } scenebuf_modelinstance_t;
 
     // TODO: Typedef for pixel coordinates based on buffer size.
     typedef struct packed {
@@ -104,8 +119,14 @@ package types_pkg;
     // Interface from PipelineHead to rest of pipeline
     typedef struct packed {
         triangle_t triangle;
+        transform_t model_transform;
+        transform_t camera_transform;
+    } pipeline_entry_t; // Triangle transform pair fed into pipeline
+
+    typedef struct packed {
+        triangle_t triangle;
         transform_t transform;
-    } triangle_tf_t; // Triangle transform pair fed into pipeline
+    } triangle_tf;
 
     typedef struct packed {
         logic model_last;

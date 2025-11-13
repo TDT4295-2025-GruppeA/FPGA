@@ -11,8 +11,8 @@ module SceneReader #(
 
     input logic scene_s_valid,
     output logic scene_s_ready,
-    input modelinstance_t scene_s_data,
-    input modelinstance_meta_t scene_s_metadata,
+    input scenebuf_modelinstance_t scene_s_data,
+    input last_t scene_s_metadata,
 
     output logic model_m_valid,
     input logic model_m_ready,
@@ -25,8 +25,8 @@ module SceneReader #(
 
     output logic triangle_tf_m_valid,
     input logic triangle_tf_m_ready,
-    output triangle_tf_t triangle_tf_m_data,
-    output triangle_tf_meta_t triangle_tf_m_metadata
+    output pipeline_entry_t triangle_tf_m_data,
+    output last_t triangle_tf_m_metadata
 );
 
     typedef enum logic [1:0] {
@@ -35,8 +35,8 @@ module SceneReader #(
     } state_t;
     state_t state;
 
-    modelinstance_t current_model;
-    modelinstance_meta_t current_model_metadata;
+    scenebuf_modelinstance_t current_model;
+    last_t current_model_metadata;
     short_t triangle_index;
     logic triangle_index_valid;
 
@@ -47,10 +47,10 @@ module SceneReader #(
     assign model_m_data.triangle_index = triangle_index;
     assign model_m_valid = triangle_index_valid;
 
-    assign triangle_tf_m_data.transform = current_model.transform;
+    assign triangle_tf_m_data.model_transform = current_model.model_transform;
+    assign triangle_tf_m_data.camera_transform = current_model.camera_transform;
     assign triangle_tf_m_data.triangle = model_s_data;
-    assign triangle_tf_m_metadata.triangle_last = model_s_metadata.last;
-    assign triangle_tf_m_metadata.model_last = current_model_metadata.last;
+    assign triangle_tf_m_metadata.last = model_s_metadata.last && current_model_metadata.last;
     assign triangle_tf_m_valid = model_s_valid;
     assign model_s_ready = triangle_tf_m_ready;
 

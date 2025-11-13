@@ -34,8 +34,8 @@ module PipelineHead(
     // To graphics pipeline
     output logic                triangle_tf_m_valid,
     input  logic                triangle_tf_m_ready,
-    output triangle_tf_t        triangle_tf_m_data,
-    output triangle_tf_meta_t   triangle_tf_m_metadata
+    output pipeline_entry_t     triangle_tf_m_data,
+    output last_t               triangle_tf_m_metadata
 );
     localparam MAX_MODEL_COUNT = 10;
     localparam MAX_TRIANGLE_COUNT = 2024;
@@ -105,8 +105,8 @@ module PipelineHead(
     // Scenebuffer
     wire scene_read_valid;
     wire scene_read_ready;
-    wire modelinstance_t scene_read_data;
-    wire modelinstance_meta_t scene_read_metadata;
+    wire scenebuf_modelinstance_t scene_read_data;
+    wire last_t scene_read_metadata;
     SceneBuffer #(
         .SCENE_COUNT(2),
         .TRANSFORM_COUNT(50)

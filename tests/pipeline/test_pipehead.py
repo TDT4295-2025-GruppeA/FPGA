@@ -5,8 +5,15 @@ from core.types.types_ import (
     Byte,
     TriangleTransform,
     TriangleTransformMeta,
+    PipelineEntry,
+    Last,
 )
-from tools.constructors import make_triangle, make_transform, make_clock
+from tools.constructors import (
+    make_triangle,
+    make_transform,
+    make_clock,
+    make_identity_transform,
+)
 from tools.pipeline import Producer, Consumer
 
 VERILOG_MODULE = "PipelineHead"
@@ -47,43 +54,44 @@ T2 = make_transform(2)
 T3 = make_transform(3)
 T4 = make_transform(4)
 T5 = make_transform(5)
+TI = make_identity_transform()
 OUTPUTS_PIPE = [
-    (TriangleTransform(make_triangle(7), T5), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(8), T5), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(9), T5), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(10), T5), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(11), T5), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(12), T5), TriangleTransformMeta(1, 1)),
-    (TriangleTransform(make_triangle(1), T1), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(2), T1), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(3), T1), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(4), T1), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(5), T1), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(6), T1), TriangleTransformMeta(0, 1)),
-    (TriangleTransform(make_triangle(1), T2), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(2), T2), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(3), T2), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(4), T2), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(5), T2), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(6), T2), TriangleTransformMeta(0, 1)),
-    (TriangleTransform(make_triangle(1), T3), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(2), T3), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(3), T3), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(4), T3), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(5), T3), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(6), T3), TriangleTransformMeta(1, 1)),
-    (TriangleTransform(make_triangle(7), T4), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(8), T4), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(9), T4), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(10), T4), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(11), T4), TriangleTransformMeta(0, 0)),
-    (TriangleTransform(make_triangle(12), T4), TriangleTransformMeta(0, 1)),
-    (TriangleTransform(make_triangle(7), T5), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(8), T5), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(9), T5), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(10), T5), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(11), T5), TriangleTransformMeta(1, 0)),
-    (TriangleTransform(make_triangle(12), T5), TriangleTransformMeta(1, 1)),
+    (PipelineEntry(make_triangle(7), T5, TI), Last(0)),
+    (PipelineEntry(make_triangle(8), T5, TI), Last(0)),
+    (PipelineEntry(make_triangle(9), T5, TI), Last(0)),
+    (PipelineEntry(make_triangle(10), T5, TI), Last(0)),
+    (PipelineEntry(make_triangle(11), T5, TI), Last(0)),
+    (PipelineEntry(make_triangle(12), T5, TI), Last(1)),
+    (PipelineEntry(make_triangle(1), T1, TI), Last(0)),
+    (PipelineEntry(make_triangle(2), T1, TI), Last(0)),
+    (PipelineEntry(make_triangle(3), T1, TI), Last(0)),
+    (PipelineEntry(make_triangle(4), T1, TI), Last(0)),
+    (PipelineEntry(make_triangle(5), T1, TI), Last(0)),
+    (PipelineEntry(make_triangle(6), T1, TI), Last(0)),
+    (PipelineEntry(make_triangle(1), T2, TI), Last(0)),
+    (PipelineEntry(make_triangle(2), T2, TI), Last(0)),
+    (PipelineEntry(make_triangle(3), T2, TI), Last(0)),
+    (PipelineEntry(make_triangle(4), T2, TI), Last(0)),
+    (PipelineEntry(make_triangle(5), T2, TI), Last(0)),
+    (PipelineEntry(make_triangle(6), T2, TI), Last(0)),
+    (PipelineEntry(make_triangle(1), T3, TI), Last(0)),
+    (PipelineEntry(make_triangle(2), T3, TI), Last(0)),
+    (PipelineEntry(make_triangle(3), T3, TI), Last(0)),
+    (PipelineEntry(make_triangle(4), T3, TI), Last(0)),
+    (PipelineEntry(make_triangle(5), T3, TI), Last(0)),
+    (PipelineEntry(make_triangle(6), T3, TI), Last(1)),
+    (PipelineEntry(make_triangle(7), T4, TI), Last(0)),
+    (PipelineEntry(make_triangle(8), T4, TI), Last(0)),
+    (PipelineEntry(make_triangle(9), T4, TI), Last(0)),
+    (PipelineEntry(make_triangle(10), T4, TI), Last(0)),
+    (PipelineEntry(make_triangle(11), T4, TI), Last(0)),
+    (PipelineEntry(make_triangle(12), T4, TI), Last(0)),
+    (PipelineEntry(make_triangle(7), T5, TI), Last(0)),
+    (PipelineEntry(make_triangle(8), T5, TI), Last(0)),
+    (PipelineEntry(make_triangle(9), T5, TI), Last(0)),
+    (PipelineEntry(make_triangle(10), T5, TI), Last(0)),
+    (PipelineEntry(make_triangle(11), T5, TI), Last(0)),
+    (PipelineEntry(make_triangle(12), T5, TI), Last(1)),
 ]
 
 
@@ -91,7 +99,7 @@ OUTPUTS_PIPE = [
 async def test_pipehead(dut):
     await make_clock(dut)
     producer = Producer(dut, "cmd")
-    consumer = Consumer(dut, "triangle_tf", TriangleTransform, TriangleTransformMeta)
+    consumer = Consumer(dut, "triangle_tf", PipelineEntry, Last)
 
     await producer.run()
 

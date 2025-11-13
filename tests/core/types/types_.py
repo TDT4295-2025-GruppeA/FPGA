@@ -77,6 +77,12 @@ class ModelInstance(LogicObject):
     transform: Transform = LogicField(Transform)  # type: ignore
 
 
+class ScenebufModelInstance(LogicObject):
+    model_id: int = LogicField(UInt(8))  # type: ignore
+    model_transform: Transform = LogicField(Transform)  # type: ignore
+    camera_transform: Transform = LogicField(Transform)  # type: ignore
+
+
 class PixelCoordinate(LogicObject):
     x: int = LogicField(UInt(10))  # type: ignore
     y: int = LogicField(UInt(10))  # type: ignore
@@ -120,3 +126,13 @@ class TriangleTransform(LogicObject):
 class TriangleTransformMeta(LogicObject):
     model_last: int = LogicField(UInt(1))  # type: ignore
     triangle_last: int = LogicField(UInt(1))  # type: ignore
+
+
+class PipelineEntry(LogicObject):
+    triangle: Triangle = LogicField(Triangle)  # type: ignore
+    model_transform: Transform = LogicField(Transform)  # type: ignore
+    camera_transform: Transform = LogicField(Transform)  # type: ignore
+
+
+class Last(LogicObject):
+    last: int = LogicField(UInt(1))  # type: ignore

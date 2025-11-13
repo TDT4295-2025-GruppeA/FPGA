@@ -15,6 +15,7 @@ from core.types.types_ import (
     RotationMatrix,
     ModelInstance,
     ModelInstanceMeta,
+    ScenebufModelInstance,
 )
 
 
@@ -52,6 +53,7 @@ async def make_clock(dut: ClockRstnDevice):
     dut.rstn.value = 0
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
     dut.rstn.value = 1
     await RisingEdge(dut.clk)
 
@@ -62,6 +64,23 @@ def make_scene(
     scene: list[tuple[ModelInstance, ModelInstanceMeta]] = []
     for i in range(1, size + 1):
         instance = ModelInstance(model_id, make_transform(i + offset))
+        meta = ModelInstanceMeta(i == size)
+        scene.append((instance, meta))
+    return scene
+
+
+def make_identity_transform() -> Transform:
+    return Transform(Position(0, 0, 0), RotationMatrix(1, 0, 0, 0, 1, 0, 0, 0, 1))
+
+
+def make_scene_camera(
+    size: int, offset: int = 0, model_id: int = 1
+) -> list[tuple[ScenebufModelInstance, ModelInstanceMeta]]:
+    scene: list[tuple[ScenebufModelInstance, ModelInstanceMeta]] = []
+    for i in range(1, size + 1):
+        instance = ScenebufModelInstance(
+            model_id, make_transform(i + offset), make_identity_transform()
+        )
         meta = ModelInstanceMeta(i == size)
         scene.append((instance, meta))
     return scene

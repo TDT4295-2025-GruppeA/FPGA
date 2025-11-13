@@ -9,8 +9,11 @@ from core.types.types_ import (
     RotationMatrix,
     Transform,
     TriangleTransform,
+    PipelineEntry,
+    Last,
     TriangleTransformMeta,
 )
+from stubs.pipelinemath import Pipelinemath
 
 VERILOG_MODULE = "PipelineMath"
 
@@ -23,7 +26,7 @@ async def reset(dut):
 
 
 @cocotb.test(timeout_time=5, timeout_unit="ms")
-async def test_passthrough(dut):
+async def test_passthrough(dut: Pipelinemath):
     """Test that PipelineMath passes through data unchanged with identity transform."""
     # Set up a 10ns clock
     cocotb.start_soon(Clock(dut.clk, 10, "ns").start())
@@ -43,8 +46,12 @@ async def test_passthrough(dut):
         v2=Vertex(position=Position(7.0, 8.0, 9.0)),
     )
 
-    tri_tf_in = TriangleTransform(triangle=tri_in, transform=identity_transform)
-    tri_tf_meta_in = TriangleTransformMeta(model_last=1, triangle_last=1)
+    tri_tf_in = PipelineEntry(
+        triangle=tri_in,
+        model_transform=identity_transform,
+        camera_transform=identity_transform,
+    )
+    tri_tf_meta_in = Last(last=1)
 
     # Drive input
     dut.triangle_tf_s_valid.value = 1
@@ -63,7 +70,7 @@ async def test_passthrough(dut):
     dut.triangle_tf_s_valid.value = 0  # Deassert valid after input is accepted
 
     # Wait for transform to finish processing
-    while not dut.transform_backface_culler_valid.value:
+    while not dut.transform_camera_valid.value:
         await RisingEdge(dut.clk)
     cocotb.log.info("Projection produced output")
 

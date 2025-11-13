@@ -2,19 +2,20 @@ import types_pkg::*;
 import fixed_pkg::*;
 
 module Transform #(
+    parameter TRIANGLE_META_WIDTH = 1
 )(
     input  logic        clk,
     input  logic        rstn,
 
-    input  triangle_tf_t       triangle_tf_s_data,
-    input  triangle_tf_meta_t  triangle_tf_s_metadata,
-    input  logic               triangle_tf_s_valid,
-    output logic               triangle_tf_s_ready,
+    input  triangle_tf              triangle_tf_s_data,
+    input  logic [TRIANGLE_META_WIDTH-1:0]  triangle_tf_s_metadata,
+    input  logic                      triangle_tf_s_valid,
+    output logic                      triangle_tf_s_ready,
 
-    output triangle_t       triangle_m_data,
-    output logic            triangle_m_valid,
-    output triangle_meta_t  triangle_m_metadata,
-    input  logic            triangle_m_ready
+    output triangle_t                 triangle_m_data,
+    output logic                      triangle_m_valid,
+    output logic [TRIANGLE_META_WIDTH-1:0]  triangle_m_metadata,
+    input  logic                      triangle_m_ready
 );
 
     // FSM states
@@ -35,7 +36,7 @@ module Transform #(
     triangle_t triangle_reg;
     rotmat_t   rotmat_reg;
     position_t pos_reg;
-    logic      m_reg;
+    logic [TRIANGLE_META_WIDTH-1:0] m_reg;
 
     // Shared multiplier outputs (combinational)
     fixed m00x, m01y, m02z;
@@ -121,7 +122,7 @@ module Transform #(
             triangle_reg <= triangle_tf_s_data.triangle;
             rotmat_reg   <= triangle_tf_s_data.transform.rotmat;
             pos_reg      <= triangle_tf_s_data.transform.position;
-            m_reg        <= triangle_tf_s_metadata.triangle_last && triangle_tf_s_metadata.model_last;
+            m_reg        <= triangle_tf_s_metadata;
         end
     end
 
@@ -203,6 +204,6 @@ module Transform #(
     assign triangle_m_data.v0 = v0_out;
     assign triangle_m_data.v1 = v1_out;
     assign triangle_m_data.v2 = v2_out;
-    assign triangle_m_metadata.last = m_reg;
+    assign triangle_m_metadata = m_reg;
 
 endmodule

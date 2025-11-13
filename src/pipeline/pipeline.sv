@@ -41,8 +41,8 @@ module Pipeline #(
 
     wire logic head_math_valid;
     wire logic head_math_ready;
-    wire triangle_tf_t head_math_data;
-    wire triangle_tf_meta_t head_math_metadata;
+    wire pipeline_entry_t head_math_data;
+    wire last_t head_math_metadata;
     PipelineHead pipeline_head(
         .clk(clk_system),
         .rstn(rstn_system),
