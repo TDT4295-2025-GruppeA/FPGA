@@ -50,8 +50,8 @@ module Top (
             if (cmd_reset && !cmd_reset_d) begin
                 // Start the reset pulse if we get signal from command module.
                 cmd_reset_d <= 1'b1;
-                cmd_reset_counter <= CMD_RESET_HOLD_CYCLES - 1;
-            end else if (cmd_reset_counter) begin
+                cmd_reset_counter <= $clog2(CMD_RESET_HOLD_CYCLES)'(CMD_RESET_HOLD_CYCLES - 1);
+            end else if (cmd_reset_counter > 0) begin
                 // Decrement the reset counter while it's non zero.
                 cmd_reset_counter <= cmd_reset_counter - 1;
             end else if (!cmd_reset && cmd_reset_d) begin

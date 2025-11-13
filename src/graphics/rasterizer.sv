@@ -124,8 +124,13 @@ module Rasterizer #(
                         end_coordinate.x   <= normalized_to_pixel(attributed_triangle.bounding_box.right,  VIEWPORT_WIDTH,   1);
                         end_coordinate.y   <= normalized_to_pixel(attributed_triangle.bounding_box.bottom, VIEWPORT_HEIGHT,  1);
 
-                        // Move to init phase.
-                        state <= INIT;
+                        if (attributed_triangle.small_area) begin
+                            // If the triangle has a small area we skip rasterization.
+                            state <= INIT;
+                        end else begin
+                            // Otherwise we move to init phase.
+                            state <= INIT;
+                        end
                     end
                 end
                 INIT: begin

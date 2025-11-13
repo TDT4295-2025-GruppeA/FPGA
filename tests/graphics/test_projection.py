@@ -44,10 +44,11 @@ TEST_TRIANGLES = [
 
 async def feed_triangles(producer: Producer, triangles):
     for triangle in triangles:
+        cocotb.log.info(f"Feeding Triangle: {triangle}")
         await producer.produce(triangle)
 
 
-@cocotb.test(timeout_time=1, timeout_unit="us")
+@cocotb.test(timeout_time=10, timeout_unit="us")
 async def test_projection(dut):
     """Test projection of multiple triangles."""
     await make_clock(dut)

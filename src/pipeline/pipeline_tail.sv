@@ -6,7 +6,8 @@ import types_pkg::*;
 
 module PipelineTail #(
     parameter buffer_config_t BUFFER_CONFIG = BUFFER_160x120x12,
-    parameter video_mode_t VIDEO_MODE = VMODE_640x480p60
+    parameter video_mode_t VIDEO_MODE = VMODE_640x480p60,
+    parameter bit IGNORE_DRAW_ACK = 0
 )(
     input clk_system,
     input rstn_system,
@@ -172,7 +173,7 @@ module PipelineTail #(
         .clk(clk_system),
         .rstn(rstn_system),
         .sw(sw),
-        .draw_ack(draw_ack),
+        .draw_ack(draw_ack || IGNORE_DRAW_ACK),
         .write_en(dm_write_en),
         .write_addr(dm_write_addr),
         .write_data(dm_write_data),
