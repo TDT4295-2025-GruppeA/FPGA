@@ -7,7 +7,7 @@ module DrawingManager #(
     parameter int BUFFER_ADDR_WIDTH = $clog2(BUFFER_WIDTH * BUFFER_HEIGHT),
     parameter real NEAR_PLANE = 0.25,
     parameter real FAR_PLANE  = 1000.0
-)(
+) (
     input logic clk,
     input logic rstn,
     input logic draw_ack,

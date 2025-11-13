@@ -17,7 +17,7 @@ VERILOG_MODULE = "PipelineMath"
 
 async def reset(dut):
     dut.rstn.value = 0
-    await Timer(20, units="ns")
+    await Timer(20, "ns")
     dut.rstn.value = 1
     await RisingEdge(dut.clk)
 
@@ -26,7 +26,7 @@ async def reset(dut):
 async def test_passthrough(dut):
     """Test that PipelineMath passes through data unchanged with identity transform."""
     # Set up a 10ns clock
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 10, "ns").start())
     await reset(dut)
 
     # Create identity transform
@@ -63,7 +63,12 @@ async def test_passthrough(dut):
     dut.triangle_tf_s_valid.value = 0  # Deassert valid after input is accepted
 
     # Wait for transform to finish processing
-    while not dut.transform_projection_valid.value:
+    while not dut.transform_backface_culler_valid.value:
+        await RisingEdge(dut.clk)
+    cocotb.log.info("Projection produced output")
+
+    # Wait for backface_culler to finish processing
+    while not dut.backface_culler_projection_valid.value:
         await RisingEdge(dut.clk)
     cocotb.log.info("Projection produced output")
 

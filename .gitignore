@@ -14,7 +14,8 @@ testtools/testrunner.py
 testtools/stub_dummytests.py
 tests/stubs
 waveform
-*_output.png
+*_output/
+*_output.*
 
 # Log files
 *.log
