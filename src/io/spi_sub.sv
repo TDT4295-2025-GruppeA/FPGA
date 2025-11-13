@@ -21,14 +21,14 @@ module SpiSub #(
 
     // User data interface
     // Transmitting data
-    input logic tx_in_valid,
-    input logic [WORD_SIZE-1:0] tx_in_data,
-    output logic tx_in_ready,
+    input logic tx_s_valid,
+    input logic [WORD_SIZE-1:0] tx_s_data,
+    output logic tx_s_ready,
 
     // Receiving data
-    input logic rx_out_ready,
-    output logic [WORD_SIZE-1:0] rx_out_data,
-    output logic rx_out_valid,
+    input logic rx_m_ready,
+    output logic [WORD_SIZE-1:0] rx_m_data,
+    output logic rx_m_valid,
 
     output logic active // High as long as a transaction is ongoing. (SSN is low)
 );
@@ -77,10 +77,10 @@ module SpiSub #(
         .data_in(rx_buffer),
 
         .read_clk(sys_clk),
-        .read_en(rx_out_ready),
-        .data_out(rx_out_data),
+        .read_en(rx_m_ready),
+        .data_out(rx_m_data),
 
-        .read_ready(rx_out_valid),
+        .read_ready(rx_m_valid),
 
         // Ignored.
         .empty(),
@@ -117,10 +117,10 @@ module SpiSub #(
         .data_out(tx_buffer),
 
         .write_clk(sys_clk),
-        .write_en(tx_in_valid),
-        .data_in(tx_in_data),
+        .write_en(tx_s_valid),
+        .data_in(tx_s_data),
 
-        .write_ready(tx_in_ready),
+        .write_ready(tx_s_ready),
 
         // Ignored.
         .empty(),
