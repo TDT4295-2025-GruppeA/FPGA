@@ -17,13 +17,13 @@ module Pipeline #(
     input clk_display,
     input rstn_display,
 
-    input logic cmd_in_valid,
-    output logic cmd_in_ready,
-    input byte_t cmd_in_data,
+    input logic cmd_s_valid,
+    output logic cmd_s_ready,
+    input byte_t cmd_s_data,
 
-    output logic cmd_out_valid,
-    input logic cmd_out_ready,
-    output byte_t cmd_out_data,
+    output logic cmd_m_valid,
+    input logic cmd_m_ready,
+    output byte_t cmd_m_data,
 
     output logic cmd_reset,
 
@@ -47,20 +47,20 @@ module Pipeline #(
         .clk(clk_system),
         .rstn(rstn_system),
 
-        .cmd_in_valid(cmd_in_valid),
-        .cmd_in_ready(cmd_in_ready),
-        .cmd_in_data(cmd_in_data),
+        .cmd_s_valid(cmd_s_valid),
+        .cmd_s_ready(cmd_s_ready),
+        .cmd_s_data(cmd_s_data),
 
-        .cmd_out_valid(cmd_out_valid),
-        .cmd_out_ready(cmd_out_ready),
-        .cmd_out_data(cmd_out_data),
+        .cmd_m_valid(cmd_m_valid),
+        .cmd_m_ready(cmd_m_ready),
+        .cmd_m_data(cmd_m_data),
 
         .cmd_reset(cmd_reset),
         
-        .triangle_tf_out_valid(head_math_valid),
-        .triangle_tf_out_ready(head_math_ready),
-        .triangle_tf_out_data(head_math_data),
-        .triangle_tf_out_metadata(head_math_metadata)
+        .triangle_tf_m_valid(head_math_valid),
+        .triangle_tf_m_ready(head_math_ready),
+        .triangle_tf_m_data(head_math_data),
+        .triangle_tf_m_metadata(head_math_metadata)
     );
 
     wire logic math_tail_ready;

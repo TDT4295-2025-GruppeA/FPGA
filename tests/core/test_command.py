@@ -106,18 +106,13 @@ async def test_command(dut: Commandinput, cmd_data: list[int]):
     await tester.add_input_stream(
         "cmd",
         [Byte(byte) for byte in cmd_data],
-        signal_style="inout",
         processing_time=1,
     )
     data, metadata = zip(*OUTPUTS_SCENE)
     # NOTE: be careful changing processing_time values in this test.
     # The module is designed to drop data if the scenebuffer is not ready
     # to receive.
-    await tester.add_output_stream(
-        "scene", data, metadata, signal_style="inout", processing_time=1
-    )
+    await tester.add_output_stream("scene", data, metadata, processing_time=1)
     data, metadata = zip(*OUTPUTS_MODEL)
-    await tester.add_output_stream(
-        "model", data, metadata, signal_style="inout", processing_time=10
-    )
+    await tester.add_output_stream("model", data, metadata, processing_time=10)
     await tester.run_test(1000)

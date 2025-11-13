@@ -107,13 +107,13 @@ module Top (
         .sys_rstn(rstn_system),
 
         // User data interface
-        .tx_in_valid(cmd_spi_valid),
-        .tx_in_ready(cmd_spi_ready),
-        .tx_in_data(cmd_spi_data),
+        .tx_s_valid(cmd_spi_valid),
+        .tx_s_ready(cmd_spi_ready),
+        .tx_s_data(cmd_spi_data),
 
-        .rx_out_ready(spi_cmd_ready),
-        .rx_out_valid(spi_cmd_valid),
-        .rx_out_data(spi_cmd_data),
+        .rx_m_ready(spi_cmd_ready),
+        .rx_m_valid(spi_cmd_valid),
+        .rx_m_data(spi_cmd_data),
         .active() // Ignored.
     );
 
@@ -131,13 +131,13 @@ module Top (
         .clk_display(clk_display),
         .rstn_display(rstn_display),
 
-        .cmd_in_valid(spi_cmd_valid),
-        .cmd_in_ready(spi_cmd_ready),
-        .cmd_in_data(spi_cmd_data),
+        .cmd_s_valid(spi_cmd_valid),
+        .cmd_s_ready(spi_cmd_ready),
+        .cmd_s_data(spi_cmd_data),
 
-        .cmd_out_valid(cmd_spi_valid),
-        .cmd_out_ready(cmd_spi_ready),
-        .cmd_out_data(cmd_spi_data),
+        .cmd_m_valid(cmd_spi_valid),
+        .cmd_m_ready(cmd_spi_ready),
+        .cmd_m_data(cmd_spi_data),
 
         .cmd_reset(cmd_reset),
 
