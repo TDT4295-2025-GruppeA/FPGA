@@ -18,6 +18,7 @@ CMD_RESET = 0x55
 CMD_BEGIN_UPLOAD = 0xA0
 CMD_UPLOAD_TRIANGLE = 0xA1
 CMD_ADD_MODEL_INSTANCE = 0xB0
+CMD_SET_CAMERA_TRANSFORM = 0xC0
 
 # fmt: off
 INPUTS_IDEAL = [
@@ -36,6 +37,7 @@ INPUTS_IDEAL = [
     CMD_UPLOAD_TRIANGLE, *([10] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([11] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([12] * 14 * 3),  # Upload a triangle
+    CMD_SET_CAMERA_TRANSFORM, *([6] * 48), # Set camera transform
     CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([1] * 48),  # Add transform
     CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([2] * 48),  # Add transform
     CMD_ADD_MODEL_INSTANCE, 0x01, 0x00, *([3] * 48),  # Add transform, last in scene
@@ -63,6 +65,7 @@ INPUTS_FUCKED = [
     CMD_UPLOAD_TRIANGLE, *([10] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([11] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([12] * 14 * 3),  # Upload a triangle
+    CMD_SET_CAMERA_TRANSFORM, *([6] * 48), # Set camera transform
     CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([1] * 48),  # Add transform
     CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([2] * 48),  # Add transform
     CMD_ADD_MODEL_INSTANCE, 0x01, 0x00, *([3] * 48),  # Add transform, last in scene
@@ -97,6 +100,8 @@ OUTPUTS_SCENE = [
     (ModelInstance(1, make_transform(5)), ModelInstanceMeta(1)),
 ]
 
+OUTPUTS_CAMERA = [(make_transform(6), None)]
+
 
 @cocotb.test()
 @cocotb.parametrize(cmd_data=[INPUTS_IDEAL, INPUTS_FUCKED])
@@ -108,11 +113,13 @@ async def test_command(dut: Commandinput, cmd_data: list[int]):
         [Byte(byte) for byte in cmd_data],
         processing_time=1,
     )
-    data, metadata = zip(*OUTPUTS_SCENE)
     # NOTE: be careful changing processing_time values in this test.
     # The module is designed to drop data if the scenebuffer is not ready
     # to receive.
+    data, metadata = zip(*OUTPUTS_SCENE)
     await tester.add_output_stream("scene", data, metadata, processing_time=1)
     data, metadata = zip(*OUTPUTS_MODEL)
     await tester.add_output_stream("model", data, metadata, processing_time=10)
+    data, metadata = zip(*OUTPUTS_CAMERA)
+    await tester.add_output_stream("camera", data, metadata, processing_time=10)
     await tester.run_test(1000)

@@ -85,19 +85,25 @@ package cmd_types_pkg;
         return triangle_out;
     endfunction
 
+    function automatic transform_t cast_transform(cmd_transform_t transform);
+        transform_t transform_out;
+        transform_out.position = cast_position(transform.position);
+        transform_out.rotmat.m00 = cast_q16x16_q11x14(transform.rotmat.m00);
+        transform_out.rotmat.m01 = cast_q16x16_q11x14(transform.rotmat.m01);
+        transform_out.rotmat.m02 = cast_q16x16_q11x14(transform.rotmat.m02);
+        transform_out.rotmat.m10 = cast_q16x16_q11x14(transform.rotmat.m10);
+        transform_out.rotmat.m11 = cast_q16x16_q11x14(transform.rotmat.m11);
+        transform_out.rotmat.m12 = cast_q16x16_q11x14(transform.rotmat.m12);
+        transform_out.rotmat.m20 = cast_q16x16_q11x14(transform.rotmat.m20);
+        transform_out.rotmat.m21 = cast_q16x16_q11x14(transform.rotmat.m21);
+        transform_out.rotmat.m22 = cast_q16x16_q11x14(transform.rotmat.m22);
+        return transform_out;
+    endfunction
+
     function automatic modelinstance_t cast_modelinstance(cmd_modelinstance_t modelinstance);
         modelinstance_t modelinstance_out;
         modelinstance_out.model_id = modelinstance.model_id;
-        modelinstance_out.transform.position = cast_position(modelinstance.transform.position);
-        modelinstance_out.transform.rotmat.m00 = cast_q16x16_q11x14(modelinstance.transform.rotmat.m00);
-        modelinstance_out.transform.rotmat.m01 = cast_q16x16_q11x14(modelinstance.transform.rotmat.m01);
-        modelinstance_out.transform.rotmat.m02 = cast_q16x16_q11x14(modelinstance.transform.rotmat.m02);
-        modelinstance_out.transform.rotmat.m10 = cast_q16x16_q11x14(modelinstance.transform.rotmat.m10);
-        modelinstance_out.transform.rotmat.m11 = cast_q16x16_q11x14(modelinstance.transform.rotmat.m11);
-        modelinstance_out.transform.rotmat.m12 = cast_q16x16_q11x14(modelinstance.transform.rotmat.m12);
-        modelinstance_out.transform.rotmat.m20 = cast_q16x16_q11x14(modelinstance.transform.rotmat.m20);
-        modelinstance_out.transform.rotmat.m21 = cast_q16x16_q11x14(modelinstance.transform.rotmat.m21);
-        modelinstance_out.transform.rotmat.m22 = cast_q16x16_q11x14(modelinstance.transform.rotmat.m22);
+        modelinstance_out.transform = cast_transform(modelinstance.transform);
         return modelinstance_out;
     endfunction
 endpackage
