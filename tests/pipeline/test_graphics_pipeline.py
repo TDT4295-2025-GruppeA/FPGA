@@ -2,6 +2,7 @@
 This test can generate an image from the pipeline output, and
 could be useful for testing
 """
+
 import cocotb
 from cocotb.clock import Clock
 from stubs.pipeline import Pipeline
@@ -28,6 +29,7 @@ CMD_BEGIN_UPLOAD = 0xA0
 CMD_UPLOAD_TRIANGLE = 0xA1
 CMD_ADD_MODEL_INSTANCE = 0xB0
 
+
 async def make_system_clock(dut: Pipeline):
     clock = Clock(dut.clk_system, 10, "ns")
     clock.start()
@@ -36,6 +38,7 @@ async def make_system_clock(dut: Pipeline):
     await clock.cycles(2)
     dut.rstn_system.value = 1
     await clock.cycles(2)
+
 
 # async def make_display_clock(dut: Pipeline):
 #     clock = Clock(dut.clk_display, 1, "ns")
@@ -46,10 +49,12 @@ async def make_system_clock(dut: Pipeline):
 #     dut.rstn_display.value = 1
 #     await clock.cycles(1)
 
+
 async def feed_commands(producer: Producer, inputs: list[int]):
     await producer.run()
     for cmd in inputs:
         await producer.produce(Byte(cmd))
+
 
 @cocotb.test(timeout_time=5, timeout_unit="ms")
 async def test_graphics_pipeline(dut: Pipeline):
@@ -57,10 +62,10 @@ async def test_graphics_pipeline(dut: Pipeline):
         INPUTS = list(f.read())
 
     os.makedirs("pipeline_output/", exist_ok=True)
-    
+
     dut.rstn_display.value = 1
     await make_system_clock(dut)
-    
+
     producer = Producer(dut, "cmd", clock_name="clk_system", processing_time=20)
     cocotb.start_soon(feed_commands(producer, INPUTS))
 
@@ -87,10 +92,9 @@ async def test_graphics_pipeline(dut: Pipeline):
                 frame_buffer[y, x, 1] = (g << 4) | g
                 frame_buffer[y, x, 2] = (b << 4) | b
             await ClockCycles(dut.clk_system, 1)
-        
+
         img = Image.fromarray(frame_buffer, "RGB")
         img.save(f"pipeline_output/frame_{i}.png")
 
         # Wait for frame done to be assserted
         await FallingEdge(dut.pipeline_tail.drawing_manager_inst.frame_done)
-
