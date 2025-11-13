@@ -32,7 +32,7 @@ async def test_transform_identity(dut):
     """Verify that identity transform leaves triangle unchanged."""
     await make_clock(dut)
 
-    producer = Producer(dut, "triangle_tf", False)
+    producer = Producer(dut, "triangle_tf")
     consumer = Consumer(dut, "triangle", Triangle, None)
     await producer.run()
     await consumer.run()
@@ -65,7 +65,7 @@ async def test_transform_translation(dut):
     """Feed a triangle through Transform and verify translation is applied."""
     await make_clock(dut)
 
-    producer = Producer(dut, "triangle_tf", False)
+    producer = Producer(dut, "triangle_tf")
     consumer = Consumer(dut, "triangle", Triangle, None)
     await producer.run()
     await consumer.run()
@@ -112,7 +112,7 @@ async def test_transform_rotation_z_90(dut):
     """Rotate a triangle 90 degrees around Z and verify positions."""
     await make_clock(dut)
 
-    producer = Producer(dut, "triangle_tf", False)
+    producer = Producer(dut, "triangle_tf")
     consumer = Consumer(dut, "triangle", Triangle, None)
     await producer.run()
     await consumer.run()
@@ -197,7 +197,7 @@ async def test_transform_rotation_translation(dut):
     """Apply rotation and translation together."""
     await make_clock(dut)
 
-    producer = Producer(dut, "triangle_tf", False)
+    producer = Producer(dut, "triangle_tf")
     consumer = Consumer(dut, "triangle", Triangle, None)
     await producer.run()
     await consumer.run()
@@ -251,7 +251,7 @@ async def test_transform_metadata_passthrough(dut):
     """Verify that metadata (1-bit) is correctly latched and passed through the Transform module."""
     await make_clock(dut)
 
-    producer = Producer(dut, "triangle_tf", has_metadata=True)
+    producer = Producer(dut, "triangle_tf")
     consumer = Consumer(dut, "triangle", Triangle, TriangleMetadata)
     await producer.run()
     await consumer.run()

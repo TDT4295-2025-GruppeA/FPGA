@@ -69,7 +69,6 @@ class Producer(PipelineBase, Generic[_Data, _Metadata]):
         self,
         dut: PipelineDut,
         name: str,
-        has_metadata: bool = False,
         clock_name: str = "clk",
         processing_time: int = 1,
     ):

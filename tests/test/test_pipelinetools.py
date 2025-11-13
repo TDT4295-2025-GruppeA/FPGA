@@ -37,7 +37,7 @@ async def make_clock(dut):
 @cocotb.test(timeout_time=10 * 1000, timeout_unit="ns")
 async def test_producer_consumer(dut: Pipelinetoolstester):
     await make_clock(dut)
-    producer = Producer(dut, "stage", True)
+    producer = Producer(dut, "stage")
     consumer = Consumer(dut, "stage", OutputData, OutputMetadata)
     await producer.run()
     await consumer.run()
@@ -57,7 +57,7 @@ async def test_producer_consumer(dut: Pipelinetoolstester):
 @cocotb.test(timeout_time=10 * 1000, timeout_unit="ns")
 async def test_no_metadata(dut: Pipelinetoolstester):
     await make_clock(dut)
-    producer = Producer(dut, "stage", False)
+    producer = Producer(dut, "stage")
     consumer = Consumer(dut, "stage", OutputData, None)
     await producer.run()
     await consumer.run()

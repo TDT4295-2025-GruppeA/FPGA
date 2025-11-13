@@ -53,7 +53,7 @@ async def test_projection(dut):
     """Test projection of multiple triangles."""
     await make_clock(dut)
 
-    producer = Producer(dut, "triangle", has_metadata=False)
+    producer = Producer(dut, "triangle")
     consumer = Consumer(dut, "projected_triangle", Triangle, None)
 
     await producer.run()
