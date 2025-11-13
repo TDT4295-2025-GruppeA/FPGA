@@ -14,6 +14,11 @@ module SceneBuffer #(
     input modelinstance_t write_s_data,
     input modelinstance_meta_t write_s_metadata,
 
+    // Camera interface
+    input logic camera_s_valid,
+    output logic camera_s_ready,
+    input transform_t camera_s_data,
+
     // Read interface
     output logic read_m_valid,
     input logic read_m_ready,
@@ -73,6 +78,7 @@ module SceneBuffer #(
             write_idx <= 0;
             read_idx  <= 0;
             read_m_valid <= 0;
+            camera_s_ready <= 1;
             for (int i = 0; i < SCENE_COUNT; i++) begin
                 scenes[i].size  <= 0;
                 scenes[i].ready <= 0;
@@ -93,6 +99,10 @@ module SceneBuffer #(
                         end
                     write_idx <= 0;
                 end
+            end
+
+            if (camera_s_valid && camera_s_ready) begin
+                scenes[scene_idx_write].camera_transform <= camera_s_data;
             end
 
             // Reading logic

@@ -48,6 +48,10 @@ module PipelineHead(
     wire modelinstance_meta_t cmd_scene_metadata;
     wire logic cmd_scene_valid;
     wire logic cmd_scene_ready;
+
+    wire logic cmd_camera_valid;
+    wire logic cmd_camera_ready;
+    wire transform_t cmd_camera_data;
     CommandInput cmd_inst (
         .clk(clk),
         .rstn(rstn),
@@ -69,7 +73,11 @@ module PipelineHead(
         .scene_m_valid(cmd_scene_valid),
         .scene_m_ready(cmd_scene_ready),
         .scene_m_data(cmd_scene_data),
-        .scene_m_metadata(cmd_scene_metadata)
+        .scene_m_metadata(cmd_scene_metadata),
+
+        .camera_m_valid(cmd_camera_valid),
+        .camera_m_ready(cmd_camera_ready),
+        .camera_m_data(cmd_camera_data)
     );
 
     // Modelbuffer
@@ -113,6 +121,10 @@ module PipelineHead(
     ) scenebuffer_inst (
         .clk(clk),
         .rstn(rstn),
+
+        .camera_s_valid(cmd_camera_valid),
+        .camera_s_ready(cmd_camera_ready),
+        .camera_s_data(cmd_camera_data),
 
         .write_s_valid(cmd_scene_valid),
         .write_s_ready(cmd_scene_ready),
