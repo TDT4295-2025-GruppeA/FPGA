@@ -38,7 +38,7 @@ module PipelineHead(
     output triangle_tf_meta_t   triangle_tf_out_metadata
 );
     localparam MAX_MODEL_COUNT = 10;
-    localparam MAX_TRIANGLE_COUNT = 2024;
+    localparam MAX_TRIANGLE_COUNT = 1024;
 
     wire modelbuf_write_t cmd_model_data;
     wire logic cmd_model_valid;

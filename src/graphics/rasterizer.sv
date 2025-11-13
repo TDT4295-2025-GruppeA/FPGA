@@ -1,16 +1,20 @@
 import types_pkg::*;
 import fixed_pkg::*;
 
-function automatic logic [9:0] clamp_pixel_coordinate(fixed pixel_coordinate, int viewport_size);
-    pixel_coordinate = (pixel_coordinate < itof(0)) ? itof(0) : pixel_coordinate;
-    pixel_coordinate = (pixel_coordinate > itof(viewport_size - 1)) ? itof(viewport_size - 1) : pixel_coordinate;
-    return 10'(ftoi(pixel_coordinate));
+function automatic logic [9:0] clamp_floor(fixed pixel_coordinate, int viewport_size);
+    return 10'(ftoi(clamp(
+        sub(pixel_coordinate, rtof(0.5, PIXEL_FRACTIONAL_BITS)),
+        itof(0, PIXEL_FRACTIONAL_BITS),
+        itof(viewport_size - 1, PIXEL_FRACTIONAL_BITS)
+    ), PIXEL_FRACTIONAL_BITS));
 endfunction
 
-function automatic logic [9:0] normalized_to_pixel(fixed normalized_coordinate, int viewport_size, int offset);
-    fixed half_viewport = rtof(real'(viewport_size - 1)/2);
-    fixed pixel_coordinate = add(mul(normalized_coordinate, half_viewport), half_viewport + itof(offset));
-    return clamp_pixel_coordinate(pixel_coordinate, viewport_size);
+function automatic logic [9:0] clamp_ceil(fixed pixel_coordinate, int viewport_size);
+    return 10'(ftoi(clamp(
+        add(pixel_coordinate, rtof(0.5, PIXEL_FRACTIONAL_BITS)),
+        itof(0, PIXEL_FRACTIONAL_BITS),
+        itof(viewport_size - 1, PIXEL_FRACTIONAL_BITS)
+    ), PIXEL_FRACTIONAL_BITS));
 endfunction
 
 module Rasterizer #(
@@ -84,10 +88,7 @@ module Rasterizer #(
     // If the interpolator is ready to receive a new sample point.
     logic pixel_coordinate_ready;
 
-    TriangleInterpolator #(
-        .VIEWPORT_WIDTH(VIEWPORT_WIDTH),
-        .VIEWPORT_HEIGHT(VIEWPORT_HEIGHT)
-    ) interpolator (
+    TriangleInterpolator interpolator (
         .clk(clk),
         .rstn(rstn),
 
@@ -119,10 +120,10 @@ module Rasterizer #(
                     // Check if a new triangle has been accepted.
                     if (attributed_triangle_valid && rasterizer_ready) begin
                         // Set the start and end coordinates of the bounding box.
-                        start_coordinate.x <= normalized_to_pixel(attributed_triangle.bounding_box.left,   VIEWPORT_WIDTH,  -1);
-                        start_coordinate.y <= normalized_to_pixel(attributed_triangle.bounding_box.top,    VIEWPORT_HEIGHT, -1);
-                        end_coordinate.x   <= normalized_to_pixel(attributed_triangle.bounding_box.right,  VIEWPORT_WIDTH,   1);
-                        end_coordinate.y   <= normalized_to_pixel(attributed_triangle.bounding_box.bottom, VIEWPORT_HEIGHT,  1);
+                        start_coordinate.x <= clamp_floor(attributed_triangle.bounding_box.left,  VIEWPORT_WIDTH);
+                        start_coordinate.y <= clamp_floor(attributed_triangle.bounding_box.top,   VIEWPORT_HEIGHT);
+                        end_coordinate.x   <= clamp_ceil(attributed_triangle.bounding_box.right,  VIEWPORT_WIDTH);
+                        end_coordinate.y   <= clamp_ceil(attributed_triangle.bounding_box.bottom, VIEWPORT_HEIGHT);
 
                         if (attributed_triangle.small_area) begin
                             // If the triangle has a small area we skip rasterization.

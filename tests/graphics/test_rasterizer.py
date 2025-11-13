@@ -9,10 +9,10 @@ from core.types.types_ import (
     RGB,
     PixelData,
     PixelDataMetadata,
-    Position,
-    Triangle,
+    ProjectedPosition,
+    ProjectedVertex,
+    ProjectedTriangle,
     TriangleMetadata,
-    Vertex,
 )
 
 VIEWPORT_WIDTH = 64
@@ -33,51 +33,66 @@ VERILOG_PARAMETERS = {
 }
 
 TEST_TRIANGLES = [
-    Triangle(
-        Vertex(Position(-0.80, -0.90, 0.00), RGB(15, 0, 0)),
-        Vertex(Position(0.50, -0.70, 0.00), RGB(0, 15, 0)),
-        Vertex(Position(0.00, 0.50, 1.00), RGB(0, 0, 15)),
+    ProjectedTriangle(
+        ProjectedVertex(ProjectedPosition( 0,  0, 0.00), RGB(15, 0, 0)),
+        ProjectedVertex(ProjectedPosition(15,  0, 0.00), RGB(0, 15, 0)),
+        ProjectedVertex(ProjectedPosition(15, 15, 1.00), RGB(0, 0, 15)),
     ),
-    Triangle(
-        Vertex(Position(-0.20, 0.00, 0.00), RGB(15, 0, 0)),
-        Vertex(Position(1.00, -0.20, 1.00), RGB(15, 15, 0)),
-        Vertex(Position(1.00, 0.80, 0.00), RGB(15, 15, 15)),
+    ProjectedTriangle(
+        ProjectedVertex(ProjectedPosition(49, 49, 1.00), RGB(15, 0, 0)),
+        ProjectedVertex(ProjectedPosition(63, 49, 0.00), RGB(0, 15, 0)),
+        ProjectedVertex(ProjectedPosition(63, 63, 0.00), RGB(0, 0, 15)),
     ),
-    Triangle(
-        Vertex(Position(-1.00, 0.50, 0.50), RGB(15, 15, 15)),
-        Vertex(Position(-0.50, 1.00, 0.50), RGB(15, 15, 0)),
-        Vertex(Position(-1.00, 1.00, 0.50), RGB(15, 0, 0)),
+    ProjectedTriangle(
+        ProjectedVertex(ProjectedPosition( 0,  0, 0.50), RGB(15, 0, 0)),
+        ProjectedVertex(ProjectedPosition(63, 63, 1.00), RGB(0, 0, 15)),
+        ProjectedVertex(ProjectedPosition( 0, 63, 0.00), RGB(0, 15, 0)),
     ),
-    Triangle(
-        Vertex(Position(-1.00, 0.50, 1.00), RGB(15, 0, 15)),
-        Vertex(Position(-0.50, 0.50, 1.00), RGB(15, 0, 15)),
-        Vertex(Position(-0.50, 1.00, 1.00), RGB(15, 0, 15)),
-    ),
-    Triangle(
-        Vertex(Position(-1.00, 0.50, 0.00), RGB(15, 0, 15)),
-        Vertex(Position(-0.50, 0.00, 0.00), RGB(15, 15, 15)),
-        Vertex(Position(-0.50, 0.50, 0.00), RGB(15, 0, 15)),
-    ),
-    Triangle(
-        Vertex(Position(-1.00, -1.00, 0.75), RGB(15, 0, 0)),
-        Vertex(Position(-0.40, -1.00, 0.00), RGB(0, 0, 15)),
-        Vertex(Position(-1.00, -0.40, 1.00), RGB(0, 15, 0)),
-    ),
-    Triangle(
-        Vertex(Position(1.00, -1.00, 1.00), RGB(15, 0, 0)),
-        Vertex(Position(1.00, -0.40, 1.00), RGB(7, 7, 0)),
-        Vertex(Position(0.40, -0.40, 1.00), RGB(3, 3, 3)),
-    ),
-    Triangle(
-        Vertex(Position(1.00, -1.00, 0.00), RGB(15, 0, 0)),
-        Vertex(Position(0.40, -0.40, 0.00), RGB(0, 10, 10)),
-        Vertex(Position(0.40, -1.00, 0.00), RGB(5, 5, 5)),
-    ),
-    Triangle(
-        Vertex(Position(0.51, 0.50, 1.00), RGB(15, 15, 10)),
-        Vertex(Position(0.51, -0.51, 1.00), RGB(10, 15, 15)),
-        Vertex(Position(0.50, 0.50, 1.00), RGB(15, 10, 15)),
-    ),
+    # Triangle(
+    #     ProjectedVertex(Position(-0.80, -0.90, 0.00), RGB(15, 0, 0)),
+    #     ProjectedVertex(Position(0.50, -0.70, 0.00), RGB(0, 15, 0)),
+    #     ProjectedVertex(Position(0.00, 0.50, 1.00), RGB(0, 0, 15)),
+    # ),
+    # Triangle(
+    #     ProjectedVertex(Position(-0.20, 0.00, 0.00), RGB(15, 0, 0)),
+    #     ProjectedVertex(Position(1.00, -0.20, 1.00), RGB(15, 15, 0)),
+    #     ProjectedVertex(Position(1.00, 0.80, 0.00), RGB(15, 15, 15)),
+    # ),
+    # Triangle(
+    #     ProjectedVertex(Position(-1.00, 0.50, 0.50), RGB(15, 15, 15)),
+    #     ProjectedVertex(Position(-0.50, 1.00, 0.50), RGB(15, 15, 0)),
+    #     ProjectedVertex(Position(-1.00, 1.00, 0.50), RGB(15, 0, 0)),
+    # ),
+    # Triangle(
+    #     ProjectedVertex(Position(-1.00, 0.50, 1.00), RGB(15, 0, 15)),
+    #     ProjectedVertex(Position(-0.50, 0.50, 1.00), RGB(15, 0, 15)),
+    #     ProjectedVertex(Position(-0.50, 1.00, 1.00), RGB(15, 0, 15)),
+    # ),
+    # Triangle(
+    #     ProjectedVertex(Position(-1.00, 0.50, 0.00), RGB(15, 0, 15)),
+    #     ProjectedVertex(Position(-0.50, 0.00, 0.00), RGB(15, 15, 15)),
+    #     ProjectedVertex(Position(-0.50, 0.50, 0.00), RGB(15, 0, 15)),
+    # ),
+    # Triangle(
+    #     ProjectedVertex(Position(-1.00, -1.00, 0.75), RGB(15, 0, 0)),
+    #     ProjectedVertex(Position(-0.40, -1.00, 0.00), RGB(0, 0, 15)),
+    #     ProjectedVertex(Position(-1.00, -0.40, 1.00), RGB(0, 15, 0)),
+    # ),
+    # Triangle(
+    #     ProjectedVertex(Position(1.00, -1.00, 1.00), RGB(15, 0, 0)),
+    #     ProjectedVertex(Position(1.00, -0.40, 1.00), RGB(7, 7, 0)),
+    #     ProjectedVertex(Position(0.40, -0.40, 1.00), RGB(3, 3, 3)),
+    # ),
+    # Triangle(
+    #     ProjectedVertex(Position(1.00, -1.00, 0.00), RGB(15, 0, 0)),
+    #     ProjectedVertex(Position(0.40, -0.40, 0.00), RGB(0, 10, 10)),
+    #     ProjectedVertex(Position(0.40, -1.00, 0.00), RGB(5, 5, 5)),
+    # ),
+    # Triangle(
+    #     ProjectedVertex(Position(0.0022135764, 0.7012346, 1.00), RGB(15, 10, 15)),
+    #     ProjectedVertex(Position(0.0445375153, 0.7032100, 1.00), RGB(15, 15, 10)),
+    #     ProjectedVertex(Position(0.0412342314, 0.7554272, 1.00), RGB(10, 15, 15)),
+    # ),
 ]
 
 
@@ -168,4 +183,7 @@ async def test_rasterizer(dut: Rasterizer):
         await clock.cycles(1)
 
     img = Image.fromarray(color_buffer, "RGB")
-    img.save("rasterizer_output.png")
+    img.save("rasterizer_color_output.png")
+
+    img = Image.fromarray((depth_buffer * 255).astype(np.uint8), "L")
+    img.save("rasterizer_depth_output.png")

@@ -40,7 +40,7 @@ module FixedDivider (
 
     // Left shift dividend to 64 bits to preserve
     // decimal point position after division.
-    assign internal_dividend_data = 48'(dividend_s_data <<< DECIMAL_WIDTH);
+    assign internal_dividend_data = 48'(dividend_s_data <<< STANDARD_FRACTIONAL_BITS);
     // Divisor and output have the same width as
     // out fixed point type so no shift needed.
     assign internal_divisor_data = 32'(divisor_s_data);

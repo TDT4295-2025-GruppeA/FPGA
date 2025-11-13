@@ -26,10 +26,10 @@ module DepthBuffer #(
     input  logic [BUFFER_ADDR_WIDTH-1:0] clear_addr
 );
     // Precompute reciprocal near/far planes
-    localparam fixed REC_NEAR = rtof(1.0 / NEAR_PLANE);
-    localparam fixed REC_FAR  = rtof(1.0 / FAR_PLANE);
+    localparam fixed REC_NEAR = rtof(1.0 / NEAR_PLANE, PRECISION_FRACTIONAL_BITS);
+    localparam fixed REC_FAR  = rtof(1.0 / FAR_PLANE, PRECISION_FRACTIONAL_BITS);
 
-    localparam int DECIMATION_OFFSET = 0;
+    localparam int DECIMATION_OFFSET = 4;
     localparam int DECIMATION_WIDTH = 18; // Hardocded to 18 as that is one of the word sizes for BRAM.
     (* ram_style = "block" *) logic signed [DECIMATION_WIDTH-1:0] z_buffer [0:(BUFFER_WIDTH*BUFFER_HEIGHT)-1];
 

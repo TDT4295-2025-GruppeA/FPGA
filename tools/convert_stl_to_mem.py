@@ -9,7 +9,7 @@ from split import split_memory_file
 # We store the models with Q16.16 independently of what the FPGA
 # uses internally for the sake of simplicity. The FPGA will
 # convert to its own format as needed.
-DECIMAL_WIDTH = 16
+FRACTIONAL_BITS = 16
 
 
 def float_to_fixed(value: float, fractional_bits: int) -> int:
@@ -64,9 +64,9 @@ def write_sv_mem_triangles(stl_path: str, output_path: str):
             for v in triangle_vertices:
                 color = pseudo_random_12_bit_color(v) << 4
                 x, y, z = v
-                qx = float_to_fixed(x, DECIMAL_WIDTH)
-                qy = float_to_fixed(y, DECIMAL_WIDTH)
-                qz = float_to_fixed(z, DECIMAL_WIDTH)
+                qx = float_to_fixed(x, FRACTIONAL_BITS)
+                qy = float_to_fixed(y, FRACTIONAL_BITS)
+                qz = float_to_fixed(z, FRACTIONAL_BITS)
                 output += f"{qx & 0xFFFFFFFF:08X}"
                 output += f"{qy & 0xFFFFFFFF:08X}"
                 output += f"{qz & 0xFFFFFFFF:08X}"

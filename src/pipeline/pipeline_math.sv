@@ -81,8 +81,9 @@ module PipelineMath #(
     logic projection_rasterizer_ready;
 
     Projection #(
-        .FOCAL_LENGTH(1.0),
-        .ASPECT_RATIO(real'(BUFFER_WIDTH) / real'(BUFFER_HEIGHT))
+        .FOCAL_LENGTH(0.5),
+        .VIEWPORT_WIDTH(BUFFER_WIDTH),
+        .VIEWPORT_HEIGHT(BUFFER_HEIGHT)
     ) projection (
         .clk(clk),
         .rstn(rstn),

@@ -1,6 +1,6 @@
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, ReadOnly
+from cocotb.triggers import RisingEdge, ReadOnly, Timer
 import numpy as np
 
 from core.types.types_ import PixelData, PixelCoordinate, RGB
@@ -135,7 +135,7 @@ async def test_depth_buffer_clipping(dut):
         (pixel_near, False),
         (pixel_far, False),
     ]:
-        await cocotb.triggers.Timer(1, "ns")
+        await Timer(1, "ns")
         await write_pixel(dut.clk, dut, addr, pixel)
 
         # Wait for pipeline to settle

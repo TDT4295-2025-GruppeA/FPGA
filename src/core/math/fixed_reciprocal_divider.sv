@@ -1,7 +1,10 @@
 import fixed_pkg::*;
 
 // Uses Vivado's built-in divider IP to perform fixed-point division.
-module FixedReciprocalDivider (
+module FixedReciprocalDivider #(
+    parameter int INPUT_FRACTIONAL_BITS = STANDARD_FRACTIONAL_BITS,
+    parameter int OUTPUT_FRACTIONAL_BITS = STANDARD_FRACTIONAL_BITS
+) (
     input logic clk,
 
     output logic divisor_s_ready,
@@ -40,7 +43,7 @@ module FixedReciprocalDivider (
 
     // Left shift dividend to 64 bits to preserve
     // decimal point position after division.
-    assign internal_dividend_data = 33'(1 << DECIMAL_WIDTH*2);
+    assign internal_dividend_data = 33'(1 << (INPUT_FRACTIONAL_BITS + OUTPUT_FRACTIONAL_BITS));
     // Divisor and output have the same width as
     // out fixed point type so no shift needed.
     assign internal_divisor_data = 32'(divisor_s_data);
