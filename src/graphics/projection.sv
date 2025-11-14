@@ -70,15 +70,16 @@ module Projection #(
     assign current_z_clamped = clamp(current_z, rtof(1.0), rtof(1000.0));
     
     FixedReciprocalDivider #(
-        .INPUT_FRACTIONAL_BITS(PIXEL_FRACTIONAL_BITS),
+        .INPUT_FRACTIONAL_BITS(STANDARD_FRACTIONAL_BITS),
         .OUTPUT_FRACTIONAL_BITS(PRECISION_FRACTIONAL_BITS)
     ) divider (
         .clk(clk),
+        .rstn(rstn),
 
         .divisor_s_ready(divisor_ready),
         .divisor_s_valid(divisor_valid),
         // TODO: Make fixed divider support higher precision inputs.
-        .divisor_s_data(cast_precision(current_z_clamped, STANDARD_FRACTIONAL_BITS, PIXEL_FRACTIONAL_BITS)),
+        .divisor_s_data(current_z_clamped),
 
         .result_m_ready(z_reciprocal_ready),
         .result_m_valid(z_reciprocal_valid),

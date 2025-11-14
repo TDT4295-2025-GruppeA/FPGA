@@ -165,6 +165,7 @@ module TrianglePreprocessor (
         .OUTPUT_FRACTIONAL_BITS(PRECISION_FRACTIONAL_BITS)
     ) divider (
         .clk(clk),
+        .rstn(rstn),
 
         .divisor_s_ready(), // Ignored
         .divisor_s_valid(state == LATCH_AREA),

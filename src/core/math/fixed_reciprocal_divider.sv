@@ -1,4 +1,5 @@
 import fixed_pkg::*;
+import reciprocal_divider_params::*;
 
 // Uses Vivado's built-in divider IP to perform fixed-point division.
 module FixedReciprocalDivider #(
@@ -6,6 +7,7 @@ module FixedReciprocalDivider #(
     parameter int OUTPUT_FRACTIONAL_BITS = STANDARD_FRACTIONAL_BITS
 ) (
     input logic clk,
+    input logic rstn,
 
     output logic divisor_s_ready,
     input logic divisor_s_valid,
@@ -15,16 +17,21 @@ module FixedReciprocalDivider #(
     output logic result_m_valid,
     output fixed result_m_data
 );
+    if (INPUT_FRACTIONAL_BITS + OUTPUT_FRACTIONAL_BITS >= DIVIDEND_AND_QUOTIENT_WIDTH) begin
+        $error("FixedReciprocalDivider: INPUT_FRACTIONAL_BITS + OUTPUT_FRACTIONAL_BITS must be < DIVIDEND_AND_QUOTIENT_WIDTH.");
+    end
+
     logic internal_dividend_valid, internal_divisor_ready;
 
     // Sizes are hardcoded as the IP core is generated
     // with fixed sized inputs and outputs.
-    logic [32:0] internal_dividend_data;
-    logic [31:0] internal_divisor_data;
-    logic [39:0] internal_result_data;
+    logic [DIVIDEND_AND_QUOTIENT_WIDTH - 1:0] internal_dividend_data;
+    logic [DIVISOR_WIDTH - 1:0] internal_divisor_data;
+    logic [DIVIDEND_AND_QUOTIENT_WIDTH - 1:0] internal_result_data;
     
     ReciprocalDivider divider (
         .aclk(clk),
+        .aresetn(rstn),
         
         .s_axis_dividend_tready(internal_dividend_valid),
         .s_axis_dividend_tvalid(divisor_s_valid),
@@ -43,10 +50,10 @@ module FixedReciprocalDivider #(
 
     // Left shift dividend to 64 bits to preserve
     // decimal point position after division.
-    assign internal_dividend_data = 33'(1 << (INPUT_FRACTIONAL_BITS + OUTPUT_FRACTIONAL_BITS));
+    assign internal_dividend_data = DIVIDEND_AND_QUOTIENT_WIDTH'(1 << (INPUT_FRACTIONAL_BITS + OUTPUT_FRACTIONAL_BITS));
     // Divisor and output have the same width as
     // out fixed point type so no shift needed.
-    assign internal_divisor_data = 32'(divisor_s_data);
+    assign internal_divisor_data = DIVISOR_WIDTH'(divisor_s_data);
     // Truncate result to fit in fixed type.
     assign result_m_data = fixed'(internal_result_data);
 endmodule
