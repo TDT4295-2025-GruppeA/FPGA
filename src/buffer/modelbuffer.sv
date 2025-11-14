@@ -7,18 +7,18 @@ module ModelBuffer #(
     input clk,
     input rstn,
 
-    input logic write_in_valid,
-    output logic write_in_ready,
-    input modelbuf_write_t write_in_data,
+    input logic write_s_valid,
+    output logic write_s_ready,
+    input modelbuf_write_t write_s_data,
 
-    input logic read_in_valid,
-    output logic read_in_ready,
-    input modelbuf_read_t read_in_data,
+    input logic read_s_valid,
+    output logic read_s_ready,
+    input modelbuf_read_t read_s_data,
 
-    output logic read_out_valid,
-    input logic read_out_ready,
-    output triangle_t read_out_data,
-    output triangle_meta_t read_out_metadata
+    output logic read_m_valid,
+    input logic read_m_ready,
+    output triangle_t read_m_data,
+    output triangle_meta_t read_m_metadata
 );
 
     typedef enum logic [1:0] {
@@ -40,17 +40,17 @@ module ModelBuffer #(
     // Write input data
     wire model_idx_t write_model_idx;
     wire triangle_t write_triangle;
-    assign write_model_idx = model_idx_t'(write_in_data.model_id);
-    assign write_triangle = write_in_data.triangle;
+    assign write_model_idx = model_idx_t'(write_s_data.model_id);
+    assign write_triangle = write_s_data.triangle;
 
     // Writing happens to bram, so we can always accept data
-    assign write_in_ready = 1;
+    assign write_s_ready = 1;
 
     // Read input data
     wire model_idx_t read_model_index;
     wire triangle_idx_t read_triangle_index;
-    assign read_model_index = model_idx_t'(read_in_data.model_index);
-    assign read_triangle_index = triangle_idx_t'(read_in_data.triangle_index);
+    assign read_model_index = model_idx_t'(read_s_data.model_index);
+    assign read_triangle_index = triangle_idx_t'(read_s_data.triangle_index);
 
     // Current index we are reading/writing from/to (model start addr + triangle_index)
     triangle_idx_t read_addr;
@@ -75,8 +75,8 @@ module ModelBuffer #(
     // Read from the registry
     always_comb begin
         read_addr = registry[read_model_index].index + read_triangle_index;
-        write_en = write_in_valid && write_in_ready && ~full;
-        read_in_ready = ~read_out_valid | read_out_ready;
+        write_en = write_s_valid && write_s_ready && ~full;
+        read_s_ready = ~read_m_valid | read_m_ready;
 
         if (write_model_idx != write_prev_model_index) begin
             write_triangle_index = 0;
@@ -106,9 +106,9 @@ module ModelBuffer #(
         .write_address(write_addr),
         .write_data(write_triangle),
 
-        .read_enable(read_in_ready && read_in_valid),
+        .read_enable(read_s_ready && read_s_valid),
         .read_address(read_addr),
-        .read_data(read_out_data)
+        .read_data(read_m_data)
     );
 
     always_ff @(posedge clk or negedge rstn) begin
@@ -118,13 +118,13 @@ module ModelBuffer #(
         if (!rstn) begin // Reset control signals
             addr_next <= 0;
             write_prev_model_index <= -1;
-            read_out_valid <= 0;
+            read_m_valid <= 0;
             for (int i = 0; i < MAX_MODEL_COUNT; i++) begin
                 registry[i].state = STATE_EMPTY;
                 registry[i].size = 0;
                 registry[i].index = 0;
             end
-            read_out_metadata.last <= 0;
+            read_m_metadata.last <= 0;
         end else begin
             if (write_en) begin
                 if (write_model_idx != write_prev_model_index) begin
@@ -149,15 +149,15 @@ module ModelBuffer #(
                 write_prev_model_index <= write_model_idx;
             end
 
-            if (read_out_valid && read_out_ready) begin
-                read_out_valid <= 0; // Set low if we do not have more triangles
+            if (read_m_valid && read_m_ready) begin
+                read_m_valid <= 0; // Set low if we do not have more triangles
             end
 
-            if (read_in_valid && read_in_ready) begin
+            if (read_s_valid && read_s_ready) begin
                 // Only set output valid high if triangle index is within size
-                read_out_valid <= read_triangle_index < registry[read_model_index].size;
+                read_m_valid <= read_triangle_index < registry[read_model_index].size;
                 // Mark triangle as last
-                read_out_metadata.last <= read_triangle_index + 1 >= registry[read_model_index].size;
+                read_m_metadata.last <= read_triangle_index + 1 >= registry[read_model_index].size;
             end
         end
 

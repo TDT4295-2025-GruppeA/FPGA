@@ -69,13 +69,10 @@ class Producer(PipelineBase, Generic[_Data, _Metadata]):
         self,
         dut: PipelineDut,
         name: str,
-        has_metadata: bool = False,
-        signal_style: str = "inout",
         clock_name: str = "clk",
         processing_time: int = 1,
     ):
-        type = "in" if signal_style == "inout" else "s"
-        super().__init__(dut, name, type, clock_name=clock_name)
+        super().__init__(dut, name, "s", clock_name=clock_name)
         self._input_queue: Queue[tuple[_Data, _Metadata | None]] = Queue()
 
         if processing_time < 1:
@@ -135,12 +132,10 @@ class Consumer(PipelineBase, Generic[_Data, _Metadata]):
         name: str,
         data_type: Type[_Data],
         metadata_type: Type[_Metadata] | None = None,
-        signal_style: str = "inout",
         clock_name: str = "clk",
         processing_time: int = 1,
     ):
-        type = "out" if signal_style == "inout" else "m"
-        super().__init__(dut, name, type, clock_name=clock_name)
+        super().__init__(dut, name, "m", clock_name=clock_name)
 
         # Store the output type so we can use them to convert LogicArray
         # to the output type
@@ -204,13 +199,11 @@ class PipelineTester:
         signal_name: str,
         data: Sequence[LogicObject],
         metadata: Sequence[LogicObject | None] | None = None,
-        signal_style: Literal["ms", "inout"] = "inout",
         processing_time: int = 2,
     ):
         producer = Producer(
             dut=self._dut,
             name=signal_name,
-            signal_style=signal_style,
             clock_name=self._clock_name,
             processing_time=processing_time,
         )
@@ -225,7 +218,6 @@ class PipelineTester:
         signal_name: str,
         data: Sequence[LogicObject],
         metadata: Sequence[LogicObject] | Sequence[None] | None = None,
-        signal_style: Literal["ms", "inout"] = "inout",
         processing_time: int = 3,
     ):
         if len(data) == 0:
@@ -244,7 +236,6 @@ class PipelineTester:
             name=signal_name,
             data_type=output_type,
             metadata_type=output_metadata_type,
-            signal_style=signal_style,
             clock_name=self._clock_name,
             processing_time=processing_time,
         )

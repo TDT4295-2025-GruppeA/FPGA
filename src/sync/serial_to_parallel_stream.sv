@@ -14,14 +14,14 @@ module SerialToParallelStream #(
     input logic synchronize,
 
     // Serial input stream
-    output logic                   serial_in_ready,
-    input  logic                   serial_in_valid,
-    input  logic [INPUT_SIZE-1:0]  serial_in_data,
+    output logic                   serial_s_ready,
+    input  logic                   serial_s_valid,
+    input  logic [INPUT_SIZE-1:0]  serial_s_data,
 
     // Parallel output stream
-    input  logic                   parallel_out_ready,
-    output logic                   parallel_out_valid,
-    output logic [OUTPUT_SIZE-1:0] parallel_out_data
+    input  logic                   parallel_m_ready,
+    output logic                   parallel_m_valid,
+    output logic [OUTPUT_SIZE-1:0] parallel_m_data
 );
     // Check parameter relation
     if (OUTPUT_SIZE % INPUT_SIZE != 0) begin
@@ -36,13 +36,13 @@ module SerialToParallelStream #(
     logic [OUTPUT_SIZE-1:0] buffer;
     element_count_t element_count;
 
-    assign parallel_out_data = buffer;
+    assign parallel_m_data = buffer;
 
     // Parallel output valid when full
-    assign parallel_out_valid = (element_count == element_count_t'(ELEMENT_COUNT));
+    assign parallel_m_valid = (element_count == element_count_t'(ELEMENT_COUNT));
 
     // Accept new serial data only if not full OR it will become ready next cycle
-    assign serial_in_ready = !parallel_out_valid || (parallel_out_valid && parallel_out_ready);
+    assign serial_s_ready = !parallel_m_valid || (parallel_m_valid && parallel_m_ready);
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
@@ -50,9 +50,9 @@ module SerialToParallelStream #(
             element_count <= 0;
         end else begin
             // Accept serial data
-            if (serial_in_valid && serial_in_ready) begin
-                buffer <= {buffer[OUTPUT_SIZE-INPUT_SIZE-1:0], serial_in_data};
-                // This won't overflow because serial_in_ready
+            if (serial_s_valid && serial_s_ready) begin
+                buffer <= {buffer[OUTPUT_SIZE-INPUT_SIZE-1:0], serial_s_data};
+                // This won't overflow because serial_s_ready
                 // is low until element counter is reset.
                 element_count <= element_count + 1;
             end
@@ -60,8 +60,8 @@ module SerialToParallelStream #(
             // Reset element counter on output accept or synchronize signal
             // If parallel output is valid we ignore the synchronize signal
             // as the next serial input will be the first element anyway
-            if (parallel_out_valid && parallel_out_ready || synchronize && !parallel_out_valid) begin
-                if (serial_in_valid && serial_in_ready) begin
+            if (parallel_m_valid && parallel_m_ready || synchronize && !parallel_m_valid) begin
+                if (serial_s_valid && serial_s_ready) begin
                     // Reset to 1 if we accept new data immediately.
                     element_count <= 1;
                 end else begin

@@ -9,24 +9,24 @@ module SceneReader #(
     input clk,
     input rstn,
 
-    input logic scene_in_valid,
-    output logic scene_in_ready,
-    input modelinstance_t scene_in_data,
-    input modelinstance_meta_t scene_in_metadata,
+    input logic scene_s_valid,
+    output logic scene_s_ready,
+    input modelinstance_t scene_s_data,
+    input modelinstance_meta_t scene_s_metadata,
 
-    output logic model_out_valid,
-    input logic model_out_ready,
-    output modelbuf_read_t model_out_data,
+    output logic model_m_valid,
+    input logic model_m_ready,
+    output modelbuf_read_t model_m_data,
 
-    input logic model_in_valid,
-    output logic model_in_ready,
-    input triangle_t model_in_data,
-    input triangle_meta_t model_in_metadata,
+    input logic model_s_valid,
+    output logic model_s_ready,
+    input triangle_t model_s_data,
+    input triangle_meta_t model_s_metadata,
 
-    output logic triangle_tf_out_valid,
-    input logic triangle_tf_out_ready,
-    output triangle_tf_t triangle_tf_out_data,
-    output triangle_tf_meta_t triangle_tf_out_metadata
+    output logic triangle_tf_m_valid,
+    input logic triangle_tf_m_ready,
+    output triangle_tf_t triangle_tf_m_data,
+    output triangle_tf_meta_t triangle_tf_m_metadata
 );
 
     typedef enum logic [1:0] {
@@ -41,18 +41,18 @@ module SceneReader #(
     logic triangle_index_valid;
 
     assign triangle_index_valid = state == PROCESSING;
-    assign scene_in_ready = state == IDLE;
+    assign scene_s_ready = state == IDLE;
     
-    assign model_out_data.model_index = current_model.model_id;
-    assign model_out_data.triangle_index = triangle_index;
-    assign model_out_valid = triangle_index_valid;
+    assign model_m_data.model_index = current_model.model_id;
+    assign model_m_data.triangle_index = triangle_index;
+    assign model_m_valid = triangle_index_valid;
 
-    assign triangle_tf_out_data.transform = current_model.transform;
-    assign triangle_tf_out_data.triangle = model_in_data;
-    assign triangle_tf_out_metadata.triangle_last = model_in_metadata.last;
-    assign triangle_tf_out_metadata.model_last = current_model_metadata.last;
-    assign triangle_tf_out_valid = model_in_valid;
-    assign model_in_ready = triangle_tf_out_ready;
+    assign triangle_tf_m_data.transform = current_model.transform;
+    assign triangle_tf_m_data.triangle = model_s_data;
+    assign triangle_tf_m_metadata.triangle_last = model_s_metadata.last;
+    assign triangle_tf_m_metadata.model_last = current_model_metadata.last;
+    assign triangle_tf_m_valid = model_s_valid;
+    assign model_s_ready = triangle_tf_m_ready;
 
 
     always_ff @(posedge clk or negedge rstn) begin
@@ -61,17 +61,17 @@ module SceneReader #(
         end else begin
             case (state)
                 IDLE: begin
-                    if (scene_in_valid && scene_in_ready) begin
-                        current_model <= scene_in_data;
-                        current_model_metadata <= scene_in_metadata;
+                    if (scene_s_valid && scene_s_ready) begin
+                        current_model <= scene_s_data;
+                        current_model_metadata <= scene_s_metadata;
                         state <= PROCESSING;
                     end
                 end
                 PROCESSING: begin
-                    if (model_out_ready && model_out_valid) begin
+                    if (model_m_ready && model_m_valid) begin
                         triangle_index <= triangle_index + 1;
                     end
-                    if (model_in_metadata.last && model_in_valid && model_out_ready && model_in_ready && model_out_valid) begin // TODO: FIX ME
+                    if (model_s_metadata.last && model_s_valid && model_m_ready && model_s_ready && model_m_valid) begin // TODO: FIX ME
                         state <= IDLE;
                         triangle_index <= 0;
                     end
