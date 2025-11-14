@@ -62,7 +62,7 @@ module CommandInput(
             CMD_BEGIN_MODEL_UPLOAD: return byte_t'(2);
             CMD_UPLOAD_TRIANGLE: return byte_t'(1 + $bits(cmd_triangle_t) / 8);
             CMD_ADD_MODEL_INSTANCE: return byte_t'(1 + $bits(cmd_scene_t) / 8);
-            CMD_SET_CAMERA_TRANSFORM: return byte_t'(1 + $bits(cmd_transform_t) / 8);
+            CMD_SET_CAMERA_TRANSFORM: return byte_t'(1 + $bits(cmd_camera_transform_t) / 8);
             default: return byte_t'(1);
         endcase
     endfunction
@@ -142,13 +142,12 @@ module CommandInput(
     assign camera_serial_s_data = cmd_s_data;
     assign camera_serial_s_valid = (state == STATE_SET_CAMERA_TRANSFORM) && cmd_s_transaction;
 
-    wire cmd_transform_t camera_parallel_m_data;
-
-    assign camera_m_data = cast_transform(camera_parallel_m_data);
+    wire cmd_camera_transform_t camera_parallel_m_data;
+    assign camera_m_data = cast_transform(camera_parallel_m_data.transform);
 
     SerialToParallelStream #(
         .INPUT_SIZE($bits(byte_t)),
-        .OUTPUT_SIZE($bits(cmd_transform_t))
+        .OUTPUT_SIZE($bits(cmd_camera_transform_t))
     ) cameratransform_serializer (
         .clk(clk),
         .rstn(rstn),

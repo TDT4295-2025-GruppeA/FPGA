@@ -54,7 +54,12 @@ package cmd_types_pkg;
         cmd_modelinstance_t modelinst;
     } cmd_scene_t;
 
-        function automatic color_t cast_c565_c444(cmd_color_t color);
+    typedef struct packed {
+        short_t reserved;
+        cmd_transform_t transform;
+    } cmd_camera_transform_t;
+
+    function automatic color_t cast_c565_c444(cmd_color_t color);
         color_t color_out;
         color_out.red = 4'(color.red >> 1);
         color_out.green = 4'(color.green >> 2);

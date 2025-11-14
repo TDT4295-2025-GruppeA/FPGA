@@ -37,7 +37,7 @@ INPUTS_IDEAL = [
     CMD_UPLOAD_TRIANGLE, *([10] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([11] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([12] * 14 * 3),  # Upload a triangle
-    CMD_SET_CAMERA_TRANSFORM, *([6] * 48), # Set camera transform
+    CMD_SET_CAMERA_TRANSFORM, 0x00, 0x00, *([6] * 48), # Set camera transform
     CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([1] * 48),  # Add transform
     CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([2] * 48),  # Add transform
     CMD_ADD_MODEL_INSTANCE, 0x01, 0x00, *([3] * 48),  # Add transform, last in scene
@@ -65,7 +65,7 @@ INPUTS_FUCKED = [
     CMD_UPLOAD_TRIANGLE, *([10] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([11] * 14 * 3),  # Upload a triangle
     CMD_UPLOAD_TRIANGLE, *([12] * 14 * 3),  # Upload a triangle
-    CMD_SET_CAMERA_TRANSFORM, *([6] * 48), # Set camera transform
+    CMD_SET_CAMERA_TRANSFORM, 0x00, 0x00, *([6] * 48), # Set camera transform
     CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([1] * 48),  # Add transform
     CMD_ADD_MODEL_INSTANCE, 0x00, 0x00, *([2] * 48),  # Add transform
     CMD_ADD_MODEL_INSTANCE, 0x01, 0x00, *([3] * 48),  # Add transform, last in scene
