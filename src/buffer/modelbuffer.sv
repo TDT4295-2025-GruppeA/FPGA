@@ -97,7 +97,7 @@ module ModelBuffer #(
     end
 
     Bram #(
-        .ENTRY_COUNT(MAX_TRIANGLE_COUNT),
+        .ENTRY_COUNT(MAX_TRIANGLE_COUNT + 1),
         .DATA_WIDTH($bits(triangle_t))
     ) bram (
         .clk(clk),

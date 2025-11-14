@@ -4,13 +4,18 @@ from cocotb.triggers import RisingEdge
 
 from tools.utils import within_tolerance
 from tools.pipeline import Producer, Consumer
-from core.types.types_ import Triangle, Vertex, Position, RGB
+from core.types.types_ import ProjectedTriangle, Triangle, Vertex, Position, RGB
 
-FOCAL_LENGTH = 0.10
+FOCAL_LENGTH = 0.5
+VIEWPORT_WIDTH = 160
+VIEWPORT_HEIGHT = 120
+ASPECT_RATIO = VIEWPORT_WIDTH / VIEWPORT_HEIGHT
 
 VERILOG_MODULE = "Projection"
 VERILOG_PARAMETERS = {
     "FOCAL_LENGTH": f"{FOCAL_LENGTH}",
+    "VIEWPORT_WIDTH": VIEWPORT_WIDTH,
+    "VIEWPORT_HEIGHT": VIEWPORT_HEIGHT,
 }
 
 
@@ -54,7 +59,7 @@ async def test_projection(dut):
     await make_clock(dut)
 
     producer = Producer(dut, "triangle")
-    consumer = Consumer(dut, "projected_triangle", Triangle, None)
+    consumer = Consumer(dut, "projected_triangle", ProjectedTriangle, None)
 
     await producer.run()
     await consumer.run()
@@ -74,8 +79,20 @@ async def test_projection(dut):
         ):
             z = v_in.position.z
             w_expected = 1 / z
-            x_expected = FOCAL_LENGTH * (v_in.position.x * w_expected)
-            y_expected = FOCAL_LENGTH * (v_in.position.y * w_expected)
+            x_expected = (
+                FOCAL_LENGTH * VIEWPORT_WIDTH * (v_in.position.x * w_expected)
+                + VIEWPORT_WIDTH / 2
+            )
+            y_expected = (
+                FOCAL_LENGTH
+                * VIEWPORT_HEIGHT
+                * ASPECT_RATIO
+                * (v_in.position.y * w_expected)
+                + VIEWPORT_HEIGHT / 2
+            )
+
+            cocotb.log.info(f"{v_in.position.x}, {v_in.position.y}, {v_in.position.z}")
+            cocotb.log.info(f"{x_expected}, {y_expected}, {w_expected}")
 
             assert within_tolerance(v_out.position.x, x_expected, 2)
             assert within_tolerance(v_out.position.y, y_expected, 2)

@@ -5,11 +5,14 @@ from cocotb.types import Array, LogicArray
 
 # How many decimals bits are used in the fixed point format.
 # IMPORTANT: This needs to match the fixed point format used in the Verilog code
-DECIMAL_WIDTH = 14
+STANDARD_FRACTIONAL_BITS = 14
+PRECISION_FRACTIONAL_BITS = 20
+PIXEL_FRACTIONAL_BITS = 3
+
 TOTAL_WIDTH = 25
 
 # The smallest representable interval in the fixed point format.
-RESOLUTION = 2**-DECIMAL_WIDTH
+RESOLUTION = 2**-STANDARD_FRACTIONAL_BITS
 
 MAX_VALUE = ((1 << (TOTAL_WIDTH - 1)) - 1) * RESOLUTION
 MIN_VALUE = -(1 << (TOTAL_WIDTH - 1)) * RESOLUTION
@@ -35,12 +38,16 @@ def np_round_away(x: np.ndarray) -> np.ndarray:
 
 
 @overload
-def to_fixed(value: float) -> int: ...
+def to_fixed(value: float, fractional_bits: int = STANDARD_FRACTIONAL_BITS) -> int: ...
 @overload
-def to_fixed(value: np.ndarray) -> np.ndarray: ...
-def to_fixed(value: float | np.ndarray) -> int | np.ndarray:
+def to_fixed(
+    value: np.ndarray, fractional_bits: int = STANDARD_FRACTIONAL_BITS
+) -> np.ndarray: ...
+def to_fixed(
+    value: float | np.ndarray, fractional_bits: int = STANDARD_FRACTIONAL_BITS
+) -> int | np.ndarray:
     """Convert a float to fixed point."""
-    res = value * (1 << DECIMAL_WIDTH)
+    res = value * (1 << fractional_bits)
 
     # It is important that we round away from zero here
     # as that is what System Verilog does.
@@ -52,21 +59,31 @@ def to_fixed(value: float | np.ndarray) -> int | np.ndarray:
 
 
 @overload
-def to_float(value: int) -> float: ...
+def to_float(value: int, fractional_bits: int = STANDARD_FRACTIONAL_BITS) -> float: ...
 @overload
-def to_float(value: np.ndarray) -> np.ndarray: ...
-def to_float(value: int | np.ndarray) -> float | np.ndarray:
+def to_float(
+    value: np.ndarray, fractional_bits: int = STANDARD_FRACTIONAL_BITS
+) -> np.ndarray: ...
+def to_float(
+    value: int | np.ndarray, fractional_bits: int = STANDARD_FRACTIONAL_BITS
+) -> float | np.ndarray:
     """Convert a fixed point to float."""
-    return value / (1 << DECIMAL_WIDTH)
+    return value / (1 << fractional_bits)
 
 
 @overload
-def quantize(value: float) -> float: ...
+def quantize(
+    value: float, fractional_bits: int = STANDARD_FRACTIONAL_BITS
+) -> float: ...
 @overload
-def quantize(value: np.ndarray) -> np.ndarray: ...
-def quantize(value: float | np.ndarray) -> float | np.ndarray:
+def quantize(
+    value: np.ndarray, fractional_bits: int = STANDARD_FRACTIONAL_BITS
+) -> np.ndarray: ...
+def quantize(
+    value: float | np.ndarray, fractional_bits: int = STANDARD_FRACTIONAL_BITS
+) -> float | np.ndarray:
     """Round a float or numpy array to the closest fixed point representation."""
-    return to_float(to_fixed(value))
+    return to_float(to_fixed(value), fractional_bits)
 
 
 def within_tolerance(

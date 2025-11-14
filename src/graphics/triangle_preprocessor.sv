@@ -6,16 +6,19 @@ function automatic fixed triangle_area(position_t p0, position_t p1, position_t 
         add(
             mul(
                 sub(p1.y, p2.y),
-                p0.x
+                p0.x,
+                PIXEL_FRACTIONAL_BITS
             ),
             mul(
                 sub(p2.y, p0.y),
-                p1.x
+                p1.x,
+                PIXEL_FRACTIONAL_BITS
             )
         ),
         mul(
             sub(p0.y, p1.y),
-            p2.x
+            p2.x,
+            PIXEL_FRACTIONAL_BITS
         )
     );
 endfunction
@@ -157,8 +160,12 @@ module TrianglePreprocessor (
         triangle.v2.position.x
     );
 
-    FixedReciprocalDivider divider (
+    FixedReciprocalDivider #(
+        .INPUT_FRACTIONAL_BITS(PIXEL_FRACTIONAL_BITS),
+        .OUTPUT_FRACTIONAL_BITS(PRECISION_FRACTIONAL_BITS)
+    ) divider (
         .clk(clk),
+        .rstn(rstn),
 
         .divisor_s_ready(), // Ignored
         .divisor_s_valid(state == LATCH_AREA),

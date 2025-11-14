@@ -6,12 +6,16 @@
 // shall be done in stead of truncation.
 
 package fixed_pkg;
-    localparam int DECIMAL_WIDTH = 14;
+    localparam int STANDARD_FRACTIONAL_BITS = 14;
+    localparam int PIXEL_FRACTIONAL_BITS = 3;
+    localparam int PRECISION_FRACTIONAL_BITS = 20;
     localparam int TOTAL_WIDTH = 25;
 
     typedef logic signed [TOTAL_WIDTH-1:0] fixed;
     typedef logic signed [31:0] fixed_q16x16;
     typedef fixed fixed_q11x14;
+
+    typedef logic signed [(TOTAL_WIDTH*2)-1:0] double;
 
     //////////////////////////
     // Conversion Functions //
@@ -20,26 +24,26 @@ package fixed_pkg;
     // These functions are named to follow the convention
     // of the existin functions in SystemVerilog. 
 
-    function automatic fixed rtof(real r);
-        return fixed'(r * (1 << DECIMAL_WIDTH));
+    function automatic fixed rtof(real r, int decimal_width = STANDARD_FRACTIONAL_BITS);
+        return fixed'(r * (1 << decimal_width));
     endfunction
 
-    function automatic real ftor(fixed f);
-        return real'(f) / real'(1 << DECIMAL_WIDTH);
+    function automatic real ftor(fixed f, int decimal_width = STANDARD_FRACTIONAL_BITS);
+        return real'(f) / real'(1 << decimal_width);
     endfunction
 
-    function automatic int ftoi(fixed f);
+    function automatic int ftoi(fixed f, int decimal_width = STANDARD_FRACTIONAL_BITS);
         // Add a bias to round to nearest integer in stead of just truncating.
-        fixed bias = 1 <<< (DECIMAL_WIDTH - 1);
+        fixed bias = 1 <<< (decimal_width - 1);
         // If number is negative, the bias will need to be subtracted.
         fixed signed_bias = f[TOTAL_WIDTH-1] ? -bias : bias;
         fixed rounded = f + signed_bias;
         
-        return int'(rounded) >>> DECIMAL_WIDTH;
+        return int'(rounded) >>> decimal_width;
     endfunction
 
-    function automatic fixed itof(int i);
-        return fixed'(i <<< DECIMAL_WIDTH);
+    function automatic fixed itof(int i, int decimal_width = STANDARD_FRACTIONAL_BITS);
+        return fixed'(i <<< decimal_width);
     endfunction
 
     ///////////////////////////
@@ -58,23 +62,20 @@ package fixed_pkg;
         return lhs - rhs;
     endfunction
 
-    function automatic fixed mul(fixed lhs, fixed rhs);
+    function automatic fixed mul(fixed lhs, fixed rhs, int decimal_width = STANDARD_FRACTIONAL_BITS);
         // Store intermediate result in wider type to avoid overflow.
-        typedef logic signed [(TOTAL_WIDTH*2)-1:0] double;
         double wide_result = double'(lhs) * double'(rhs);
-        return fixed'(wide_result >>> DECIMAL_WIDTH);
+        return fixed'(wide_result >>> decimal_width);
     endfunction
 
     // NOTE: This function is currently not used and we should
     // figure out if we need a more advanced/efficient division
     // algortihm than what SystemVerilog synthesizes.
-    function automatic fixed div(fixed lhs, fixed rhs);
+    function automatic fixed div(fixed lhs, fixed rhs, int decimal_width = STANDARD_FRACTIONAL_BITS);
         // Store numerator in wider type to avoid overflow.
         // Denominator must match the width of numerator.
-        typedef logic signed [TOTAL_WIDTH+DECIMAL_WIDTH-1:0] extended;
-        
-        extended numerator = {lhs, {DECIMAL_WIDTH{1'b0}}};
-        extended denominator = extended'(rhs);
+        double numerator = double'(lhs) <<< decimal_width;
+        double denominator = double'(rhs);
 
         return fixed'(numerator / denominator);
     endfunction
@@ -83,12 +84,20 @@ package fixed_pkg;
     // Utility Functions //
     ///////////////////////
 
+    function automatic fixed cast_precision(fixed value, int from_decimal_width, int to_decimal_width);
+        if (to_decimal_width > from_decimal_width) begin
+            return value <<< (to_decimal_width - from_decimal_width);
+        end else begin
+            return value >>> (from_decimal_width - to_decimal_width);
+        end
+    endfunction
+
     function automatic fixed_q11x14 cast_q16x16_q11x14(fixed_q16x16 in);
         localparam DELTA_DECIMAL_WIDTH = 2;
         return fixed_q11x14'(in >>> DELTA_DECIMAL_WIDTH);
     endfunction
 
-    function automatic fixed clamp(fixed value, fixed min = rtof(0.0), fixed max = rtof(1.0));
+    function automatic fixed clamp(fixed value, fixed min, fixed max);
         if (value < min) begin
             return min;
         end else if (value > max) begin

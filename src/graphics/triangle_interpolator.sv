@@ -14,16 +14,18 @@ function automatic fixed edge_equation(position_t p0, position_t p1, fixed qx, f
         add(
             mul(
                 sub(p0.y, p1.y),
-                qx
+                qx,
+                PIXEL_FRACTIONAL_BITS
             ),
             mul(
                 sub(p1.x, p0.x),
-                qy
+                qy,
+                PIXEL_FRACTIONAL_BITS
             )
         ),
         sub(
-            mul(p0.x, p1.y),
-            mul(p0.y, p1.x)
+            mul(p0.x, p1.y, PIXEL_FRACTIONAL_BITS),
+            mul(p0.y, p1.x, PIXEL_FRACTIONAL_BITS)
         )
     );
 endfunction
@@ -32,19 +34,35 @@ endfunction
 function automatic fixed barycentric_weight(fixed b0, fixed value0, fixed b1, fixed value1, fixed b2, fixed value2);
     return add(
         add(
-            mul(b0, value0),
-            mul(b1, value1)
+            mul(b0, value0, PRECISION_FRACTIONAL_BITS),
+            mul(b1, value1, PRECISION_FRACTIONAL_BITS)
         ),
-        mul(b2, value2)
+        mul(b2, value2, PRECISION_FRACTIONAL_BITS)
     );
 endfunction
 
+function automatic logic [3:0] max_color(logic [3:0] color0, logic [3:0] color1, logic [3:0] color2);
+    logic [3:0] max01;
+    max01 = (color0 > color1) ? color0 : color1;
+    return (max01 > color2) ? max01 : color2;
+endfunction
+
+function automatic logic [3:0] min_color(logic [3:0] color0, logic [3:0] color1, logic [3:0] color2);
+    logic [3:0] min01;
+    min01 = (color0 < color1) ? color0 : color1;
+    return (min01 < color2) ? min01 : color2;
+endfunction
+
 function automatic logic [3:0] barycentric_weight_color(fixed b0, logic [3:0] color0, fixed b1, logic [3:0] color1, fixed b2, logic [3:0] color2);
-    return 4'(ftoi(barycentric_weight(
-        b0, itof(32'(color0)),
-        b1, itof(32'(color1)),
-        b2, itof(32'(color2))
-    )));
+    return 4'(ftoi(clamp(
+        barycentric_weight(
+            b0, itof(32'(color0), PRECISION_FRACTIONAL_BITS),
+            b1, itof(32'(color1), PRECISION_FRACTIONAL_BITS),
+            b2, itof(32'(color2), PRECISION_FRACTIONAL_BITS)
+        ), 
+        itof(32'(min_color(color0, color1, color2)), PRECISION_FRACTIONAL_BITS),
+        itof(32'(max_color(color0, color1, color2)), PRECISION_FRACTIONAL_BITS)
+    ), PRECISION_FRACTIONAL_BITS));
 endfunction
 
 function automatic logic is_top_left(position_t p0, position_t p1);
@@ -57,10 +75,7 @@ endfunction
 // 3. Infer last barycentric coordinate.
 // 4. Interpolate color and depth.
 // 5. Output pixel data.
-module TriangleInterpolator #(
-    parameter int VIEWPORT_WIDTH = 2,
-    parameter int VIEWPORT_HEIGHT = 2
-) (
+module TriangleInterpolator (
     input logic clk,
     input logic rstn,
 
@@ -80,16 +95,16 @@ module TriangleInterpolator #(
     output pixel_metadata_t pixel_data_m_metadata
 
 );
-    // Precompute how many fixed point units a pixel represents.
-    // NOTE: We subtract 1 from the width and height because we
-    // measure lengths between pixels from their centers.
-    // E.g. in a 2 pixel wide viewport the distance from the left
-    // column to the right column is 1 pixel, not 2 pixels.
-    localparam real PIXEL_SCALE_X = 2.0 / real'(VIEWPORT_WIDTH - 1);
-    localparam real PIXEL_SCALE_Y = 2.0 / real'(VIEWPORT_HEIGHT - 1);
+    // // Precompute how many fixed point units a pixel represents.
+    // // NOTE: We subtract 1 from the width and height because we
+    // // measure lengths between pixels from their centers.
+    // // E.g. in a 2 pixel wide viewport the distance from the left
+    // // column to the right column is 1 pixel, not 2 pixels.
+    // localparam real PIXEL_SCALE_X = 2.0 / real'(VIEWPORT_WIDTH - 1);
+    // localparam real PIXEL_SCALE_Y = 2.0 / real'(VIEWPORT_HEIGHT - 1);
 
-    localparam int PIXEL_OFFSET_X = (VIEWPORT_WIDTH - 1) / 2;
-    localparam int PIXEL_OFFSET_Y = (VIEWPORT_HEIGHT - 1) / 2;
+    // localparam int PIXEL_OFFSET_X = (VIEWPORT_WIDTH - 1) / 2;
+    // localparam int PIXEL_OFFSET_Y = (VIEWPORT_HEIGHT - 1) / 2;
 
     // Stall pipline when downstream is not ready.
     logic stall;
@@ -148,8 +163,10 @@ module TriangleInterpolator #(
 
     // Convert pixel coordinates to fixed point.
     fixed pixel_x_1_c, pixel_y_1_c;
-    assign pixel_x_1_c = pixel_coordinate_1_r.x * rtof(PIXEL_SCALE_X) - 18'(PIXEL_OFFSET_X) * rtof(PIXEL_SCALE_X);
-    assign pixel_y_1_c = pixel_coordinate_1_r.y * rtof(PIXEL_SCALE_Y) - 18'(PIXEL_OFFSET_Y) * rtof(PIXEL_SCALE_Y);
+    // assign pixel_x_1_c = pixel_coordinate_1_r.x * rtof(PIXEL_SCALE_X) - 18'(PIXEL_OFFSET_X) * rtof(PIXEL_SCALE_X);
+    assign pixel_x_1_c = itof(32'(pixel_coordinate_1_r.x), PIXEL_FRACTIONAL_BITS);
+    // assign pixel_y_1_c = pixel_coordinate_1_r.y * rtof(PIXEL_SCALE_Y) - 18'(PIXEL_OFFSET_Y) * rtof(PIXEL_SCALE_Y);
+    assign pixel_y_1_c = itof(32'(pixel_coordinate_1_r.y), PIXEL_FRACTIONAL_BITS);
 
     // Edge functions for the three edges of the triangle.
     fixed f01_1_c, f12_1_c, f20_1_c;
@@ -225,10 +242,11 @@ module TriangleInterpolator #(
     );
 
     // Calculate barycentric coordinates.
+    // They are in PRECISION_FRACTIONAL_BITS fixed point format.
     fixed b0_2_c, b1_2_c, b2_2_c;
-    assign b0_2_c = mul(f12_2_r, a_reciprocal_2_r);
-    assign b1_2_c = mul(f20_2_r, a_reciprocal_2_r);
-    assign b2_2_c = mul(f01_2_r, a_reciprocal_2_r);
+    assign b0_2_c = fixed'((50'(f12_2_r) * 50'(a_reciprocal_2_r)) >> (PIXEL_FRACTIONAL_BITS));
+    assign b1_2_c = fixed'((50'(f20_2_r) * 50'(a_reciprocal_2_r)) >> (PIXEL_FRACTIONAL_BITS));
+    assign b2_2_c = fixed'((50'(f01_2_r) * 50'(a_reciprocal_2_r)) >> (PIXEL_FRACTIONAL_BITS));
 
     /////////////
     // Stage 3 //
@@ -272,31 +290,31 @@ module TriangleInterpolator #(
 
     // Clamp 
     fixed b0_clamped_3_c, b1_clamped_3_c, b2_clamped_3_c;
-    assign b0_clamped_3_c = clamp(b0_3_r);
-    assign b1_clamped_3_c = clamp(b1_3_r);
-    assign b2_clamped_3_c = clamp(b2_3_r);
+    assign b0_clamped_3_c = clamp(b0_3_r, itof(0, PRECISION_FRACTIONAL_BITS), itof(1, PRECISION_FRACTIONAL_BITS));
+    assign b1_clamped_3_c = clamp(b1_3_r, itof(0, PRECISION_FRACTIONAL_BITS), itof(1, PRECISION_FRACTIONAL_BITS));
+    assign b2_clamped_3_c = clamp(b2_3_r, itof(0, PRECISION_FRACTIONAL_BITS), itof(1, PRECISION_FRACTIONAL_BITS));
 
-    fixed normalization_error;
-    assign normalization_error = sub(itof(1), add(add(b0_clamped_3_c, b1_clamped_3_c), b2_clamped_3_c));
+    fixed normalization_error_3_c;
+    assign normalization_error_3_c = sub(itof(1, PRECISION_FRACTIONAL_BITS), add(add(b0_clamped_3_c, b1_clamped_3_c), b2_clamped_3_c));
     
-    localparam fixed NORMALIZATION_ERROR_TOLERANCE = rtof(1.0/16.0);
-    logic normalization_error_too_large;
-    assign normalization_error_too_large = (
-        (normalization_error >  NORMALIZATION_ERROR_TOLERANCE) ||
-        (normalization_error < -NORMALIZATION_ERROR_TOLERANCE)
+    localparam fixed NORMALIZATION_ERROR_TOLERANCE = rtof(1.0/8.0, PRECISION_FRACTIONAL_BITS);
+    logic normalization_error_too_large_3_c;
+    assign normalization_error_too_large_3_c = (
+        (normalization_error_3_c >  NORMALIZATION_ERROR_TOLERANCE) ||
+        (normalization_error_3_c < -NORMALIZATION_ERROR_TOLERANCE)
     );
 
     fixed b0_3_c, b1_3_c, b2_3_c;
     always_comb begin
-        if (normalization_error_too_large) begin
-            b0_3_c = rtof(1.0/3.0);
-            b1_3_c = rtof(1.0/3.0);
-            b2_3_c = rtof(1.0/3.0);
-        end else begin
+        // if (normalization_error_too_large_3_c) begin
+        //     b0_3_c = rtof(1.0/3.0);
+        //     b1_3_c = rtof(1.0/3.0);
+        //     b2_3_c = rtof(1.0/3.0);
+        // end else begin
             b0_3_c = b0_clamped_3_c;
             b1_3_c = b1_clamped_3_c;
             b2_3_c = b2_clamped_3_c;
-        end
+        // end
     end
 
     // TODO: Maybe do some (working) normalization correction in stead?
@@ -325,7 +343,7 @@ module TriangleInterpolator #(
     triangle_t triangle_4_r;
     pixel_coordinate_t pixel_coordinate_4_r;
     pixel_metadata_t pixel_metadata_4_r;
-    logic covered_4_r;
+    logic covered_4_r; //, normalization_error_too_large_4_r;
     fixed b0_4_r, b1_4_r, b2_4_r;
     fixed pixel_x_4_r, pixel_y_4_r;
 
@@ -337,6 +355,7 @@ module TriangleInterpolator #(
             pixel_coordinate_4_r <= '0;
             pixel_metadata_4_r <= '0;
             covered_4_r <= '0;
+            // normalization_error_too_large_4_r <= '0;
             b0_4_r <= '0;
             b1_4_r <= '0;
             b2_4_r <= '0;
@@ -348,6 +367,7 @@ module TriangleInterpolator #(
             pixel_coordinate_4_r <= pixel_coordinate_3_r;
             pixel_metadata_4_r <= pixel_metadata_3_r;
             covered_4_r <= covered_3_c;
+            // normalization_error_too_large_4_r <= normalization_error_too_large_3_c;
             b0_4_r <= b0_3_c;
             b1_4_r <= b1_3_c;
             b2_4_r <= b2_3_c;

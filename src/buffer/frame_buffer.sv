@@ -1,4 +1,5 @@
 import buffer_config_pkg::*;
+import types_pkg::*;
 
 module FrameBuffer #(
     parameter buffer_config_t BUFFER_CONFIG = BUFFER_160x120x12

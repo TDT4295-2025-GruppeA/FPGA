@@ -1,6 +1,8 @@
 from dataclasses import dataclass, Field, field, fields
 from typing import dataclass_transform, Literal
 
+from numpy import isin
+
 from tools.utils import quantize, to_fixed, to_float
 from cocotb.types import LogicArray, Logic, Range
 
@@ -21,8 +23,9 @@ class UInt(_LogicType):
 
 
 class Fixed(_LogicType):
-    def __init__(self):
-        super().__init__(25)  # TOTAL_WIDTH
+    def __init__(self, fractional_bits: int = 14, total_width: int = 25):
+        super().__init__(total_width)
+        self.fractional_bits = fractional_bits
 
 
 class Bytes(_LogicType):
@@ -65,23 +68,23 @@ class LogicObject(metaclass=_Meta):
         index = 0
         for key in reversed(cls.__dataclass_fields__.keys()):
             size = cls._get_field_size(key)
-            field_type = cls._get_field_type(key)
+            field = cls._get_field(key)
 
             sliced = logic_array[index + size - 1 : index]
             sliced.range = Range(size - 1, "downto", 0)
 
-            if issubclass(field_type, Int):
+            if isinstance(field, Int):
                 values[key] = sliced.to_signed()
-            elif issubclass(field_type, UInt):
+            elif isinstance(field, UInt):
                 values[key] = sliced.to_unsigned()
-            elif issubclass(field_type, Fixed):
-                values[key] = to_float(sliced.to_signed())
-            elif issubclass(field_type, Bytes):
+            elif isinstance(field, Fixed):
+                values[key] = to_float(sliced.to_signed(), field.fractional_bits)
+            elif isinstance(field, Bytes):
                 values[key] = sliced.to_bytes(byteorder="big")  # TODO: expose byteorder
-            elif issubclass(field_type, LogicObject):
-                values[key] = field_type.from_logicarray(sliced)
+            elif isinstance(field, type) and issubclass(field, LogicObject):
+                values[key] = field.from_logicarray(sliced)
             else:
-                raise ValueError(f"Invalid value type '{field_type}'")
+                raise ValueError(f"Invalid value type '{type(field)}'")
 
             index += size
         return cls(**values)
@@ -92,19 +95,19 @@ class LogicObject(metaclass=_Meta):
             value = getattr(self, key)
             size = self._get_field_size(key)
 
-            field_type = self._get_field_type(key)
+            field = self._get_field(key)
             arr_range = Range(size - 1, "downto", 0)
 
-            if issubclass(field_type, Int):
+            if isinstance(field, Int):
                 arr = LogicArray.from_signed(value, arr_range)
-            elif issubclass(field_type, UInt):
+            elif isinstance(field, UInt):
                 arr = LogicArray.from_unsigned(value, arr_range)
-            elif issubclass(field_type, Bytes):
+            elif isinstance(field, Bytes):
                 raise NotImplemented
-            elif issubclass(field_type, Fixed):
-                value = to_fixed(value)
+            elif isinstance(field, Fixed):
+                value = to_fixed(value, field.fractional_bits)
                 arr = LogicArray.from_signed(value, arr_range)
-            elif issubclass(field_type, LogicObject):
+            elif isinstance(field, type) and issubclass(field, LogicObject):
                 if isinstance(value, LogicObject):
                     value = value.to_logicarray()
                     arr = LogicArray(value, arr_range)
@@ -113,7 +116,7 @@ class LogicObject(metaclass=_Meta):
                         f"value is '{type(value)}', not LogicObject when field type is LogicObject."
                     )
             else:
-                raise ValueError(f"Invalid field type '{field_type}'")
+                raise ValueError(f"Invalid field type '{type(field)}'")
 
             arrays.append(arr)
 
@@ -153,6 +156,25 @@ class LogicObject(metaclass=_Meta):
 
         if isinstance(field_type, _LogicType):
             return type(field_type)
+        elif isinstance(field_type, type) and issubclass(field_type, LogicObject):
+            return field_type
+        else:
+            raise TypeError(
+                f"Invalid field type '{field_type}' for field '{field_name}'"
+            )
+
+    @classmethod
+    def _get_field(cls, field_name: str) -> "_LogicType | type[LogicObject]":
+        value_field = cls.__dataclass_fields__.get(field_name)
+        if not isinstance(value_field, Field):
+            raise TypeError(
+                f"dataclass field for '{field_name}' in '{cls.__name__}' is not of type 'Field'"
+            )
+
+        field_type = value_field.metadata.get("type")
+
+        if isinstance(field_type, _LogicType):
+            return field_type
         elif isinstance(field_type, type) and issubclass(field_type, LogicObject):
             return field_type
         else:

@@ -40,8 +40,19 @@ class Position(LogicObject):
     z: float = LogicField(Fixed())  # type: ignore
 
 
+class ProjectedPosition(LogicObject):
+    x: float = LogicField(Fixed(3))  # type: ignore
+    y: float = LogicField(Fixed(3))  # type: ignore
+    z: float = LogicField(Fixed(20))  # type: ignore
+
+
 class Vertex(LogicObject):
     position: Position = LogicField(Position)  # type: ignore
+    color: RGB = LogicField(RGB, default_factory=RGB)  # type: ignore
+
+
+class ProjectedVertex(LogicObject):
+    position: ProjectedPosition = LogicField(ProjectedPosition)  # type: ignore
     color: RGB = LogicField(RGB, default_factory=RGB)  # type: ignore
 
 
@@ -49,6 +60,12 @@ class Triangle(LogicObject):
     v0: Vertex = LogicField(Vertex)  # type: ignore
     v1: Vertex = LogicField(Vertex)  # type: ignore
     v2: Vertex = LogicField(Vertex)  # type: ignore
+
+
+class ProjectedTriangle(LogicObject):
+    v0: ProjectedVertex = LogicField(ProjectedVertex)  # type: ignore
+    v1: ProjectedVertex = LogicField(ProjectedVertex)  # type: ignore
+    v2: ProjectedVertex = LogicField(ProjectedVertex)  # type: ignore
 
 
 class TriangleMetadata(LogicObject):
@@ -90,7 +107,7 @@ class PixelCoordinate(LogicObject):
 
 class PixelData(LogicObject):
     covered: int = LogicField(UInt(1))  # type: ignore
-    depth: float = LogicField(Fixed())  # type: ignore
+    depth: float = LogicField(Fixed(20))  # type: ignore
     color: RGB = LogicField(RGB)  # type: ignore
     coordinate: PixelCoordinate = LogicField(PixelCoordinate)  # type: ignore
 

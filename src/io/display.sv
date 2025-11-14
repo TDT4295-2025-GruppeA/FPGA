@@ -3,6 +3,7 @@
 
 import video_modes_pkg::*;
 import buffer_config_pkg::*;
+import types_pkg::*;
 
 module Display #(
     parameter video_mode_t VIDEO_MODE = VMODE_640x480p60,

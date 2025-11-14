@@ -3,8 +3,9 @@ import fixed_pkg::*;
 
 // Projects a single coordinate using the formula:
 //   p' = f * p * (1/z) + c
-function automatic fixed project(fixed f, fixed point, fixed rec_z);
-    return mul(f, mul(point, rec_z));
+function automatic fixed project(fixed f, fixed point, fixed rec_z, fixed c);
+    fixed a = fixed'(double'(f) * double'(rec_z) >> PRECISION_FRACTIONAL_BITS);
+    return cast_precision(add(mul(a, point), c), STANDARD_FRACTIONAL_BITS, PIXEL_FRACTIONAL_BITS);
 endfunction
 
 // Projection module: converts 3D triangle vertices to NDC space.
@@ -14,7 +15,8 @@ endfunction
 //   z' = 1/z
 module Projection #(
     parameter real FOCAL_LENGTH = 0.1,
-    parameter real ASPECT_RATIO = 1.0
+    parameter int VIEWPORT_WIDTH = 160,
+    parameter int VIEWPORT_HEIGHT = 120
 )(
     input  logic        clk,
     input  logic        rstn,
@@ -29,8 +31,12 @@ module Projection #(
     output triangle_meta_t  projected_triangle_m_metadata,
     input  logic            projected_triangle_m_ready
 );
-    localparam fixed FOCAL_LENGTH_X = rtof(FOCAL_LENGTH / ASPECT_RATIO);
-    localparam fixed FOCAL_LENGTH_Y = rtof(FOCAL_LENGTH);
+    localparam real ASPECT_RATIO = real'(VIEWPORT_WIDTH) / real'(VIEWPORT_HEIGHT);
+
+    localparam fixed FOCAL_LENGTH_X = rtof(FOCAL_LENGTH * VIEWPORT_WIDTH);
+    localparam fixed FOCAL_LENGTH_Y = rtof(FOCAL_LENGTH * VIEWPORT_HEIGHT * ASPECT_RATIO);
+    localparam fixed VIEWPORT_CENTER_X = rtof(VIEWPORT_WIDTH / 2);
+    localparam fixed VIEWPORT_CENTER_Y = rtof(VIEWPORT_HEIGHT / 2);
 
     // FSM states
     typedef enum {
@@ -63,11 +69,16 @@ module Projection #(
     // TODO: Use FAR_PLANE and NEAR_PLANE parameters.
     assign current_z_clamped = clamp(current_z, rtof(1.0), rtof(1000.0));
     
-    FixedReciprocalDivider divider (
+    FixedReciprocalDivider #(
+        .INPUT_FRACTIONAL_BITS(STANDARD_FRACTIONAL_BITS),
+        .OUTPUT_FRACTIONAL_BITS(PRECISION_FRACTIONAL_BITS)
+    ) divider (
         .clk(clk),
+        .rstn(rstn),
 
         .divisor_s_ready(divisor_ready),
         .divisor_s_valid(divisor_valid),
+        // TODO: Make fixed divider support higher precision inputs.
         .divisor_s_data(current_z_clamped),
 
         .result_m_ready(z_reciprocal_ready),
@@ -214,20 +225,20 @@ module Projection #(
             triangle_projected <= '0;
         end else if (state == S_PROJ) begin
             // Vertex 0
-            triangle_projected.v0.position.x <= project(FOCAL_LENGTH_X, triangle_in.v0.position.x, rec_z0);
-            triangle_projected.v0.position.y <= project(FOCAL_LENGTH_Y, triangle_in.v0.position.y, rec_z0);
+            triangle_projected.v0.position.x <= project(FOCAL_LENGTH_X, triangle_in.v0.position.x, rec_z0, VIEWPORT_CENTER_X);
+            triangle_projected.v0.position.y <= project(FOCAL_LENGTH_Y, triangle_in.v0.position.y, rec_z0, VIEWPORT_CENTER_Y);
             triangle_projected.v0.position.z <= rec_z0;
             triangle_projected.v0.color      <= triangle_in.v0.color;
 
             // Vertex 1
-            triangle_projected.v1.position.x <= project(FOCAL_LENGTH_X, triangle_in.v1.position.x, rec_z1);
-            triangle_projected.v1.position.y <= project(FOCAL_LENGTH_Y, triangle_in.v1.position.y, rec_z1);
+            triangle_projected.v1.position.x <= project(FOCAL_LENGTH_X, triangle_in.v1.position.x, rec_z1, VIEWPORT_CENTER_X);
+            triangle_projected.v1.position.y <= project(FOCAL_LENGTH_Y, triangle_in.v1.position.y, rec_z1, VIEWPORT_CENTER_Y);
             triangle_projected.v1.position.z <= rec_z1;
             triangle_projected.v1.color      <= triangle_in.v1.color;
 
             // Vertex 2
-            triangle_projected.v2.position.x <= project(FOCAL_LENGTH_X, triangle_in.v2.position.x, rec_z2);
-            triangle_projected.v2.position.y <= project(FOCAL_LENGTH_Y, triangle_in.v2.position.y, rec_z2);
+            triangle_projected.v2.position.x <= project(FOCAL_LENGTH_X, triangle_in.v2.position.x, rec_z2, VIEWPORT_CENTER_X);
+            triangle_projected.v2.position.y <= project(FOCAL_LENGTH_Y, triangle_in.v2.position.y, rec_z2, VIEWPORT_CENTER_Y);
             triangle_projected.v2.position.z <= rec_z2;
             triangle_projected.v2.color      <= triangle_in.v2.color;
         end
