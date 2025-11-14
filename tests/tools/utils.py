@@ -72,7 +72,9 @@ def to_float(
 
 
 @overload
-def quantize(value: float, fractional_bits: int = STANDARD_FRACTIONAL_BITS) -> float: ...
+def quantize(
+    value: float, fractional_bits: int = STANDARD_FRACTIONAL_BITS
+) -> float: ...
 @overload
 def quantize(
     value: np.ndarray, fractional_bits: int = STANDARD_FRACTIONAL_BITS
