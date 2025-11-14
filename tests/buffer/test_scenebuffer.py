@@ -2,9 +2,9 @@ import cocotb
 from cocotb.triggers import ClockCycles
 
 from stubs.scenebuffer import Scenebuffer
-from core.types.types_ import ModelInstance, ModelInstanceMeta
+from core.types.types_ import ModelInstance, ModelInstanceMeta, ScenebufModelInstance
 from tools.pipeline import Producer, Consumer
-from tools.constructors import make_clock, make_scene
+from tools.constructors import make_clock, make_scene, make_scene_camera
 
 VERILOG_MODULE = "SceneBuffer"
 
@@ -21,10 +21,10 @@ INPUTS = [
 ]
 
 OUTPUTS = [
-    *make_scene(4, 0),
-    *make_scene(1, 4),
-    *make_scene(2, 5),
-    *make_scene(5, 7),
+    *make_scene_camera(4, 0),
+    *make_scene_camera(1, 4),
+    *make_scene_camera(2, 5),
+    *make_scene_camera(5, 7),
 ]
 
 
@@ -32,7 +32,7 @@ OUTPUTS = [
 async def test_scenebuffer(dut: Scenebuffer):
     await make_clock(dut)
     producer = Producer(dut, "write")
-    consumer = Consumer(dut, "read", ModelInstance, ModelInstanceMeta)
+    consumer = Consumer(dut, "read", ScenebufModelInstance, ModelInstanceMeta)
 
     await producer.run()
     for item in INPUTS:
@@ -46,5 +46,5 @@ async def test_scenebuffer(dut: Scenebuffer):
     assert len(outputs) == len(
         OUTPUTS
     ), f"Incorrect number of elements: {len(outputs)} vs {len(OUTPUTS)}"
-    for output, actual_output in zip(outputs, OUTPUTS):
+    for output, actual_output in zip(OUTPUTS, outputs):
         assert output == actual_output

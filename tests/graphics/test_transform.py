@@ -16,6 +16,9 @@ from core.types.types_ import (
 )
 
 VERILOG_MODULE = "Transform"
+VERILOG_PARAMETERS = {
+    "TRIANGLE_META_WIDTH": 2,
+}
 
 
 async def make_clock(dut):
@@ -252,7 +255,7 @@ async def test_transform_metadata_passthrough(dut):
     await make_clock(dut)
 
     producer = Producer(dut, "triangle_tf")
-    consumer = Consumer(dut, "triangle", Triangle, TriangleMetadata)
+    consumer = Consumer(dut, "triangle", Triangle, TriangleTransformMeta)
     await producer.run()
     await consumer.run()
 
@@ -279,12 +282,12 @@ async def test_transform_metadata_passthrough(dut):
 
     for meta_triangle, meta_model in [(0, 0), (1, 0), (0, 1), (1, 1)]:
         triangle_expected = triangle_in
-        metadata_expected = meta_triangle and meta_model
+        metadata_expected = TriangleTransformMeta(meta_model, meta_triangle)
         dut._log.info("Doing stuff")
 
         await producer.produce(
             TriangleTransform(triangle=triangle_in, transform=transform),
-            TriangleTransformMeta(meta_model, meta_triangle),
+            metadata_expected,
         )
 
         await RisingEdge(dut.triangle_m_valid)
@@ -297,8 +300,8 @@ async def test_transform_metadata_passthrough(dut):
         ), f"Triangle changed under identity transform!\nExpected: {triangle_expected}\nGot: {triangle_out}"
 
         assert (
-            out_meta.last == metadata_expected
-        ), f"Metadata mismatch!\nExpected: {metadata_expected}\nGot: {out_meta.last}"
+            out_meta == metadata_expected
+        ), f"Metadata mismatch!\nExpected: {metadata_expected}\nGot: {out_meta}"
 
         prev_meta = int(dut.triangle_m_metadata.value)
         await RisingEdge(dut.clk)

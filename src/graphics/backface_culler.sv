@@ -149,4 +149,4 @@ module BackfaceCuller (
     // This is done so that the metadata can still be passed through if needed.
     assign triangle_m_data = (is_backface) ? '0 : triangle;
     assign triangle_m_metadata = triangle_metadata;
-endmodule;
+endmodule

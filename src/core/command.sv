@@ -30,6 +30,11 @@ module CommandInput(
     output modelinstance_t      scene_m_data,
     output modelinstance_meta_t scene_m_metadata,
 
+    // SceneBuffer camera transform comms
+    output logic camera_m_valid,
+    input  logic camera_m_ready,
+    output transform_t camera_m_data,
+
     // Reset signal for the entire system
     output logic cmd_reset
 );
@@ -39,14 +44,16 @@ module CommandInput(
         STATE_RESET              = 3'd1,
         STATE_BEGIN_MODEL_UPLOAD = 3'd2,
         STATE_UPLOAD_TRIANGLE    = 3'd3,
-        STATE_ADD_MODELINSTANCE  = 3'd4
+        STATE_ADD_MODELINSTANCE  = 3'd4,
+        STATE_SET_CAMERA_TRANSFORM = 3'd5
     } state_t;
 
     // Commands we have implemented
-    localparam byte_t CMD_RESET               = byte_t'(8'h55);
-    localparam byte_t CMD_BEGIN_MODEL_UPLOAD  = byte_t'(8'hA0);
-    localparam byte_t CMD_UPLOAD_TRIANGLE     = byte_t'(8'hA1);
-    localparam byte_t CMD_ADD_MODEL_INSTANCE  = byte_t'(8'hB0);
+    localparam byte_t CMD_RESET                = byte_t'(8'h55);
+    localparam byte_t CMD_BEGIN_MODEL_UPLOAD   = byte_t'(8'hA0);
+    localparam byte_t CMD_UPLOAD_TRIANGLE      = byte_t'(8'hA1);
+    localparam byte_t CMD_ADD_MODEL_INSTANCE   = byte_t'(8'hB0);
+    localparam byte_t CMD_SET_CAMERA_TRANSFORM = byte_t'(8'hC0);
 
     // Function that returns the length of the command in bytes
     function automatic byte_t command_length_bytes(byte_t cmd);
@@ -55,6 +62,7 @@ module CommandInput(
             CMD_BEGIN_MODEL_UPLOAD: return byte_t'(2);
             CMD_UPLOAD_TRIANGLE: return byte_t'(1 + $bits(cmd_triangle_t) / 8);
             CMD_ADD_MODEL_INSTANCE: return byte_t'(1 + $bits(cmd_scene_t) / 8);
+            CMD_SET_CAMERA_TRANSFORM: return byte_t'(1 + $bits(cmd_transform_t) / 8);
             default: return byte_t'(1);
         endcase
     endfunction
@@ -124,6 +132,35 @@ module CommandInput(
         .parallel_m_data(scene_parallel_m_data)
     );
 
+    
+    // Serializer camera transform
+    transform_t current_camera_transform;
+
+    wire camera_serial_s_ready;
+    wire camera_serial_s_valid;
+    wire byte_t camera_serial_s_data;
+    assign camera_serial_s_data = cmd_s_data;
+    assign camera_serial_s_valid = (state == STATE_SET_CAMERA_TRANSFORM) && cmd_s_transaction;
+
+    wire cmd_transform_t camera_parallel_m_data;
+
+    assign camera_m_data = cast_transform(camera_parallel_m_data);
+
+    SerialToParallelStream #(
+        .INPUT_SIZE($bits(byte_t)),
+        .OUTPUT_SIZE($bits(cmd_transform_t))
+    ) cameratransform_serializer (
+        .clk(clk),
+        .rstn(rstn),
+        .synchronize(serial_to_parallel_synchronize),
+        .serial_s_ready(camera_serial_s_ready),
+        .serial_s_valid(camera_serial_s_valid),
+        .serial_s_data(camera_serial_s_data),
+        .parallel_m_ready(1),
+        .parallel_m_valid(camera_m_valid),
+        .parallel_m_data(camera_parallel_m_data)
+    );
+
     // For debugging send the received commands.
     assign cmd_m_valid = cmd_s_transaction;
     assign cmd_m_data  = cmd_s_data;
@@ -133,12 +170,13 @@ module CommandInput(
     // on downstream logic.
     always_comb begin
         case (state)
-            STATE_IDLE:                cmd_s_ready = 1'b1;
-            STATE_RESET:               cmd_s_ready = 1'b1;
-            STATE_BEGIN_MODEL_UPLOAD:  cmd_s_ready = 1'b1; // accept model index byte
-            STATE_UPLOAD_TRIANGLE:     cmd_s_ready = model_serial_s_ready; // accept triangle bytes when serializer ready
-            STATE_ADD_MODELINSTANCE:   cmd_s_ready = scene_serial_s_ready; // accept modelinstance bytes when serializer ready
-            default:                   cmd_s_ready = 1'b0;
+            STATE_IDLE:                 cmd_s_ready = 1'b1;
+            STATE_RESET:                cmd_s_ready = 1'b1;
+            STATE_BEGIN_MODEL_UPLOAD:   cmd_s_ready = 1'b1; // accept model index byte
+            STATE_UPLOAD_TRIANGLE:      cmd_s_ready = model_serial_s_ready; // accept triangle bytes when serializer ready
+            STATE_ADD_MODELINSTANCE:    cmd_s_ready = scene_serial_s_ready; // accept modelinstance bytes when serializer ready
+            STATE_SET_CAMERA_TRANSFORM: cmd_s_ready = camera_serial_s_ready; // Accept camera transform bytes when serializer ready
+            default:                    cmd_s_ready = 1'b0;
         endcase
     end
 
@@ -172,6 +210,9 @@ module CommandInput(
                         end
                         CMD_ADD_MODEL_INSTANCE: begin
                             state <= STATE_ADD_MODELINSTANCE;
+                        end
+                        CMD_SET_CAMERA_TRANSFORM: begin
+                            state <= STATE_SET_CAMERA_TRANSFORM;
                         end
                         default: begin 
                             // Ignore. TODO: Send invalid response?

@@ -34,8 +34,8 @@ module PipelineHead(
     // To graphics pipeline
     output logic                triangle_tf_m_valid,
     input  logic                triangle_tf_m_ready,
-    output triangle_tf_t        triangle_tf_m_data,
-    output triangle_tf_meta_t   triangle_tf_m_metadata
+    output pipeline_entry_t     triangle_tf_m_data,
+    output last_t               triangle_tf_m_metadata
 );
     localparam MAX_MODEL_COUNT = 10;
     localparam MAX_TRIANGLE_COUNT = 2024;
@@ -48,6 +48,10 @@ module PipelineHead(
     wire modelinstance_meta_t cmd_scene_metadata;
     wire logic cmd_scene_valid;
     wire logic cmd_scene_ready;
+
+    wire logic cmd_camera_valid;
+    wire logic cmd_camera_ready;
+    wire transform_t cmd_camera_data;
     CommandInput cmd_inst (
         .clk(clk),
         .rstn(rstn),
@@ -69,7 +73,11 @@ module PipelineHead(
         .scene_m_valid(cmd_scene_valid),
         .scene_m_ready(cmd_scene_ready),
         .scene_m_data(cmd_scene_data),
-        .scene_m_metadata(cmd_scene_metadata)
+        .scene_m_metadata(cmd_scene_metadata),
+
+        .camera_m_valid(cmd_camera_valid),
+        .camera_m_ready(cmd_camera_ready),
+        .camera_m_data(cmd_camera_data)
     );
 
     // Modelbuffer
@@ -105,14 +113,18 @@ module PipelineHead(
     // Scenebuffer
     wire scene_read_valid;
     wire scene_read_ready;
-    wire modelinstance_t scene_read_data;
-    wire modelinstance_meta_t scene_read_metadata;
+    wire scenebuf_modelinstance_t scene_read_data;
+    wire last_t scene_read_metadata;
     SceneBuffer #(
         .SCENE_COUNT(2),
         .TRANSFORM_COUNT(50)
     ) scenebuffer_inst (
         .clk(clk),
         .rstn(rstn),
+
+        .camera_s_valid(cmd_camera_valid),
+        .camera_s_ready(cmd_camera_ready),
+        .camera_s_data(cmd_camera_data),
 
         .write_s_valid(cmd_scene_valid),
         .write_s_ready(cmd_scene_ready),
