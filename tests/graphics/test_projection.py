@@ -79,8 +79,17 @@ async def test_projection(dut):
         ):
             z = v_in.position.z
             w_expected = 1 / z
-            x_expected = FOCAL_LENGTH * VIEWPORT_WIDTH * (v_in.position.x * w_expected) + VIEWPORT_WIDTH / 2
-            y_expected = FOCAL_LENGTH * VIEWPORT_HEIGHT * ASPECT_RATIO * (v_in.position.y * w_expected) + VIEWPORT_HEIGHT / 2
+            x_expected = (
+                FOCAL_LENGTH * VIEWPORT_WIDTH * (v_in.position.x * w_expected)
+                + VIEWPORT_WIDTH / 2
+            )
+            y_expected = (
+                FOCAL_LENGTH
+                * VIEWPORT_HEIGHT
+                * ASPECT_RATIO
+                * (v_in.position.y * w_expected)
+                + VIEWPORT_HEIGHT / 2
+            )
 
             cocotb.log.info(f"{v_in.position.x}, {v_in.position.y}, {v_in.position.z}")
             cocotb.log.info(f"{x_expected}, {y_expected}, {w_expected}")

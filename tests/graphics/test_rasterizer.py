@@ -34,8 +34,8 @@ VERILOG_PARAMETERS = {
 
 TEST_TRIANGLES = [
     ProjectedTriangle(
-        ProjectedVertex(ProjectedPosition( 0,  0, 0.00), RGB(15, 0, 0)),
-        ProjectedVertex(ProjectedPosition(15,  0, 0.00), RGB(0, 15, 0)),
+        ProjectedVertex(ProjectedPosition(0, 0, 0.00), RGB(15, 0, 0)),
+        ProjectedVertex(ProjectedPosition(15, 0, 0.00), RGB(0, 15, 0)),
         ProjectedVertex(ProjectedPosition(15, 15, 1.00), RGB(0, 0, 15)),
     ),
     ProjectedTriangle(
@@ -44,9 +44,9 @@ TEST_TRIANGLES = [
         ProjectedVertex(ProjectedPosition(63, 63, 0.00), RGB(0, 0, 15)),
     ),
     ProjectedTriangle(
-        ProjectedVertex(ProjectedPosition( 0,  0, 0.50), RGB(15, 0, 0)),
+        ProjectedVertex(ProjectedPosition(0, 0, 0.50), RGB(15, 0, 0)),
         ProjectedVertex(ProjectedPosition(63, 63, 1.00), RGB(0, 0, 15)),
-        ProjectedVertex(ProjectedPosition( 0, 63, 0.00), RGB(0, 15, 0)),
+        ProjectedVertex(ProjectedPosition(0, 63, 0.00), RGB(0, 15, 0)),
     ),
     # Triangle(
     #     ProjectedVertex(Position(-0.80, -0.90, 0.00), RGB(15, 0, 0)),

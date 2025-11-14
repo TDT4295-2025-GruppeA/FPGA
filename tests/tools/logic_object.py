@@ -162,7 +162,7 @@ class LogicObject(metaclass=_Meta):
             raise TypeError(
                 f"Invalid field type '{field_type}' for field '{field_name}'"
             )
-        
+
     @classmethod
     def _get_field(cls, field_name: str) -> "_LogicType | type[LogicObject]":
         value_field = cls.__dataclass_fields__.get(field_name)

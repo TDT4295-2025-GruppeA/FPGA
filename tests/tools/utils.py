@@ -37,8 +37,12 @@ def np_round_away(x: np.ndarray) -> np.ndarray:
 @overload
 def to_fixed(value: float, fractional_bits: int = FRACTIONAL_BITS) -> int: ...
 @overload
-def to_fixed(value: np.ndarray, fractional_bits: int = FRACTIONAL_BITS) -> np.ndarray: ...
-def to_fixed(value: float | np.ndarray, fractional_bits: int = FRACTIONAL_BITS) -> int | np.ndarray:
+def to_fixed(
+    value: np.ndarray, fractional_bits: int = FRACTIONAL_BITS
+) -> np.ndarray: ...
+def to_fixed(
+    value: float | np.ndarray, fractional_bits: int = FRACTIONAL_BITS
+) -> int | np.ndarray:
     """Convert a float to fixed point."""
     res = value * (1 << fractional_bits)
 
@@ -54,8 +58,12 @@ def to_fixed(value: float | np.ndarray, fractional_bits: int = FRACTIONAL_BITS) 
 @overload
 def to_float(value: int, fractional_bits: int = FRACTIONAL_BITS) -> float: ...
 @overload
-def to_float(value: np.ndarray, fractional_bits: int = FRACTIONAL_BITS) -> np.ndarray: ...
-def to_float(value: int | np.ndarray, fractional_bits: int = FRACTIONAL_BITS) -> float | np.ndarray:
+def to_float(
+    value: np.ndarray, fractional_bits: int = FRACTIONAL_BITS
+) -> np.ndarray: ...
+def to_float(
+    value: int | np.ndarray, fractional_bits: int = FRACTIONAL_BITS
+) -> float | np.ndarray:
     """Convert a fixed point to float."""
     return value / (1 << fractional_bits)
 
@@ -63,8 +71,12 @@ def to_float(value: int | np.ndarray, fractional_bits: int = FRACTIONAL_BITS) ->
 @overload
 def quantize(value: float, fractional_bits: int = FRACTIONAL_BITS) -> float: ...
 @overload
-def quantize(value: np.ndarray, fractional_bits: int = FRACTIONAL_BITS) -> np.ndarray: ...
-def quantize(value: float | np.ndarray, fractional_bits: int = FRACTIONAL_BITS) -> float | np.ndarray:
+def quantize(
+    value: np.ndarray, fractional_bits: int = FRACTIONAL_BITS
+) -> np.ndarray: ...
+def quantize(
+    value: float | np.ndarray, fractional_bits: int = FRACTIONAL_BITS
+) -> float | np.ndarray:
     """Round a float or numpy array to the closest fixed point representation."""
     return to_float(to_fixed(value), fractional_bits)
 
