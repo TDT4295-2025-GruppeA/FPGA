@@ -77,47 +77,47 @@ set_property -dict { PACKAGE_PIN A5   IOSTANDARD LVCMOS33 } [get_ports { screen_
 set_property -dict { PACKAGE_PIN A8   IOSTANDARD LVCMOS33 } [get_ports { screen_data_enable }]; # Data enable
 
 
-# SRAM A (PINS INCORRECT)
-set_property -dict { PACKAGE_PIN N14   IOSTANDARD LVCMOS33 } [get_ports { srama_a0 }]; # SRAM B Address 0
-set_property -dict { PACKAGE_PIN N16   IOSTANDARD LVCMOS33 } [get_ports { srama_a1 }]; # SRAM B Address 1
-set_property -dict { PACKAGE_PIN P1   IOSTANDARD LVCMOS33 } [get_ports { srama_a2 }]; # SRAM B Address 2
-set_property -dict { PACKAGE_PIN P3   IOSTANDARD LVCMOS33 } [get_ports { srama_a3 }]; # SRAM B Address 3
-set_property -dict { PACKAGE_PIN P4   IOSTANDARD LVCMOS33 } [get_ports { srama_a4 }]; # SRAM B Address 4
-set_property -dict { PACKAGE_PIN P5   IOSTANDARD LVCMOS33 } [get_ports { srama_a5 }]; # SRAM B Address 5
-set_property -dict { PACKAGE_PIN P6   IOSTANDARD LVCMOS33 } [get_ports { srama_a6 }]; # SRAM B Address 6
-set_property -dict { PACKAGE_PIN P8   IOSTANDARD LVCMOS33 } [get_ports { srama_a7 }]; # SRAM B Address 7
-set_property -dict { PACKAGE_PIN R6   IOSTANDARD LVCMOS33 } [get_ports { srama_a8 }]; # SRAM B Address 8
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_a9 }]; # SRAM B Address 9
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_a10 }]; # SRAM B Address 10
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_a11 }]; # SRAM B Address 11
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_a12 }]; # SRAM B Address 12
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_a13 }]; # SRAM B Address 13
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_a14 }]; # SRAM B Address 14
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_a15 }]; # SRAM B Address 15
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_a16 }]; # SRAM B Address 16
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_a17 }]; # SRAM B Address 17
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_a18 }]; # SRAM B Address 18
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d0 }]; # SRAM B Data 0
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d1 }]; # SRAM B Data 1
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d2 }]; # SRAM B Data 2
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d3 }]; # SRAM B Data 3
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d4 }]; # SRAM B Data 4
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d5 }]; # SRAM B Data 5
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d6 }]; # SRAM B Data 6
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d7 }]; # SRAM B Data 7
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d8 }]; # SRAM B Data 8
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d9 }]; # SRAM B Data 9
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d10 }]; # SRAM B Data 10
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d11 }]; # SRAM B Data 11
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d12 }]; # SRAM B Data 12
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d13 }]; # SRAM B Data 13
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d14 }]; # SRAM B Data 14
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_d15 }]; # SRAM B Data 15
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_cen }]; # SRAM B chip enable
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_wen }]; # SRAM B write enable
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_oen }]; # SRAM B output enable
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_bhen }]; # SRAM B byte high enable
-set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { srama_blen }]; # SRAM B byte low enable
+# SRAM A
+set_property -dict { PACKAGE_PIN N14  IOSTANDARD LVCMOS33 } [get_ports { srama_a0   }]; # SRAM B Address 0
+set_property -dict { PACKAGE_PIN N16  IOSTANDARD LVCMOS33 } [get_ports { srama_a1   }]; # SRAM B Address 1
+set_property -dict { PACKAGE_PIN P1   IOSTANDARD LVCMOS33 } [get_ports { srama_a2   }]; # SRAM B Address 2
+set_property -dict { PACKAGE_PIN P3   IOSTANDARD LVCMOS33 } [get_ports { srama_a3   }]; # SRAM B Address 3
+set_property -dict { PACKAGE_PIN P4   IOSTANDARD LVCMOS33 } [get_ports { srama_a4   }]; # SRAM B Address 4
+set_property -dict { PACKAGE_PIN P5   IOSTANDARD LVCMOS33 } [get_ports { srama_a5   }]; # SRAM B Address 5
+set_property -dict { PACKAGE_PIN P6   IOSTANDARD LVCMOS33 } [get_ports { srama_a6   }]; # SRAM B Address 6
+set_property -dict { PACKAGE_PIN P8   IOSTANDARD LVCMOS33 } [get_ports { srama_a7   }]; # SRAM B Address 7
+set_property -dict { PACKAGE_PIN R6   IOSTANDARD LVCMOS33 } [get_ports { srama_a8   }]; # SRAM B Address 8
+set_property -dict { PACKAGE_PIN R7   IOSTANDARD LVCMOS33 } [get_ports { srama_a9   }]; # SRAM B Address 9
+set_property -dict { PACKAGE_PIN R8   IOSTANDARD LVCMOS33 } [get_ports { srama_a10  }]; # SRAM B Address 10
+set_property -dict { PACKAGE_PIN R10  IOSTANDARD LVCMOS33 } [get_ports { srama_a11  }]; # SRAM B Address 11
+set_property -dict { PACKAGE_PIN R11  IOSTANDARD LVCMOS33 } [get_ports { srama_a12  }]; # SRAM B Address 12
+set_property -dict { PACKAGE_PIN R12  IOSTANDARD LVCMOS33 } [get_ports { srama_a13  }]; # SRAM B Address 13
+set_property -dict { PACKAGE_PIN L14  IOSTANDARD LVCMOS33 } [get_ports { srama_a14  }]; # SRAM B Address 14
+set_property -dict { PACKAGE_PIN L15  IOSTANDARD LVCMOS33 } [get_ports { srama_a15  }]; # SRAM B Address 15
+set_property -dict { PACKAGE_PIN M4   IOSTANDARD LVCMOS33 } [get_ports { srama_a16  }]; # SRAM B Address 16
+set_property -dict { PACKAGE_PIN M5   IOSTANDARD LVCMOS33 } [get_ports { srama_a17  }]; # SRAM B Address 17
+set_property -dict { PACKAGE_PIN M6   IOSTANDARD LVCMOS33 } [get_ports { srama_a18  }]; # SRAM B Address 18
+set_property -dict { PACKAGE_PIN N12  IOSTANDARD LVCMOS33 } [get_ports { srama_d0   }]; # SRAM B Data 0
+set_property -dict { PACKAGE_PIN N11  IOSTANDARD LVCMOS33 } [get_ports { srama_d1   }]; # SRAM B Data 1
+set_property -dict { PACKAGE_PIN N9   IOSTANDARD LVCMOS33 } [get_ports { srama_d2   }]; # SRAM B Data 2
+set_property -dict { PACKAGE_PIN N3   IOSTANDARD LVCMOS33 } [get_ports { srama_d3   }]; # SRAM B Data 3
+set_property -dict { PACKAGE_PIN N2   IOSTANDARD LVCMOS33 } [get_ports { srama_d4   }]; # SRAM B Data 4
+set_property -dict { PACKAGE_PIN N1   IOSTANDARD LVCMOS33 } [get_ports { srama_d5   }]; # SRAM B Data 5
+set_property -dict { PACKAGE_PIN M16  IOSTANDARD LVCMOS33 } [get_ports { srama_d6   }]; # SRAM B Data 6
+set_property -dict { PACKAGE_PIN M15  IOSTANDARD LVCMOS33 } [get_ports { srama_d7   }]; # SRAM B Data 7
+set_property -dict { PACKAGE_PIN R5   IOSTANDARD LVCMOS33 } [get_ports { srama_d8   }]; # SRAM B Data 8
+set_property -dict { PACKAGE_PIN R2   IOSTANDARD LVCMOS33 } [get_ports { srama_d9   }]; # SRAM B Data 9
+set_property -dict { PACKAGE_PIN R3   IOSTANDARD LVCMOS33 } [get_ports { srama_d10  }]; # SRAM B Data 10
+set_property -dict { PACKAGE_PIN R1   IOSTANDARD LVCMOS33 } [get_ports { srama_d11  }]; # SRAM B Data 11
+set_property -dict { PACKAGE_PIN P16  IOSTANDARD LVCMOS33 } [get_ports { srama_d12  }]; # SRAM B Data 12
+set_property -dict { PACKAGE_PIN P15  IOSTANDARD LVCMOS33 } [get_ports { srama_d13  }]; # SRAM B Data 13
+set_property -dict { PACKAGE_PIN P14  IOSTANDARD LVCMOS33 } [get_ports { srama_d14  }]; # SRAM B Data 14
+set_property -dict { PACKAGE_PIN P13  IOSTANDARD LVCMOS33 } [get_ports { srama_d15  }]; # SRAM B Data 15
+set_property -dict { PACKAGE_PIN N13  IOSTANDARD LVCMOS33 } [get_ports { srama_cen  }]; # SRAM B chip enable
+set_property -dict { PACKAGE_PIN M14  IOSTANDARD LVCMOS33 } [get_ports { srama_wen  }]; # SRAM B write enable
+set_property -dict { PACKAGE_PIN P9   IOSTANDARD LVCMOS33 } [get_ports { srama_oen  }]; # SRAM B output enable
+set_property -dict { PACKAGE_PIN P10  IOSTANDARD LVCMOS33 } [get_ports { srama_bhen }]; # SRAM B byte high enable
+set_property -dict { PACKAGE_PIN P11  IOSTANDARD LVCMOS33 } [get_ports { srama_blen }]; # SRAM B byte low enable
 
 
 # SRAM B (PINS INCORRECT)
