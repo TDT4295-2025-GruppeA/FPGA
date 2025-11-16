@@ -104,7 +104,7 @@ module PipelineTail #(
     // The Display module drives disp_read_addr
     assign fb_a_read_addr = disp_read_addr;
     assign fb_b_read_addr = disp_read_addr;
-    assign disp_read_data = sw[3] 
+    assign disp_read_data = ~sw[3]
         ? (buffer_select ? fb_a_read_data : fb_b_read_data)
         : (buffer_select ? fb_b_read_data : fb_a_read_data);
 
