@@ -30,12 +30,10 @@ module FrameBuffer #(
     end
 
     initial begin
-        // Hardcoded 12-bit R4G4B4 format: RRRR GGGG BBBB
-        // Full Red (1111), Zero Green (0000), Zero Blue (0000)
-        localparam logic[11:0] INITIAL_RED_VALUE = color_t'('hF00);
+        localparam logic[11:0] INITIAL_COLOR_VALUE = color_t'('hFFF);
         
         for (int i = 0; i < BUFFER_CONFIG.size; i++) begin
-            memory[i] = INITIAL_RED_VALUE;
+            memory[i] = INITIAL_COLOR_VALUE;
         end
     end
 
