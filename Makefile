@@ -7,6 +7,7 @@ PART_A735T_SHORT := xc7a35t_0
 PART_A735T_LONG := xc7a35ticsg324-1L
 PART_A7100T_SHORT := xc7a100t_0
 PART_A7100T_LONG := xc7a100ticsg324-1L
+PART_A7100T_FTG_LONG := xc7a100tiftg256-1L
 
 TARGET ?= 35t
 BOARD ?= arty7
@@ -18,6 +19,9 @@ ifeq ($(TARGET),35t)
 else ifeq ($(TARGET),100t)
 	PART_LONG = $(PART_A7100T_LONG)
 	PART_SHORT = $(PART_A7100T_SHORT)
+else ifeq ($(TARGET),100t_ftg)
+	PART_LONG = $(PART_A7100T_FTG_LONG)
+	PART_SHORt = $(PART_A7100T_SHORT)
 endif
 
 VERILOG_SOURCES := $(shell find src -type f -name "*.*v")
