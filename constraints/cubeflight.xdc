@@ -10,41 +10,42 @@ set_clock_groups -asynchronous \
     -group [get_clocks clk_out_unbuf_1]
 
 # GPIO
-set_property -dict { PACKAGE_PIN C3    IOSTANDARD LVCMOS33 } [get_ports { reset }]; # GPIO 0
-# set_property -dict { PACKAGE_PIN C4    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO 1
-# set_property -dict { PACKAGE_PIN D5    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO 2
-# set_property -dict { PACKAGE_PIN C6    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO 3
-# set_property -dict { PACKAGE_PIN C7    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO 4
-# set_property -dict { PACKAGE_PIN D8    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO 5
+set_property -dict { PACKAGE_PIN C3    IOSTANDARD LVCMOS33 } [get_ports { done }]; # GPIO 0
+# set_property -dict { PACKAGE_PIN C4    IOSTANDARD LVCMOS33 } [get_ports { vga_green[0] }]; # GPIO 1
+set_property -dict { PACKAGE_PIN D5    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO 2
+set_property -dict { PACKAGE_PIN C6    IOSTANDARD LVCMOS33 } [get_ports { sw[1] }]; # GPIO 3
+set_property -dict { PACKAGE_PIN C7    IOSTANDARD LVCMOS33 } [get_ports { sw[2] }]; # GPIO 4
+set_property -dict { PACKAGE_PIN D8    IOSTANDARD LVCMOS33 } [get_ports { sw[3] }]; # GPIO 5
 
 # GPIO MCU
 # set_property -dict { PACKAGE_PIN J16    IOSTANDARD LVCMOS33 } [get_ports { reset }]; # GPIO MCU 1
 # set_property -dict { PACKAGE_PIN J15    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO MCU 2
 # set_property -dict { PACKAGE_PIN G16    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO MCU 3
-# set_property -dict { PACKAGE_PIN D16    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO MCU 4
+set_property -dict { PACKAGE_PIN D16    IOSTANDARD LVCMOS33 } [get_ports { reset }]; # GPIO MCU 4
 
 # MCU SPI
 set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets spi_sclk_IBUF]; # Disable routing to a dedicated clock pin. Vivado thinks this is a global clock. It is not.
-set_property -dict { PACKAGE_PIN H16    IOSTANDARD LVCMOS33 } [get_ports { miso }]; # MCU SPI MISO
-set_property -dict { PACKAGE_PIN H14    IOSTANDARD LVCMOS33 } [get_ports { mosi }]; # MCU SPI MOSI
-set_property -dict { PACKAGE_PIN H12    IOSTANDARD LVCMOS33 } [get_ports { ssn }]; # MCU SPI SSN
-set_property -dict { PACKAGE_PIN H13    IOSTANDARD LVCMOS33 } [get_ports { sck }]; # MCU SPI SCLK
+set_property -dict { PACKAGE_PIN H13    IOSTANDARD LVCMOS33 } [get_ports { spi_miso }]; # MCU SPI MISO
+set_property -dict { PACKAGE_PIN H12    IOSTANDARD LVCMOS33 } [get_ports { spi_mosi }]; # MCU SPI MOSI
+set_property -dict { PACKAGE_PIN H14    IOSTANDARD LVCMOS33 } [get_ports { spi_ssn }]; # MCU SPI SSN
+set_property -dict { PACKAGE_PIN H16    IOSTANDARD LVCMOS33 } [get_ports { spi_sclk }]; # MCU SPI SCLK
 
 # VGA
-set_property -dict { PACKAGE_PIN T9   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[0] }]; # VGA blue[0]
-set_property -dict { PACKAGE_PIN T8   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[1] }]; # VGA blue[1]
-set_property -dict { PACKAGE_PIN T7   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[2] }]; # VGA blue[2]
-set_property -dict { PACKAGE_PIN T5   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[3] }]; # VGA blue[3]
+set_property -dict { PACKAGE_PIN T9   IOSTANDARD LVCMOS33 } [get_ports { vga_red[0] }]; # VGA blue[0]
+set_property -dict { PACKAGE_PIN T8   IOSTANDARD LVCMOS33 } [get_ports { vga_red[1] }]; # VGA blue[1]
+set_property -dict { PACKAGE_PIN T7   IOSTANDARD LVCMOS33 } [get_ports { vga_red[2] }]; # VGA blue[2]
+set_property -dict { PACKAGE_PIN T5   IOSTANDARD LVCMOS33 } [get_ports { vga_red[3] }]; # VGA blue[3]
 
-set_property -dict { PACKAGE_PIN T15   IOSTANDARD LVCMOS33 } [get_ports { vga_red[0] }]; # VGA red[0]
-set_property -dict { PACKAGE_PIN T14   IOSTANDARD LVCMOS33 } [get_ports { vga_red[1] }]; # VGA red[1]
-set_property -dict { PACKAGE_PIN T13   IOSTANDARD LVCMOS33 } [get_ports { vga_red[2] }]; # VGA red[2]
-set_property -dict { PACKAGE_PIN T10   IOSTANDARD LVCMOS33 } [get_ports { vga_red[3] }]; # VGA red[3]
 
 set_property -dict { PACKAGE_PIN T4   IOSTANDARD LVCMOS33 } [get_ports { vga_green[0] }]; # VGA green[0]
 set_property -dict { PACKAGE_PIN T3   IOSTANDARD LVCMOS33 } [get_ports { vga_green[1] }]; # VGA green[1]
 set_property -dict { PACKAGE_PIN T2   IOSTANDARD LVCMOS33 } [get_ports { vga_green[2] }]; # VGA green[2]
 set_property -dict { PACKAGE_PIN R16   IOSTANDARD LVCMOS33 } [get_ports { vga_green[3] }]; # VGA green[3]
+
+set_property -dict { PACKAGE_PIN T15   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[0] }]; # VGA red[0]
+set_property -dict { PACKAGE_PIN T14   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[1] }]; # VGA red[1]
+set_property -dict { PACKAGE_PIN T13   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[2] }]; # VGA red[2]
+set_property -dict { PACKAGE_PIN T10   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[3] }]; # VGA red[3]
 
 set_property -dict { PACKAGE_PIN R15   IOSTANDARD LVCMOS33 } [get_ports { vga_hsync }]; # VGA hsync
 set_property -dict { PACKAGE_PIN R13   IOSTANDARD LVCMOS33 } [get_ports { vga_vsync }]; # VGA vsync
@@ -70,7 +71,7 @@ set_property -dict { PACKAGE_PIN R13   IOSTANDARD LVCMOS33 } [get_ports { vga_vs
 # set_property -dict { PACKAGE_PIN A13   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[3] }]; # Screen blue[3]
 # set_property -dict { PACKAGE_PIN A12   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[4] }]; # Screen blue[4]
 
-# set_property -dict { PACKAGE_PIN A10   IOSTANDARD LVCMOS33 } [get_ports { screen_clk] }]; # Screen clk[0]
+# set_property -dict { PACKAGE_PIN A10   IOSTANDARD LVCMOS33 } [get_ports { screen_clk }]; # Screen clk[0]
 # set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { screen_enable }]; # Screen enable
 # set_property -dict { PACKAGE_PIN A7   IOSTANDARD LVCMOS33 } [get_ports { screen_hsync }]; # Screen hsync
 # set_property -dict { PACKAGE_PIN A5   IOSTANDARD LVCMOS33 } [get_ports { screen_vsync }]; # Screen vsync

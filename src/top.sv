@@ -7,9 +7,9 @@ import types_pkg::*;
 module Top (
     // Fun stuff
     input logic [3:0] sw,
-    input logic [2:0] btn,
-    output logic [3:0] led,
-    output logic [7:0] seg,
+    // input logic [2:0] btn,
+    // output logic [3:0] led,
+    // output logic [7:0] seg,
 
     // Boring stuff
     input logic clk_ext, // 100MHz for now
@@ -26,8 +26,15 @@ module Top (
     output logic vga_vsync,
     output logic[3:0] vga_red,
     output logic[3:0] vga_green,
-    output logic[3:0] vga_blue
+    output logic[3:0] vga_blue,
+
+    output logic done
 );
+    // logic [3:0] sw;
+    // logic [2:0] btn;
+    // logic [3:0] led;
+    // logic [7:0] seg;
+
     localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
     localparam buffer_config_t BUFFER_CONFIG = BUFFER_160x120x12;
 
@@ -66,7 +73,13 @@ module Top (
 
     logic clk_system;
     logic rstn_system;
-
+    always_comb begin
+        if (rstn_system) begin
+            done = 1;
+        end else begin
+            done = 0;
+        end
+    end
     ClockManager #(
         .CLK_DISPLAY(VIDEO_MODE.clock_config),
         .CLK_SYSTEM(CLK_100_50_MHZ)
