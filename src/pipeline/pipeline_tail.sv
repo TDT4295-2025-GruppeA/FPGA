@@ -106,8 +106,8 @@ module PipelineTail #(
     assign fb_a_read_addr = disp_read_addr;
     assign fb_b_read_addr = disp_read_addr;
     assign disp_read_data = debug_active_frame_buffer
-        ? (buffer_select ? fb_b_read_data : fb_a_read_data);
-        : (buffer_select ? fb_a_read_data : fb_b_read_data)
+        ? (buffer_select ? fb_b_read_data : fb_a_read_data)
+        : (buffer_select ? fb_a_read_data : fb_b_read_data);
 
     // DrawingManager writes to the INACTIVE buffer
     assign fb_a_write_en = !buffer_select_sync_sys ? dm_write_en : 1'b0;
