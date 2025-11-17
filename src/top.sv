@@ -29,14 +29,39 @@ module Top (
     output logic[3:0] vga_green,
     output logic[3:0] vga_blue,
 
-    output logic done
-);
-    // logic [3:0] sw;
-    // logic [2:0] btn;
-    // logic [3:0] led;
-    // logic [7:0] seg;
+    // Screen
+    output logic screen_hsync,
+    output logic screen_vsync,
+    output logic[4:0] screen_red,
+    output logic[5:0] screen_green,
+    output logic[4:0] screen_blue,
+    output logic screen_enable,
+    output logic screen_data_enable,
+    output logic screen_clk,
 
-    localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
+    // GPIO test
+    output logic[5:0] gpio
+);
+    logic done;
+
+    // Screen output
+    assign screen_hsync = vga_hsync;
+    assign screen_vsync = vga_vsync;
+    assign screen_red = 5'(vga_red);
+    assign screen_blue = 5'(vga_blue);
+    assign screen_green = 6'(vga_green);
+    assign screen_enable = 1;
+    assign screen_data_enable = 1;
+    assign screen_clk = clk_display;
+
+    // GPIO output
+    assign gpio[0] = done;
+    assign gpio[1] = screen_clk;
+    assign gpio[2] = screen_enable;
+    assign gpio[3] = screen_data_enable;
+    assign gpio[5:4] = screen_red[1:0];
+
+    localparam video_mode_t VIDEO_MODE = VMODE_800x600p60;
     localparam buffer_config_t BUFFER_CONFIG = BUFFER_320x240x12;
 
     ////////////////////////////////////////////////

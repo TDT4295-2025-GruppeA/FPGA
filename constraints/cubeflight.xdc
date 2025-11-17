@@ -10,12 +10,12 @@ set_clock_groups -asynchronous \
     -group [get_clocks clk_out_unbuf_1]
 
 # GPIO
-set_property -dict { PACKAGE_PIN C3    IOSTANDARD LVCMOS33 } [get_ports { done }]; # GPIO 0
-# set_property -dict { PACKAGE_PIN C4    IOSTANDARD LVCMOS33 } [get_ports { vga_green[0] }]; # GPIO 1
-# set_property -dict { PACKAGE_PIN D5    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO 2
-# set_property -dict { PACKAGE_PIN C6    IOSTANDARD LVCMOS33 } [get_ports { sw[1] }]; # GPIO 3
-# set_property -dict { PACKAGE_PIN C7    IOSTANDARD LVCMOS33 } [get_ports { sw[2] }]; # GPIO 4
-# set_property -dict { PACKAGE_PIN D8    IOSTANDARD LVCMOS33 } [get_ports { sw[3] }]; # GPIO 5
+set_property -dict { PACKAGE_PIN C3    IOSTANDARD LVCMOS33 } [get_ports { gpio[0] }]; # GPIO 0
+set_property -dict { PACKAGE_PIN C4    IOSTANDARD LVCMOS33 } [get_ports { gpio[1] }]; # GPIO 1
+set_property -dict { PACKAGE_PIN D5    IOSTANDARD LVCMOS33 } [get_ports { gpio[2] }]; # GPIO 2
+set_property -dict { PACKAGE_PIN C6    IOSTANDARD LVCMOS33 } [get_ports { gpio[3] }]; # GPIO 3
+set_property -dict { PACKAGE_PIN C7    IOSTANDARD LVCMOS33 } [get_ports { gpio[4] }]; # GPIO 4
+set_property -dict { PACKAGE_PIN D8    IOSTANDARD LVCMOS33 } [get_ports { gpio[5] }]; # GPIO 5
 
 # GPIO MCU
 set_property -dict { PACKAGE_PIN J16    IOSTANDARD LVCMOS33 } [get_ports { debug_active_frame_buffer }]; # GPIO MCU 1
@@ -52,30 +52,30 @@ set_property -dict { PACKAGE_PIN R13   IOSTANDARD LVCMOS33 } [get_ports { vga_vs
 
 
 # Screen
-# set_property -dict { PACKAGE_PIN C13   IOSTANDARD LVCMOS33 } [get_ports { screen_red[0] }]; # Screen red[0]
-# set_property -dict { PACKAGE_PIN C12   IOSTANDARD LVCMOS33 } [get_ports { screen_red[1] }]; # Screen red[1]
-# set_property -dict { PACKAGE_PIN C11   IOSTANDARD LVCMOS33 } [get_ports { screen_red[2] }]; # Screen red[2]
-# set_property -dict { PACKAGE_PIN C9   IOSTANDARD LVCMOS33 } [get_ports { screen_red[3] }]; # Screen red[3]
-# set_property -dict { PACKAGE_PIN C8   IOSTANDARD LVCMOS33 } [get_ports { screen_red[4] }]; # Screen red[4]
+set_property -dict { PACKAGE_PIN C13   IOSTANDARD LVCMOS33 } [get_ports { screen_red[0] }]; # Screen red[0]
+set_property -dict { PACKAGE_PIN C12   IOSTANDARD LVCMOS33 } [get_ports { screen_red[1] }]; # Screen red[1]
+set_property -dict { PACKAGE_PIN C11   IOSTANDARD LVCMOS33 } [get_ports { screen_red[2] }]; # Screen red[2]
+set_property -dict { PACKAGE_PIN C9   IOSTANDARD LVCMOS33 } [get_ports { screen_red[3] }]; # Screen red[3]
+set_property -dict { PACKAGE_PIN C8   IOSTANDARD LVCMOS33 } [get_ports { screen_red[4] }]; # Screen red[4]
 
-# set_property -dict { PACKAGE_PIN B16   IOSTANDARD LVCMOS33 } [get_ports { screen_green[0] }]; # Screen green[0]
-# set_property -dict { PACKAGE_PIN B15   IOSTANDARD LVCMOS33 } [get_ports { screen_green[1] }]; # Screen green[1]
-# set_property -dict { PACKAGE_PIN B14   IOSTANDARD LVCMOS33 } [get_ports { screen_green[2] }]; # Screen green[2]
-# set_property -dict { PACKAGE_PIN B12   IOSTANDARD LVCMOS33 } [get_ports { screen_green[3] }]; # Screen green[3]
-# set_property -dict { PACKAGE_PIN B11   IOSTANDARD LVCMOS33 } [get_ports { screen_green[4] }]; # Screen green[4]
-# set_property -dict { PACKAGE_PIN B10   IOSTANDARD LVCMOS33 } [get_ports { screen_green[5] }]; # Screen green[5]
+set_property -dict { PACKAGE_PIN B16   IOSTANDARD LVCMOS33 } [get_ports { screen_green[0] }]; # Screen green[0]
+set_property -dict { PACKAGE_PIN B15   IOSTANDARD LVCMOS33 } [get_ports { screen_green[1] }]; # Screen green[1]
+set_property -dict { PACKAGE_PIN B14   IOSTANDARD LVCMOS33 } [get_ports { screen_green[2] }]; # Screen green[2]
+set_property -dict { PACKAGE_PIN B12   IOSTANDARD LVCMOS33 } [get_ports { screen_green[3] }]; # Screen green[3]
+set_property -dict { PACKAGE_PIN B11   IOSTANDARD LVCMOS33 } [get_ports { screen_green[4] }]; # Screen green[4]
+set_property -dict { PACKAGE_PIN B10   IOSTANDARD LVCMOS33 } [get_ports { screen_green[5] }]; # Screen green[5]
 
-# set_property -dict { PACKAGE_PIN B9   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[0] }]; # Screen blue[0]
-# set_property -dict { PACKAGE_PIN A15   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[1] }]; # Screen blue[1]
-# set_property -dict { PACKAGE_PIN A14   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[2] }]; # Screen blue[2]
-# set_property -dict { PACKAGE_PIN A13   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[3] }]; # Screen blue[3]
-# set_property -dict { PACKAGE_PIN A12   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[4] }]; # Screen blue[4]
+set_property -dict { PACKAGE_PIN B9   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[0] }]; # Screen blue[0]
+set_property -dict { PACKAGE_PIN A15   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[1] }]; # Screen blue[1]
+set_property -dict { PACKAGE_PIN A14   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[2] }]; # Screen blue[2]
+set_property -dict { PACKAGE_PIN A13   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[3] }]; # Screen blue[3]
+set_property -dict { PACKAGE_PIN A12   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[4] }]; # Screen blue[4]
 
-# set_property -dict { PACKAGE_PIN A10   IOSTANDARD LVCMOS33 } [get_ports { screen_clk }]; # Screen clk[0]
-# set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { screen_enable }]; # Screen enable
-# set_property -dict { PACKAGE_PIN A7   IOSTANDARD LVCMOS33 } [get_ports { screen_hsync }]; # Screen hsync
-# set_property -dict { PACKAGE_PIN A5   IOSTANDARD LVCMOS33 } [get_ports { screen_vsync }]; # Screen vsync
-# set_property -dict { PACKAGE_PIN A8   IOSTANDARD LVCMOS33 } [get_ports { screen_data_enable }]; # Data enable
+set_property -dict { PACKAGE_PIN A10   IOSTANDARD LVCMOS33 } [get_ports { screen_clk }]; # Screen clk[0]
+set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { screen_enable }]; # Screen enable
+set_property -dict { PACKAGE_PIN A7   IOSTANDARD LVCMOS33 } [get_ports { screen_hsync }]; # Screen hsync
+set_property -dict { PACKAGE_PIN A5   IOSTANDARD LVCMOS33 } [get_ports { screen_vsync }]; # Screen vsync
+set_property -dict { PACKAGE_PIN A8   IOSTANDARD LVCMOS33 } [get_ports { screen_data_enable }]; # Data enable
 
 
 # # SRAM A
