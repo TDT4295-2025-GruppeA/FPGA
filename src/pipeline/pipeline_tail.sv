@@ -28,7 +28,8 @@ module PipelineTail #(
     output logic [3:0] vga_blue,
 
     // debug
-    input  logic [3:0]     sw
+    input logic debug_depth_buffer,
+    input logic debug_active_frame_buffer
 );
 
     ///////////////////////////////////////
@@ -104,9 +105,9 @@ module PipelineTail #(
     // The Display module drives disp_read_addr
     assign fb_a_read_addr = disp_read_addr;
     assign fb_b_read_addr = disp_read_addr;
-    assign disp_read_data = ~sw[3]
-        ? (buffer_select ? fb_a_read_data : fb_b_read_data)
-        : (buffer_select ? fb_b_read_data : fb_a_read_data);
+    assign disp_read_data = debug_active_frame_buffer
+        ? (buffer_select ? fb_b_read_data : fb_a_read_data);
+        : (buffer_select ? fb_a_read_data : fb_b_read_data)
 
     // DrawingManager writes to the INACTIVE buffer
     assign fb_a_write_en = !buffer_select_sync_sys ? dm_write_en : 1'b0;
@@ -172,7 +173,7 @@ module PipelineTail #(
     ) drawing_manager_inst (
         .clk(clk_system),
         .rstn(rstn_system),
-        .sw(sw),
+        
         .draw_ack(draw_ack || IGNORE_DRAW_ACK),
         .write_en(dm_write_en),
         .write_addr(dm_write_addr),
@@ -182,7 +183,9 @@ module PipelineTail #(
         .pixel_s_ready(pixel_data_s_ready),
         .pixel_s_valid(pixel_data_s_valid),
         .pixel_s_data(pixel_data_s_data),
-        .pixel_s_metadata(pixel_data_s_metadata)
+        .pixel_s_metadata(pixel_data_s_metadata),
+
+        .debug_depth_buffer(debug_depth_buffer)
     );
 
     ///////////////////////////////////////

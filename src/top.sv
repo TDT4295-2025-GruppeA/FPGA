@@ -6,7 +6,8 @@ import types_pkg::*;
 
 module Top (
     // Fun stuff
-    input logic [3:0] sw,
+    input logic debug_active_frame_buffer,
+    input logic debug_depth_buffer,
     // input logic [2:0] btn,
     // output logic [3:0] led,
     // output logic [7:0] seg,
@@ -160,8 +161,9 @@ module Top (
         .vga_green(vga_green),
         .vga_blue(vga_blue),
 
-        // debug
-        .sw(sw)
+        // Debug signals
+        .debug_depth_buffer(debug_depth_buffer),
+        .debug_active_frame_buffer(debug_active_frame_buffer)
     );
 
 endmodule

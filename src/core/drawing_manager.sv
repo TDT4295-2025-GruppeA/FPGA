@@ -23,7 +23,7 @@ module DrawingManager #(
     input pixel_metadata_t pixel_s_metadata,
 
     // Temp inputs for debugging
-    input logic [3:0] sw // Used for selecting colors
+    input logic debug_depth_buffer
 );
     typedef enum {
         BACKGROUND,
@@ -31,9 +31,6 @@ module DrawingManager #(
         FRAMERATE,
         FRAME_DONE
     } pipeline_state_t;
-
-    // Latched switch values for stable drawing during frame.
-    logic [3:0] sw_r;
 
     /////////////////////
     // Control Signals //
@@ -102,18 +99,20 @@ module DrawingManager #(
 
     logic framerate_indicator, frame_indicator_next;
 
+    logic debug_depth_buffer_r;
+
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             state <= BACKGROUND;
             framerate_indicator <= 1'b0;
-            sw_r <= '0;
+            debug_depth_buffer_r <= '0;
         end else begin
             state <= next_state;
             framerate_indicator <= frame_indicator_next;
 
             // Only sample update color between draws.
             if (state == FRAME_DONE) begin
-                sw_r <= sw;
+                debug_depth_buffer_r <= debug_depth_buffer;
             end
         end
     end
@@ -143,7 +142,7 @@ module DrawingManager #(
             GRAPHICS: begin
                 write_en = depth_write_en;
                 write_addr = depth_write_addr;
-                write_data = sw_r[0]
+                write_data = debug_depth_buffer_r
                     ? {4'h0, 4'(ftoi(mul(itof(15), depth_write_pixel.depth))), 4'h0}
                     : depth_write_pixel.color;
 

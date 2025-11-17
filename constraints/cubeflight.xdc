@@ -12,14 +12,14 @@ set_clock_groups -asynchronous \
 # GPIO
 set_property -dict { PACKAGE_PIN C3    IOSTANDARD LVCMOS33 } [get_ports { done }]; # GPIO 0
 # set_property -dict { PACKAGE_PIN C4    IOSTANDARD LVCMOS33 } [get_ports { vga_green[0] }]; # GPIO 1
-set_property -dict { PACKAGE_PIN D5    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO 2
-set_property -dict { PACKAGE_PIN C6    IOSTANDARD LVCMOS33 } [get_ports { sw[1] }]; # GPIO 3
-set_property -dict { PACKAGE_PIN C7    IOSTANDARD LVCMOS33 } [get_ports { sw[2] }]; # GPIO 4
-set_property -dict { PACKAGE_PIN D8    IOSTANDARD LVCMOS33 } [get_ports { sw[3] }]; # GPIO 5
+# set_property -dict { PACKAGE_PIN D5    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO 2
+# set_property -dict { PACKAGE_PIN C6    IOSTANDARD LVCMOS33 } [get_ports { sw[1] }]; # GPIO 3
+# set_property -dict { PACKAGE_PIN C7    IOSTANDARD LVCMOS33 } [get_ports { sw[2] }]; # GPIO 4
+# set_property -dict { PACKAGE_PIN D8    IOSTANDARD LVCMOS33 } [get_ports { sw[3] }]; # GPIO 5
 
 # GPIO MCU
-# set_property -dict { PACKAGE_PIN J16    IOSTANDARD LVCMOS33 } [get_ports { reset }]; # GPIO MCU 1
-# set_property -dict { PACKAGE_PIN J15    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO MCU 2
+set_property -dict { PACKAGE_PIN J16    IOSTANDARD LVCMOS33 } [get_ports { debug_active_frame_buffer }]; # GPIO MCU 1
+set_property -dict { PACKAGE_PIN J15    IOSTANDARD LVCMOS33 } [get_ports { debug_depth_buffer }]; # GPIO MCU 2
 # set_property -dict { PACKAGE_PIN G16    IOSTANDARD LVCMOS33 } [get_ports { sw[0] }]; # GPIO MCU 3
 set_property -dict { PACKAGE_PIN D16    IOSTANDARD LVCMOS33 } [get_ports { reset }]; # GPIO MCU 4
 

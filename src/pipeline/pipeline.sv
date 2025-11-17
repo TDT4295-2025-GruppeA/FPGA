@@ -34,9 +34,8 @@ module Pipeline #(
     output logic[3:0] vga_blue,
 
     // debug
-    // output logic [3:0] led,
-    input logic [3:0] sw
-
+    input logic debug_depth_buffer,
+    input logic debug_active_frame_buffer
 );
 
     wire logic head_math_valid;
@@ -108,7 +107,8 @@ module Pipeline #(
         .vga_green(vga_green),
         .vga_blue(vga_blue),
 
-        .sw(sw)
+        .debug_depth_buffer(debug_depth_buffer),
+        .debug_active_frame_buffer(debug_active_frame_buffer)
     );
 
 endmodule
