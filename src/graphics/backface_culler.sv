@@ -1,6 +1,15 @@
 import fixed_pkg::*;
 import types_pkg::*;
 
+
+function automatic position_t shift_right3(position_t a, int shift);
+    position_t b;
+    b.x = a.x >>> shift;
+    b.y = a.y >>> shift;
+    b.z = a.z >>> shift;
+    return b;
+endfunction
+
 function automatic position_t sub3(position_t a, position_t b);
     position_t c;
     c.x = sub(a.x, b.x);
@@ -49,6 +58,10 @@ module BackfaceCuller (
     output triangle_t triangle_m_data,
     output triangle_meta_t triangle_m_metadata
 );
+    // Because cross prodicts can grow very large, we shift down the
+    // positions before calculating the normal to avoid overflow.
+    localparam int POSITION_SHIFT = 4;
+
     typedef enum logic [2:0] {
         IDLE,
         PROCESS_1,
@@ -81,19 +94,24 @@ module BackfaceCuller (
         end
     end
 
+    position_t v0_shifted, v1_shifted, v2_shifted;
+    assign v0_shifted = shift_right3(triangle.v0.position, POSITION_SHIFT);
+    assign v1_shifted = shift_right3(triangle.v1.position, POSITION_SHIFT);
+    assign v2_shifted = shift_right3(triangle.v2.position, POSITION_SHIFT);
+    
     position_t u, v, n;
     fixed dot_product;
-    
+
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             u <= '0;
             v <= '0;
             n <= '0;
         end else if (state == PROCESS_1 || state == PROCESS_2 || state == PROCESS_3) begin
-            u <= sub3(triangle.v1.position, triangle.v0.position);
-            v <= sub3(triangle.v2.position, triangle.v0.position);
+            u <= sub3(v1_shifted, v0_shifted);
+            v <= sub3(v2_shifted, v0_shifted);
             n <= cross3(u, v);
-            dot_product <= dot3(n, triangle.v0.position);
+            dot_product <= dot3(n, v0_shifted);
         end
     end
 

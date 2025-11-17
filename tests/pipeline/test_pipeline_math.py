@@ -1,8 +1,12 @@
 import cocotb
 from cocotb.triggers import RisingEdge, Timer
 from cocotb.clock import Clock
+import numpy as np
+from PIL import Image
 
 from core.types.types_ import (
+    PixelData,
+    PixelDataMetadata,
     Position,
     Vertex,
     Triangle,
@@ -12,11 +16,18 @@ from core.types.types_ import (
     PipelineEntry,
     Last,
     TriangleTransformMeta,
+    RGB,
 )
 from stubs.pipelinemath import Pipelinemath
 
-VERILOG_MODULE = "PipelineMath"
+BUFFER_WIDTH = 160
+BUFFER_HEIGHT = 120
 
+VERILOG_MODULE = "PipelineMath"
+VERILOG_PARAMETERS = {
+    "BUFFER_WIDTH": BUFFER_WIDTH,
+    "BUFFER_HEIGHT": BUFFER_HEIGHT
+}
 
 async def reset(dut):
     dut.rstn.value = 0
@@ -25,8 +36,8 @@ async def reset(dut):
     await RisingEdge(dut.clk)
 
 
-@cocotb.test(timeout_time=5, timeout_unit="ms")
-async def test_passthrough(dut: Pipelinemath):
+@cocotb.test(timeout_time=1, timeout_unit="ms")
+async def test_pipeline_math(dut: Pipelinemath):
     """Test that PipelineMath passes through data unchanged with identity transform."""
     # Set up a 10ns clock
     cocotb.start_soon(Clock(dut.clk, 10, "ns").start())
@@ -41,9 +52,9 @@ async def test_passthrough(dut: Pipelinemath):
 
     # Create a test triangle
     tri_in = Triangle(
-        v0=Vertex(position=Position(1.0, 2.0, 3.0)),
-        v1=Vertex(position=Position(4.0, 5.0, 6.0)),
-        v2=Vertex(position=Position(7.0, 8.0, 9.0)),
+        Vertex(position=Position(-1000.0,    0.0, 1000.0), color=RGB(15,  0,  0)),
+        Vertex(position=Position( 1000.0,    0.0, 1000.0), color=RGB(15, 15, 15)),
+        Vertex(position=Position( 1000.0, 1000.0, 1000.0), color=RGB(15, 15,  0)),
     )
 
     tri_tf_in = PipelineEntry(
@@ -88,3 +99,39 @@ async def test_passthrough(dut: Pipelinemath):
     while not dut.pixel_data_m_valid.value:
         await RisingEdge(dut.clk)
     cocotb.log.info("Pipeline produced pixel data output")
+
+    frame_buffer = np.zeros((BUFFER_HEIGHT, BUFFER_WIDTH, 3), dtype=np.uint8)
+
+    last = False
+    while not last:
+        if not dut.pixel_data_m_valid.value:
+            await RisingEdge(dut.clk)
+            continue
+
+        pixel = PixelData.from_logicarray(dut.pixel_data_m_data.value)
+        metadata = PixelDataMetadata.from_logicarray(dut.pixel_data_m_metadata.value)
+
+        cocotb.log.info(f"Received pixel at ({pixel.coordinate.x}, {pixel.coordinate.y}) with color ({pixel.color.r}, {pixel.color.g}, {pixel.color.b})")
+
+        if metadata.last:
+            last = True
+
+        if not pixel.covered:
+            await RisingEdge(dut.clk)
+            continue
+
+        x = int(pixel.coordinate.x)
+        y = int(pixel.coordinate.y)
+
+        frame_buffer[y, x, :] = (
+            pixel.color.r << 4, 
+            pixel.color.g << 4,
+            pixel.color.b << 4
+        )
+
+        await RisingEdge(dut.clk)
+
+    image = Image.fromarray(frame_buffer, "RGB")
+    image.save("pipeline_math_output.png")
+
+    assert np.any(frame_buffer), "Frame buffer is empty, expected drawn triangle."
