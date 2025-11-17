@@ -37,7 +37,7 @@ module Top (
     // logic [7:0] seg;
 
     localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
-    localparam buffer_config_t BUFFER_CONFIG = BUFFER_160x120x12;
+    localparam buffer_config_t BUFFER_CONFIG = BUFFER_320x240x12;
 
     ////////////////////////////////////////////////
     ////////////// CLOCK GENERATION ////////////////
