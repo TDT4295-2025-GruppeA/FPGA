@@ -86,9 +86,9 @@ module Display #(
     logic [3:0] paint_r, paint_g, paint_b;
     logic [3:0] display_r, display_g, display_b;
     always_comb begin
-        paint_r = read_data[3:0];
+        paint_r = read_data[11:8];
         paint_g = read_data[7:4];
-        paint_b = read_data[11:8];
+        paint_b = read_data[3:0];
 
         display_r = (data_enable) ? paint_r << 1 : 5'h0;
         display_g = (data_enable) ? paint_g << 2: 6'h0;

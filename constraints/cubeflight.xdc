@@ -31,21 +31,20 @@ set_property -dict { PACKAGE_PIN H14    IOSTANDARD LVCMOS33 } [get_ports { spi_s
 set_property -dict { PACKAGE_PIN H16    IOSTANDARD LVCMOS33 } [get_ports { spi_sclk }]; # MCU SPI SCLK
 
 # VGA
-set_property -dict { PACKAGE_PIN T9   IOSTANDARD LVCMOS33 } [get_ports { vga_red[0] }]; # VGA blue[0]
-set_property -dict { PACKAGE_PIN T8   IOSTANDARD LVCMOS33 } [get_ports { vga_red[1] }]; # VGA blue[1]
-set_property -dict { PACKAGE_PIN T7   IOSTANDARD LVCMOS33 } [get_ports { vga_red[2] }]; # VGA blue[2]
-set_property -dict { PACKAGE_PIN T5   IOSTANDARD LVCMOS33 } [get_ports { vga_red[3] }]; # VGA blue[3]
-
+set_property -dict { PACKAGE_PIN T15   IOSTANDARD LVCMOS33 } [get_ports { vga_red[0] }]; # VGA red[0]
+set_property -dict { PACKAGE_PIN T14   IOSTANDARD LVCMOS33 } [get_ports { vga_red[1] }]; # VGA red[1]
+set_property -dict { PACKAGE_PIN T13   IOSTANDARD LVCMOS33 } [get_ports { vga_red[2] }]; # VGA red[2]
+set_property -dict { PACKAGE_PIN T10   IOSTANDARD LVCMOS33 } [get_ports { vga_red[3] }]; # VGA red[3]
 
 set_property -dict { PACKAGE_PIN T4   IOSTANDARD LVCMOS33 } [get_ports { vga_green[0] }]; # VGA green[0]
 set_property -dict { PACKAGE_PIN T3   IOSTANDARD LVCMOS33 } [get_ports { vga_green[1] }]; # VGA green[1]
 set_property -dict { PACKAGE_PIN T2   IOSTANDARD LVCMOS33 } [get_ports { vga_green[2] }]; # VGA green[2]
 set_property -dict { PACKAGE_PIN R16   IOSTANDARD LVCMOS33 } [get_ports { vga_green[3] }]; # VGA green[3]
 
-set_property -dict { PACKAGE_PIN T15   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[0] }]; # VGA red[0]
-set_property -dict { PACKAGE_PIN T14   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[1] }]; # VGA red[1]
-set_property -dict { PACKAGE_PIN T13   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[2] }]; # VGA red[2]
-set_property -dict { PACKAGE_PIN T10   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[3] }]; # VGA red[3]
+set_property -dict { PACKAGE_PIN T9   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[0] }]; # VGA blue[0]
+set_property -dict { PACKAGE_PIN T8   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[1] }]; # VGA blue[1]
+set_property -dict { PACKAGE_PIN T7   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[2] }]; # VGA blue[2]
+set_property -dict { PACKAGE_PIN T5   IOSTANDARD LVCMOS33 } [get_ports { vga_blue[3] }]; # VGA blue[3]
 
 set_property -dict { PACKAGE_PIN R15   IOSTANDARD LVCMOS33 } [get_ports { vga_hsync }]; # VGA hsync
 set_property -dict { PACKAGE_PIN R13   IOSTANDARD LVCMOS33 } [get_ports { vga_vsync }]; # VGA vsync
