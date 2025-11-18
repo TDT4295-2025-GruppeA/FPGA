@@ -56,10 +56,13 @@ module Top (
     // Settings for VGA
     // localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
     // localparam buffer_config_t BUFFER_CONFIG = BUFFER_320x240x12;
+    // localparam FLIP_VERTICAL = 0;
 
     // Settings for MIDAS display
     localparam video_mode_t VIDEO_MODE = VMODE_800x480p60;
     localparam buffer_config_t BUFFER_CONFIG = BUFFER_400x240x12;
+    // Flip screen since display is upside down on PCB
+    localparam FLIP_VERTICAL = 1;
 
     ////////////////////////////////////////////////
     ////////////// CLOCK GENERATION ////////////////
@@ -169,7 +172,8 @@ module Top (
 
     Pipeline #(
         .BUFFER_CONFIG(BUFFER_CONFIG),
-        .VIDEO_MODE(VIDEO_MODE)
+        .VIDEO_MODE(VIDEO_MODE),
+        .FLIP_VERTICAL(FLIP_VERTICAL)
     ) pipeline_inst (
         .clk_system(clk_system),
         .rstn_system(rstn_system),

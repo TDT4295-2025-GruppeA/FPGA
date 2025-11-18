@@ -9,7 +9,8 @@ import buffer_config_pkg::*;
 module Pipeline #(
     parameter buffer_config_t BUFFER_CONFIG = BUFFER_160x120x12,
     parameter video_mode_t VIDEO_MODE = VMODE_640x480p60,
-    parameter bit IGNORE_DRAW_ACK = 0
+    parameter bit IGNORE_DRAW_ACK = 0,
+    parameter bit FLIP_VERTICAL = 0
 )(
     input clk_system,
     input rstn_system,
@@ -89,7 +90,8 @@ module Pipeline #(
     PipelineTail #(
         .BUFFER_CONFIG(BUFFER_CONFIG),
         .VIDEO_MODE(VIDEO_MODE),
-        .IGNORE_DRAW_ACK(IGNORE_DRAW_ACK)
+        .IGNORE_DRAW_ACK(IGNORE_DRAW_ACK),
+        .FLIP_VERTICAL(FLIP_VERTICAL)
     ) pipeline_tail (
         .clk_system(clk_system),
         .rstn_system(rstn_system),
