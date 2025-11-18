@@ -24,10 +24,8 @@ BUFFER_WIDTH = 160
 BUFFER_HEIGHT = 120
 
 VERILOG_MODULE = "PipelineMath"
-VERILOG_PARAMETERS = {
-    "BUFFER_WIDTH": BUFFER_WIDTH,
-    "BUFFER_HEIGHT": BUFFER_HEIGHT
-}
+VERILOG_PARAMETERS = {"BUFFER_WIDTH": BUFFER_WIDTH, "BUFFER_HEIGHT": BUFFER_HEIGHT}
+
 
 async def reset(dut):
     dut.rstn.value = 0
@@ -52,9 +50,9 @@ async def test_pipeline_math(dut: Pipelinemath):
 
     # Create a test triangle
     tri_in = Triangle(
-        Vertex(position=Position(-1000.0,    0.0, 1000.0), color=RGB(15,  0,  0)),
-        Vertex(position=Position( 1000.0,    0.0, 1000.0), color=RGB(15, 15, 15)),
-        Vertex(position=Position( 1000.0, 1000.0, 1000.0), color=RGB(15, 15,  0)),
+        Vertex(position=Position(-1000.0, 0.0, 1000.0), color=RGB(15, 0, 0)),
+        Vertex(position=Position(1000.0, 0.0, 1000.0), color=RGB(15, 15, 15)),
+        Vertex(position=Position(1000.0, 1000.0, 1000.0), color=RGB(15, 15, 0)),
     )
 
     tri_tf_in = PipelineEntry(
@@ -111,7 +109,9 @@ async def test_pipeline_math(dut: Pipelinemath):
         pixel = PixelData.from_logicarray(dut.pixel_data_m_data.value)
         metadata = PixelDataMetadata.from_logicarray(dut.pixel_data_m_metadata.value)
 
-        cocotb.log.info(f"Received pixel at ({pixel.coordinate.x}, {pixel.coordinate.y}) with color ({pixel.color.r}, {pixel.color.g}, {pixel.color.b})")
+        cocotb.log.info(
+            f"Received pixel at ({pixel.coordinate.x}, {pixel.coordinate.y}) with color ({pixel.color.r}, {pixel.color.g}, {pixel.color.b})"
+        )
 
         if metadata.last:
             last = True
@@ -124,9 +124,9 @@ async def test_pipeline_math(dut: Pipelinemath):
         y = int(pixel.coordinate.y)
 
         frame_buffer[y, x, :] = (
-            pixel.color.r << 4, 
+            pixel.color.r << 4,
             pixel.color.g << 4,
-            pixel.color.b << 4
+            pixel.color.b << 4,
         )
 
         await RisingEdge(dut.clk)
