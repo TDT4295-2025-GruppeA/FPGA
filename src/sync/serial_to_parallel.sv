@@ -20,7 +20,7 @@ module SerialToParallel #(
     localparam ELEMENT_COUNT = OUTPUT_SIZE / INPUT_SIZE;
 
     // Buffer to hold the data which is being shifted in.
-    logic [OUTPUT_SIZE-1:0] buffer;
+    logic [OUTPUT_SIZE-2:0] buffer;
 
     // Counter type to avoid repeating "$clog2(OUTPUT_SIZE)".
     typedef logic [$clog2(ELEMENT_COUNT):0] element_count_t;
@@ -30,9 +30,9 @@ module SerialToParallel #(
     element_count_t element_count;
 
     // Assign the parallel output to the buffer.
-    assign parallel = buffer;
+    assign parallel = { buffer, serial };
     // Parallel data is ready when we've shifted in OUTPUT_SIZE bits.
-    assign parallel_ready = (element_count == element_count_t'(ELEMENT_COUNT));
+    assign parallel_ready = (element_count == (element_count_t'(ELEMENT_COUNT) - 1));
 
     always_ff @(posedge clk or negedge rstn) begin
         if (!rstn) begin
@@ -41,7 +41,10 @@ module SerialToParallel #(
         end else begin
             if (serial_valid) begin
                 // Read in the serial data by shifting left and adding the new bit at LSB.
-                buffer <= { buffer[OUTPUT_SIZE - INPUT_SIZE - 1:0], serial };
+                // Only shift if the parallel
+                if (!parallel_ready) begin
+                    buffer <= { buffer[OUTPUT_SIZE - INPUT_SIZE - 2:0], serial };
+                end
 
                 if (element_count == element_count_t'(ELEMENT_COUNT)) begin
                     // Start new count after full buffer.

@@ -13,7 +13,7 @@ set_clock_groups -asynchronous \
 set_property -dict { PACKAGE_PIN C3    IOSTANDARD LVCMOS33 } [get_ports { gpio[0] }]; # GPIO 0
 set_property -dict { PACKAGE_PIN C4    IOSTANDARD LVCMOS33 } [get_ports { gpio[1] }]; # GPIO 1
 set_property -dict { PACKAGE_PIN D5    IOSTANDARD LVCMOS33 } [get_ports { gpio[2] }]; # GPIO 2
-set_property -dict { PACKAGE_PIN C6    IOSTANDARD LVCMOS33 } [get_ports { gpio[3] }]; # GPIO 3
+set_property -dict { PACKAGE_PIN C6    IOSTANDARD LVCMOS33    SLEW FAST } [get_ports { gpio[3] }]; # GPIO 3
 set_property -dict { PACKAGE_PIN C7    IOSTANDARD LVCMOS33 } [get_ports { gpio[4] }]; # GPIO 4
 set_property -dict { PACKAGE_PIN D8    IOSTANDARD LVCMOS33 } [get_ports { gpio[5] }]; # GPIO 5
 
@@ -71,7 +71,7 @@ set_property -dict { PACKAGE_PIN A14   IOSTANDARD LVCMOS33 } [get_ports { screen
 set_property -dict { PACKAGE_PIN A13   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[3] }]; # Screen blue[3]
 set_property -dict { PACKAGE_PIN A12   IOSTANDARD LVCMOS33 } [get_ports { screen_blue[4] }]; # Screen blue[4]
 
-set_property -dict { PACKAGE_PIN A10   IOSTANDARD LVCMOS33 } [get_ports { screen_clk }]; # Screen clk[0]
+set_property -dict { PACKAGE_PIN A10    IOSTANDARD LVCMOS33    SLEW FAST } [get_ports { screen_clk }]; # Screen clk
 set_property -dict { PACKAGE_PIN A9   IOSTANDARD LVCMOS33 } [get_ports { screen_enable }]; # Screen enable
 set_property -dict { PACKAGE_PIN A7   IOSTANDARD LVCMOS33 } [get_ports { screen_hsync }]; # Screen hsync
 set_property -dict { PACKAGE_PIN A5   IOSTANDARD LVCMOS33 } [get_ports { screen_vsync }]; # Screen vsync

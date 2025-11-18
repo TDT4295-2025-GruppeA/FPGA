@@ -95,13 +95,29 @@ module SpiSub #(
     // Buffer to hold the data between popping 
     // from FIFO and loading into shift register.
     logic [WORD_SIZE-1:0] tx_buffer;
+    logic [$clog2(WORD_SIZE)-1:0] counter;
 
+    always_ff @(posedge ~sclk or negedge rstn) begin
+        if (!rstn) begin
+            counter <= 0;
+        end else begin
+            if (counter >= ($clog2(WORD_SIZE))'(WORD_SIZE - 1)) begin
+                counter <= 0;
+            end else begin
+                counter <= counter + 1;
+            end
+        end
+    end
+
+    logic tx_buffer_ready;
+    assign tx_buffer_ready = (counter == 0);
+    
     ParallelToSerial #(
         .SIZE(WORD_SIZE)
     ) tx_shift_register (
         .clk(~sclk), // We setup data on falling edge of SCLK.
         .rstn(rstn),
-        .parallel_ready(rx_buffer_ready),
+        .parallel_ready(tx_buffer_ready),
         .parallel(tx_buffer),
         .serial(miso)
     );
@@ -113,7 +129,7 @@ module SpiSub #(
         .rstn(rstn),
 
         .read_clk(~sclk), // We setup data on falling edge of SCLK.
-        .read_en(rx_buffer_ready),
+        .read_en(tx_buffer_ready),
         .data_out(tx_buffer),
 
         .write_clk(sys_clk),
