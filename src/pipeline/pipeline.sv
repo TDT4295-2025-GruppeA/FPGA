@@ -29,6 +29,7 @@ module Pipeline #(
 
     output logic vga_hsync,
     output logic vga_vsync,
+    output logic screen_data_enable,
     output logic[3:0] vga_red,
     output logic[3:0] vga_green,
     output logic[3:0] vga_blue,
@@ -103,6 +104,7 @@ module Pipeline #(
 
         .vga_hsync(vga_hsync),
         .vga_vsync(vga_vsync),
+        .screen_data_enable(screen_data_enable),
         .vga_red(vga_red),
         .vga_green(vga_green),
         .vga_blue(vga_blue),

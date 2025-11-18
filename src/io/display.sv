@@ -14,9 +14,10 @@ module Display #(
 
     output logic vga_hsync,
     output logic vga_vsync,
-    output logic[3:0] vga_red,
-    output logic[3:0] vga_green,
-    output logic[3:0] vga_blue,
+    output logic screen_data_enable,
+    output logic[4:0] vga_red,
+    output logic[5:0] vga_green,
+    output logic[4:0] vga_blue,
 
     output logic[BUFFER_CONFIG.addr_width-1:0] read_addr,
     input color_t read_data
@@ -53,6 +54,7 @@ module Display #(
         vsync = (VIDEO_MODE.v_sync_pol) ? vsync_nopol : ~vsync_nopol;
         data_enable = (x <= VW'(H_RESOLUTION - 1)
                     && y <= VH'(V_RESOLUTION - 1));
+        screen_data_enable = data_enable;
     end
 
     always_ff @(posedge clk_pixel or negedge rstn_pixel) begin
@@ -88,9 +90,9 @@ module Display #(
         paint_g = read_data[7:4];
         paint_b = read_data[11:8];
 
-        display_r = (data_enable) ? paint_r : 4'h0;
-        display_g = (data_enable) ? paint_g : 4'h0;
-        display_b = (data_enable) ? paint_b : 4'h0;
+        display_r = (data_enable) ? paint_r << 1 : 5'h0;
+        display_g = (data_enable) ? paint_g << 2: 6'h0;
+        display_b = (data_enable) ? paint_b << 1: 5'h0;
     end
 
     // Flip-flops for output

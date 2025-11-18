@@ -44,14 +44,6 @@ module Top (
 );
     logic done;
 
-    // Screen output
-    // assign screen_hsync = vga_hsync;
-    // assign screen_vsync = vga_vsync;
-    // assign screen_red = 5'(vga_red);
-    // assign screen_blue = 5'(vga_blue);
-    // assign screen_green = 6'(vga_green);
-    // assign screen_enable = 1;
-
     // GPIO output
     assign gpio[0] = done;
     assign gpio[1] = screen_enable;
@@ -61,38 +53,43 @@ module Top (
     assign gpio[5] = screen_vsync;
     // assign gpio[5:4] = screen_green[1:0];
 
-    localparam video_mode_t VIDEO_MODE = VMODE_800x600p60;
-    localparam buffer_config_t BUFFER_CONFIG = BUFFER_320x240x12;
+    // Settings for VGA
+    // localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
+    // localparam buffer_config_t BUFFER_CONFIG = BUFFER_320x240x12;
+
+    // Settings for MIDAS display
+    localparam video_mode_t VIDEO_MODE = VMODE_800x480p60;
+    localparam buffer_config_t BUFFER_CONFIG = BUFFER_400x240x12;
 
     ////////////////////////////////////////////////
     ////////////// CLOCK GENERATION ////////////////
     ////////////////////////////////////////////////
 
-    // // Logic to ensure that the reset signal from the command
-    // // module is held for a sufficient number of cycles.
-    // localparam CMD_RESET_HOLD_CYCLES = 128;
+    // Logic to ensure that the reset signal from the command
+    // module is held for a sufficient number of cycles.
+    localparam CMD_RESET_HOLD_CYCLES = 128;
 
-    // logic cmd_reset, cmd_reset_d;
-    // logic [$clog2(CMD_RESET_HOLD_CYCLES)-1:0] cmd_reset_counter;
+    logic cmd_reset, cmd_reset_d;
+    logic [$clog2(CMD_RESET_HOLD_CYCLES)-1:0] cmd_reset_counter;
 
-    // always_ff @(posedge clk_ext or posedge reset) begin
-    //     if (reset) begin
-    //         cmd_reset_d <= 1'b0;
-    //         cmd_reset_counter <= '0;
-    //     end else begin
-    //         if (cmd_reset && !cmd_reset_d) begin
-    //             // Start the reset pulse if we get signal from command module.
-    //             cmd_reset_d <= 1'b1;
-    //             cmd_reset_counter <= $clog2(CMD_RESET_HOLD_CYCLES)'(CMD_RESET_HOLD_CYCLES - 1);
-    //         end else if (cmd_reset_counter > 0) begin
-    //             // Decrement the reset counter while it's non zero.
-    //             cmd_reset_counter <= cmd_reset_counter - 1;
-    //         end else if (!cmd_reset && cmd_reset_d) begin
-    //             // When counter has reached zero, deassert the reset signal.
-    //             cmd_reset_d <= 1'b0;
-    //         end
-    //     end
-    // end
+    always_ff @(posedge clk_ext or posedge reset) begin
+        if (reset) begin
+            cmd_reset_d <= 1'b0;
+            cmd_reset_counter <= '0;
+        end else begin
+            if (cmd_reset && !cmd_reset_d) begin
+                // Start the reset pulse if we get signal from command module.
+                cmd_reset_d <= 1'b1;
+                cmd_reset_counter <= $clog2(CMD_RESET_HOLD_CYCLES)'(CMD_RESET_HOLD_CYCLES - 1);
+            end else if (cmd_reset_counter > 0) begin
+                // Decrement the reset counter while it's non zero.
+                cmd_reset_counter <= cmd_reset_counter - 1;
+            end else if (!cmd_reset && cmd_reset_d) begin
+                // When counter has reached zero, deassert the reset signal.
+                cmd_reset_d <= 1'b0;
+            end
+        end
+    end
 
     logic clk_display;
     logic rstn_display;
@@ -118,114 +115,88 @@ module Top (
         .rstn_display(rstn_display)
     );
 
-    MidasDriver md (
-        .clk_pix(clk_display),
-        .rstn(rstn_display),
-        .disp_en(screen_enable),
-        .hsync(screen_hsync),
-        .vsync(screen_vsync),
-        .de(screen_data_enable),
-        .dclk(screen_clk),
-        .r(screen_red),
-        .g(screen_green),
-        .b(screen_blue)
+    ///////////////////
+    // MIDAS Display //
+    ///////////////////
+
+    // Constant values for the midas display
+    assign screen_hsync = 0;
+    assign screen_vsync = 0;
+    assign screen_clk = clk_display;
+    assign screen_enable = 1;
+
+    /////////
+    // SPI //
+    /////////
+
+    wire logic spi_cmd_valid;
+    wire logic spi_cmd_ready;
+    wire byte_t spi_cmd_data;
+
+    wire logic cmd_spi_valid;
+    wire logic cmd_spi_ready;
+    wire byte_t cmd_spi_data;
+
+    SpiSub #(
+        .WORD_SIZE($bits(byte_t)),
+        .RX_QUEUE_LENGTH(2),
+        .TX_QUEUE_LENGTH(2)
+    ) spi_controller (
+        // SPI interface
+        .ssn(spi_ssn),
+        .sclk(spi_sclk),
+        .mosi(spi_mosi),
+        .miso(spi_miso),
+
+        // System interface
+        .sys_clk(clk_system),
+        .sys_rstn(rstn_system),
+
+        // User data interface
+        .tx_s_valid(cmd_spi_valid),
+        .tx_s_ready(cmd_spi_ready),
+        .tx_s_data(cmd_spi_data),
+
+        .rx_m_ready(spi_cmd_ready),
+        .rx_m_valid(spi_cmd_valid),
+        .rx_m_data(spi_cmd_data),
+        .active() // Ignored.
     );
 
-    // /////////
-    // // SPI //
-    // /////////
+    //////////////
+    // Pipeline //
+    //////////////
 
-    // wire logic spi_cmd_valid;
-    // wire logic spi_cmd_ready;
-    // wire byte_t spi_cmd_data;
+    Pipeline #(
+        .BUFFER_CONFIG(BUFFER_CONFIG),
+        .VIDEO_MODE(VIDEO_MODE)
+    ) pipeline_inst (
+        .clk_system(clk_system),
+        .rstn_system(rstn_system),
 
-    // wire logic cmd_spi_valid;
-    // wire logic cmd_spi_ready;
-    // wire byte_t cmd_spi_data;
+        .clk_display(clk_display),
+        .rstn_display(rstn_display),
 
-    // SpiSub #(
-    //     .WORD_SIZE($bits(byte_t)),
-    //     .RX_QUEUE_LENGTH(2),
-    //     .TX_QUEUE_LENGTH(2)
-    // ) spi_controller (
-    //     // SPI interface
-    //     .ssn(spi_ssn),
-    //     .sclk(spi_sclk),
-    //     .mosi(spi_mosi),
-    //     .miso(spi_miso),
+        .cmd_s_valid(spi_cmd_valid),
+        .cmd_s_ready(spi_cmd_ready),
+        .cmd_s_data(spi_cmd_data),
 
-    //     // System interface
-    //     .sys_clk(clk_system),
-    //     .sys_rstn(rstn_system),
+        .cmd_m_valid(cmd_spi_valid),
+        .cmd_m_ready(cmd_spi_ready),
+        .cmd_m_data(cmd_spi_data),
 
-    //     // User data interface
-    //     .tx_s_valid(cmd_spi_valid),
-    //     .tx_s_ready(cmd_spi_ready),
-    //     .tx_s_data(cmd_spi_data),
+        .cmd_reset(cmd_reset),
 
-    //     .rx_m_ready(spi_cmd_ready),
-    //     .rx_m_valid(spi_cmd_valid),
-    //     .rx_m_data(spi_cmd_data),
-    //     .active() // Ignored.
-    // );
+        .vga_vsync(vga_vsync),
+        .vga_hsync(vga_hsync),
+        .vga_red(screen_red),
+        .vga_green(screen_green),
+        .vga_blue(screen_blue),
+        .screen_data_enable(screen_data_enable),
 
-    // //////////////
-    // // Pipeline //
-    // //////////////
-
-    // Pipeline #(
-    //     .BUFFER_CONFIG(BUFFER_CONFIG),
-    //     .VIDEO_MODE(VIDEO_MODE)
-    // ) pipeline_inst (
-    //     .clk_system(clk_system),
-    //     .rstn_system(rstn_system),
-
-    //     .clk_display(clk_display),
-    //     .rstn_display(rstn_display),
-
-    //     .cmd_s_valid(spi_cmd_valid),
-    //     .cmd_s_ready(spi_cmd_ready),
-    //     .cmd_s_data(spi_cmd_data),
-
-    //     .cmd_m_valid(cmd_spi_valid),
-    //     .cmd_m_ready(cmd_spi_ready),
-    //     .cmd_m_data(cmd_spi_data),
-
-    //     .cmd_reset(cmd_reset),
-
-    //     .vga_vsync(vga_vsync),
-    //     .vga_hsync(vga_hsync),
-    //     .vga_red(vga_red),
-    //     .vga_green(vga_green),
-    //     .vga_blue(vga_blue),
-
-    //     // Debug signals
-    //     .debug_depth_buffer(debug_depth_buffer),
-    //     .debug_active_frame_buffer(debug_active_frame_buffer)
-    // );
-
-    // ODDR #(
-    //     .DDR_CLK_EDGE("SAME_EDGE")
-    // ) oddr_inst (
-    //     .Q(screen_clk),
-    //     .C(clk_display),
-    //     .CE(1'b1),
-    //     .D1(1'b1),
-    //     .D2(1'b0),
-    //     .R(1'b0),
-    //     .S(1'b0)
-    // );
-
-    // ODDR #(
-    //     .DDR_CLK_EDGE("SAME_EDGE")
-    // ) oddr_inst2 (
-    //     .Q(gpio[1]),
-    //     .C(clk_display),
-    //     .CE(1'b1),
-    //     .D1(1'b1),
-    //     .D2(1'b0),
-    //     .R(1'b0),
-    //     .S(1'b0)
-    // );
+        // Debug signals
+        .debug_depth_buffer(debug_depth_buffer),
+        .debug_active_frame_buffer(debug_active_frame_buffer)
+    );
 
 endmodule

@@ -26,4 +26,11 @@ package buffer_config_pkg;
         size: 640 * 480,
         addr_width: $clog2(640 * 480)
     };
+
+    localparam buffer_config_t BUFFER_400x240x12 = '{
+        width: 400,
+        height: 240,
+        size: 400 * 240,
+        addr_width: $clog2(400 * 240)
+    };
 endpackage
