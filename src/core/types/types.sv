@@ -3,10 +3,14 @@ package types_pkg;
     typedef logic[7:0] byte_t;
     typedef logic[15:0] short_t;
 
+    typedef logic[3:0] color_red_t;
+    typedef logic[3:0] color_green_t;
+    typedef logic[3:0] color_blue_t;
+
     typedef struct packed {
-        logic [3:0] red;
-        logic [3:0] green;
-        logic [3:0] blue;
+        color_red_t red;
+        color_green_t green;
+        color_blue_t blue;
     } color_t;
 
     typedef struct packed {

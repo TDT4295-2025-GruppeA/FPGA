@@ -86,21 +86,21 @@ module Display #(
     );
 
     // Use the single read_data input to drive the VGA color outputs
-    logic [4:0] paint_r;
-    logic [5:0] paint_g;
-    logic [4:0] paint_b;
-    logic [4:0] display_r;
-    logic [5:0] display_g;
-    logic [4:0] display_b;
+    color_red_t paint_r;
+    color_green_t paint_g;
+    color_blue_t paint_b;
+    color_red_t display_r;
+    color_green_t display_g;
+    color_blue_t display_b;
     always_comb begin
-        paint_r = read_data[11:8];
-        paint_g = read_data[7:4];
-        paint_b = read_data[3:0];
+        paint_r = read_data.red;
+        paint_g = read_data.green;
+        paint_b = read_data.blue;
 
         // Fully saturate colors
-        display_r = (data_enable) ? 5'(paint_r) << 1 : 5'h0;
-        display_g = (data_enable) ? 6'(paint_g) << 2 : 6'h0;
-        display_b = (data_enable) ? 5'(paint_b) << 1 : 5'h0;
+        display_r = (data_enable) ? paint_r : color_red_t'(0);
+        display_g = (data_enable) ? paint_g : color_green_t'(0);
+        display_b = (data_enable) ? paint_b : color_blue_t'(0);
     end
 
     // Flip-flops for output

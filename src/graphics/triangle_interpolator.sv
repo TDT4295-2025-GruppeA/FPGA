@@ -41,20 +41,20 @@ function automatic fixed barycentric_weight(fixed b0, fixed value0, fixed b1, fi
     );
 endfunction
 
-function automatic logic [3:0] max_color(logic [3:0] color0, logic [3:0] color1, logic [3:0] color2);
-    logic [3:0] max01;
+function automatic color_green_t max_color(color_red_t color0, color_green_t color1, color_blue_t color2);
+    color_green_t max01;
     max01 = (color0 > color1) ? color0 : color1;
     return (max01 > color2) ? max01 : color2;
 endfunction
 
-function automatic logic [3:0] min_color(logic [3:0] color0, logic [3:0] color1, logic [3:0] color2);
-    logic [3:0] min01;
+function automatic color_green_t min_color(color_red_t color0, color_green_t color1, color_blue_t color2);
+    color_green_t min01;
     min01 = (color0 < color1) ? color0 : color1;
     return (min01 < color2) ? min01 : color2;
 endfunction
 
-function automatic logic [3:0] barycentric_weight_color(fixed b0, logic [3:0] color0, fixed b1, logic [3:0] color1, fixed b2, logic [3:0] color2);
-    return 4'(ftoi(clamp(
+function automatic color_green_t barycentric_weight_color(fixed b0, color_red_t color0, fixed b1, color_green_t color1, fixed b2, color_blue_t color2);
+    return color_green_t'(ftoi(clamp(
         barycentric_weight(
             b0, itof(32'(color0), PRECISION_FRACTIONAL_BITS),
             b1, itof(32'(color1), PRECISION_FRACTIONAL_BITS),

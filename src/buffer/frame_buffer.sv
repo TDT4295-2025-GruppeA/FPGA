@@ -30,7 +30,10 @@ module FrameBuffer #(
     end
 
     initial begin
-        localparam logic[11:0] INITIAL_COLOR_VALUE = color_t'('hFF0);
+        localparam color_red_t INITIAL_RED_VALUE = color_red_t'('h1F);
+        localparam color_green_t INITIAL_GREEN_VALUE = color_green_t'('h3F);
+        localparam color_blue_t INITIAL_BLUE_VALUE = color_blue_t'('h1F);
+        localparam color_t INITIAL_COLOR_VALUE = {INITIAL_RED_VALUE, INITIAL_GREEN_VALUE, INITIAL_BLUE_VALUE};
         
         for (int i = 0; i < BUFFER_CONFIG.size; i++) begin
             memory[i] = INITIAL_COLOR_VALUE;

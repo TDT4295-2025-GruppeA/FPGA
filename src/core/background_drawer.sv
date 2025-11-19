@@ -14,8 +14,8 @@ module BackgroundDrawer #(
     output logic [BUFFER_ADDR_WIDTH-1:0] write_addr,
     output color_t write_data
 );
-    localparam color_t COLOR_ABOVE = color_t'('h000); // light blue
-    localparam color_t COLOR_BELOW = color_t'('h000); // light grey
+    localparam color_t COLOR_ABOVE = color_t'('h055F); // light blue
+    localparam color_t COLOR_BELOW = color_t'('h055F); // light grey
     localparam int CY = BUFFER_HEIGHT / 2;
 
     typedef enum logic [0:0] {
