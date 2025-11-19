@@ -16,9 +16,9 @@ module Display #(
     output logic vga_hsync,
     output logic vga_vsync,
     output logic screen_data_enable,
-    output logic[4:0] vga_red,
-    output logic[5:0] vga_green,
-    output logic[4:0] vga_blue,
+    output color_red_t vga_red,
+    output color_green_t vga_green,
+    output color_blue_t vga_blue,
 
     output logic[BUFFER_CONFIG.addr_width-1:0] read_addr,
     input color_t read_data
@@ -79,7 +79,7 @@ module Display #(
     end
 
     // Assign read address from VGA controller to the output port
-    assign flipped_y = FLIP_VERTICAL ? V_RESOLUTION - y - 1 : y;
+    assign flipped_y = FLIP_VERTICAL ? VH'(V_RESOLUTION) - y - 1 : y;
     localparam int SCALE = $clog2(VIDEO_MODE.h_resolution / BUFFER_CONFIG.width);
     assign read_addr = BUFFER_CONFIG.addr_width'(
         ((32'(flipped_y) >> SCALE) * BUFFER_CONFIG.width) + (32'(x) >> SCALE)

@@ -143,7 +143,7 @@ module DrawingManager #(
                 write_en = depth_write_en;
                 write_addr = depth_write_addr;
                 write_data = debug_depth_buffer_r
-                    ? {4'h0, 4'(ftoi(mul(itof(15), depth_write_pixel.depth))), 4'h0}
+                    ? {color_red_t'('h0), color_green_t'(ftoi(mul(itof(15), depth_write_pixel.depth))), color_blue_t'('h0)}
                     : depth_write_pixel.color;
 
                 if (pixel_s_valid && pixel_s_metadata.last) begin
@@ -154,7 +154,7 @@ module DrawingManager #(
                 // Toggle first pixel to be able to see framerate.
                 write_en = 1;
                 write_addr = BUFFER_ADDR_WIDTH'((BUFFER_WIDTH - 1) + (BUFFER_HEIGHT - 1) * BUFFER_WIDTH);
-                write_data = framerate_indicator ? 12'hF00 : 12'h00F;
+                write_data = framerate_indicator ? color_t'('hF700) : color_t'('h001F);
                 frame_indicator_next = ~framerate_indicator;
                 next_state = FRAME_DONE;
             end

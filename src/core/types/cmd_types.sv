@@ -61,9 +61,9 @@ package cmd_types_pkg;
 
     function automatic color_t cast_c565_c444(cmd_color_t color);
         color_t color_out;
-        color_out.red = 4'(color.red >> 1);
-        color_out.green = 4'(color.green >> 2);
-        color_out.blue = 4'(color.blue >> 1);
+        color_out.red = color_red_t'(color.red >> 1);
+        color_out.green = color_green_t'(color.green >> 2);
+        color_out.blue = color_blue_t'(color.blue >> 1);
         return color_out;
     endfunction
 

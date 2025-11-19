@@ -6,6 +6,7 @@ package types_pkg;
     typedef logic[3:0] color_red_t;
     typedef logic[3:0] color_green_t;
     typedef logic[3:0] color_blue_t;
+    typedef color_green_t color_max_t;
 
     typedef struct packed {
         color_red_t red;

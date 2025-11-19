@@ -41,20 +41,20 @@ function automatic fixed barycentric_weight(fixed b0, fixed value0, fixed b1, fi
     );
 endfunction
 
-function automatic color_green_t max_color(color_red_t color0, color_green_t color1, color_blue_t color2);
-    color_green_t max01;
+function automatic color_max_t max_color(color_max_t color0, color_max_t color1, color_max_t color2);
+    color_max_t max01;
     max01 = (color0 > color1) ? color0 : color1;
     return (max01 > color2) ? max01 : color2;
 endfunction
 
-function automatic color_green_t min_color(color_red_t color0, color_green_t color1, color_blue_t color2);
-    color_green_t min01;
+function automatic color_max_t min_color(color_max_t color0, color_max_t color1, color_max_t color2);
+    color_max_t min01;
     min01 = (color0 < color1) ? color0 : color1;
     return (min01 < color2) ? min01 : color2;
 endfunction
 
-function automatic color_green_t barycentric_weight_color(fixed b0, color_red_t color0, fixed b1, color_green_t color1, fixed b2, color_blue_t color2);
-    return color_green_t'(ftoi(clamp(
+function automatic color_max_t barycentric_weight_color(fixed b0, color_max_t color0, fixed b1, color_max_t color1, fixed b2, color_max_t color2);
+    return color_max_t'(ftoi(clamp(
         barycentric_weight(
             b0, itof(32'(color0), PRECISION_FRACTIONAL_BITS),
             b1, itof(32'(color1), PRECISION_FRACTIONAL_BITS),
@@ -389,21 +389,21 @@ module TriangleInterpolator (
         b2_4_r, triangle_4_r.v2.position.z
     );
 
-    assign pixel_data_4_c.color.red = barycentric_weight_color(
-        b0_4_r, triangle_4_r.v0.color.red,
-        b1_4_r, triangle_4_r.v1.color.red,
-        b2_4_r, triangle_4_r.v2.color.red
-    );
-    assign pixel_data_4_c.color.green = barycentric_weight_color(
-        b0_4_r, triangle_4_r.v0.color.green,
-        b1_4_r, triangle_4_r.v1.color.green,
-        b2_4_r, triangle_4_r.v2.color.green
-    );
-    assign pixel_data_4_c.color.blue = barycentric_weight_color(
-        b0_4_r, triangle_4_r.v0.color.blue,
-        b1_4_r, triangle_4_r.v1.color.blue,
-        b2_4_r, triangle_4_r.v2.color.blue
-    );
+    assign pixel_data_4_c.color.red = color_red_t'(barycentric_weight_color(
+        b0_4_r, color_max_t'(triangle_4_r.v0.color.red),
+        b1_4_r, color_max_t'(triangle_4_r.v1.color.red),
+        b2_4_r, color_max_t'(triangle_4_r.v2.color.red)
+    ));
+    assign pixel_data_4_c.color.green = color_green_t'(barycentric_weight_color(
+        b0_4_r, color_max_t'(triangle_4_r.v0.color.green),
+        b1_4_r, color_max_t'(triangle_4_r.v1.color.green),
+        b2_4_r, color_max_t'(triangle_4_r.v2.color.green)
+    ));
+    assign pixel_data_4_c.color.blue = color_blue_t'(barycentric_weight_color(
+        b0_4_r, color_max_t'(triangle_4_r.v0.color.blue),
+        b1_4_r, color_max_t'(triangle_4_r.v1.color.blue),
+        b2_4_r, color_max_t'(triangle_4_r.v2.color.blue)
+    ));
 
     /////////////
     // Stage 5 //
