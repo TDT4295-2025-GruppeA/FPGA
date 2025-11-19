@@ -46,12 +46,10 @@ module Top (
 
     // GPIO output
     assign gpio[0] = done;
-    assign gpio[1] = screen_enable;
-    assign gpio[2] = screen_data_enable;
-    assign gpio[3] = screen_clk;
-    assign gpio[4] = screen_hsync;
-    assign gpio[5] = screen_vsync;
-    // assign gpio[5:4] = screen_green[1:0];
+
+    logic [4:0] red;
+    logic [5:0] green;
+    logic [4:0] blue;
 
     // Settings for VGA
     // localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
@@ -118,15 +116,6 @@ module Top (
         .rstn_display(rstn_display)
     );
 
-    ///////////////////
-    // MIDAS Display //
-    ///////////////////
-
-    // Constant values for the midas display
-    assign screen_hsync = 0;
-    assign screen_vsync = 0;
-    assign screen_clk = clk_display;
-    assign screen_enable = 1;
 
     /////////
     // SPI //
@@ -166,6 +155,24 @@ module Top (
         .active() // Ignored.
     );
 
+    /////////////////////
+    // Display assigns //
+    /////////////////////
+
+    // Assign VGA display values
+    assign vga_red = red >> 1;
+    assign vga_green = green >> 2;
+    assign vga_blue = blue >> 1;
+
+    // Assign MIDAS display values
+    assign screen_hsync = 0;
+    assign screen_vsync = 0;
+    assign screen_clk = clk_display;
+    assign screen_enable = 1;
+    assign screen_red = red;
+    assign screen_green = green;
+    assign screen_blue = blue;
+
     //////////////
     // Pipeline //
     //////////////
@@ -193,9 +200,9 @@ module Top (
 
         .vga_vsync(vga_vsync),
         .vga_hsync(vga_hsync),
-        .vga_red(screen_red),
-        .vga_green(screen_green),
-        .vga_blue(screen_blue),
+        .vga_red(red),
+        .vga_green(green),
+        .vga_blue(blue),
         .screen_data_enable(screen_data_enable),
 
         // Debug signals

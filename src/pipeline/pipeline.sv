@@ -31,9 +31,9 @@ module Pipeline #(
     output logic vga_hsync,
     output logic vga_vsync,
     output logic screen_data_enable,
-    output logic[3:0] vga_red,
-    output logic[3:0] vga_green,
-    output logic[3:0] vga_blue,
+    output logic[4:0] vga_red,
+    output logic[5:0] vga_green,
+    output logic[4:0] vga_blue,
 
     // debug
     input logic debug_depth_buffer,
