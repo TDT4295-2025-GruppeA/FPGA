@@ -125,3 +125,6 @@ build/file_compile_order.txt: scripts/dependency.tcl $(VERILOG_SOURCES)
 test: $(TESTDEPS)
 	python testtools/gentest.py
 	pytest testtools/testrunner.py -k "$(shell echo $(TEST_MODULES) | sed 's/ / or /g')"
+
+delivery:
+	zip fpga-source.zip -r src test testtools .git-blame-ignore-revs cmds.data .gitignore readme.md requirements.txt tools scripts ip constraints Makefile .github

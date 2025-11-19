@@ -13,19 +13,42 @@ This repository contains the code for the fpga in our TDT4295 project.
     * [Convert image to .mem](#convert_img_to_mempy)
 
 
-## Quickstart
+## Setup
 
-* Install vivado
+### Prerequisites
+The following programs are required for testing and development:
+* Vivado
+* Verilator
+* Python >= 3.12
+* Linux-like shell (mostly for Makefile)
+
+### Synthing & routing
 * run `make synth`
-  * optionally specify target with `make synth TARGET=100t`. Currently supported targets are `100t` and `35t`
-  * You can also specify board `make synth BOARD=arty7`. Currently only supports `arty7`.
-* run `make flash` (again optional `TARGET=100t`, to write to flash set `FLASH_MODE=flash`)
+  * optionally specify target with `make synth TARGET=100t`. Currently supported targets are `100t`, `35t`, and `100t_ftg`
+  * You can also specify board `make synth BOARD=arty7`. Currently supports `arty7`, `nexysa7`, `cubeflight`.
+* run `make flash` (again optional `TARGET=100t_ftg`, to write to flash set `FLASH_MODE=flash`)
 
-NOTE: if using a on-board framebuffer of `12` bit color,`640x480`, the design will be too large to fit on a`Artix 7A35t`
+So to synth and flash to the Cubeflight PCB, run the following commands:
+`make synth TARGET=100t_ftg BOARD=cubeflight`
+`make flash TARGET=100t_ftg`
+
+NOTE: if using a on-board framebuffer of `12` bit color,`320x240`, the design will be too large to fit on a`Artix 7A35t`
 
 ## Testing
+To run the tests, some python tools has to be installed. The tools are listed in requirements.txt, and can
+be installed with
+
+`python3 -m pip install -r requirements.txt`
 
 To run the testbenches simply run `make test`.
+There are two options to make tests run quicker, but if running in a clean environment, the full test set should be run.
+
+Setting `RECOMPILE=no` will disable the vivado file compile order generator, which takes a while to run.
+This only needs to be run after the file structure in `src` has changed, and impacts a tested module.
+
+The `TEST_MODULES="..."` option can limit which tests are run. If this value is set, only tests made for
+the verilog module specified will be run. This is a space-separated list. For example, setting to
+"Pipeline ModelBuffer" will run all tests with "Pipeline" or "ModelBuffer" in verilog module name.
 
 ### Test setup
 The entire test-solution is a bit of a wacky setup.
