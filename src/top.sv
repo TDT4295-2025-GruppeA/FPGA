@@ -47,20 +47,18 @@ module Top (
     // GPIO output
     assign gpio[0] = done;
 
-    logic [4:0] red;
-    logic [5:0] green;
-    logic [4:0] blue;
-
     // Settings for VGA
     // localparam video_mode_t VIDEO_MODE = VMODE_640x480p60;
     // localparam buffer_config_t BUFFER_CONFIG = BUFFER_320x240x12;
     // localparam FLIP_VERTICAL = 0;
+    // localparam FLIP_HORIZONTAL = 0;
 
     // Settings for MIDAS display
     localparam video_mode_t VIDEO_MODE = VMODE_800x480p60;
     localparam buffer_config_t BUFFER_CONFIG = BUFFER_400x240x12;
     // Flip screen since display is upside down on PCB
     localparam FLIP_VERTICAL = 1;
+    localparam FLIP_HORIZONTAL = 1;
 
     ////////////////////////////////////////////////
     ////////////// CLOCK GENERATION ////////////////
@@ -158,20 +156,24 @@ module Top (
     /////////////////////
     // Display assigns //
     /////////////////////
+    color_red_t red;
+    color_green_t green;
+    color_blue_t blue;
 
     // Assign VGA display values
-    assign vga_red = red >> 1;
-    assign vga_green = green >> 2;
-    assign vga_blue = blue >> 1;
+    localparam VGA_BITS = 4;
+    assign vga_red = red >> ($bits(color_red_t) - VGA_BITS);
+    assign vga_green = green >> ($bits(color_green_t) - VGA_BITS);
+    assign vga_blue = blue >> ($bits(color_blue_t) - VGA_BITS);
 
     // Assign MIDAS display values
     assign screen_hsync = 0;
     assign screen_vsync = 0;
     assign screen_clk = clk_display;
     assign screen_enable = 1;
-    assign screen_red = red;
-    assign screen_green = green;
-    assign screen_blue = blue;
+    assign screen_red = 5'(red << (5 - $bits(color_red_t)));
+    assign screen_green = 6'(green << (6 - $bits(color_green_t)));
+    assign screen_blue = 5'(blue << (5 - $bits(color_blue_t)));
 
     //////////////
     // Pipeline //
@@ -180,7 +182,8 @@ module Top (
     Pipeline #(
         .BUFFER_CONFIG(BUFFER_CONFIG),
         .VIDEO_MODE(VIDEO_MODE),
-        .FLIP_VERTICAL(FLIP_VERTICAL)
+        .FLIP_VERTICAL(FLIP_VERTICAL),
+        .FLIP_HORIZONTAL(FLIP_HORIZONTAL)
     ) pipeline_inst (
         .clk_system(clk_system),
         .rstn_system(rstn_system),

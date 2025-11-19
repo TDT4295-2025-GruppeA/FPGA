@@ -8,7 +8,8 @@ import types_pkg::*;
 module Display #(
     parameter video_mode_t VIDEO_MODE = VMODE_640x480p60,
     parameter buffer_config_t BUFFER_CONFIG = BUFFER_160x120x12,
-    parameter bit FLIP_VERTICAL = 0
+    parameter bit FLIP_VERTICAL = 0,
+    parameter bit FLIP_HORIZONTAL = 0
 )(
     input logic clk_pixel,
     input logic rstn_pixel,
@@ -41,6 +42,7 @@ module Display #(
     logic [VW - 1:0] x;
     logic [VH - 1:0] y;
     logic [VH - 1:0] flipped_y;
+    logic [VW - 1:0] flipped_x;
 
     // Set hsync and vsync flags
     logic hsync, vsync;
@@ -80,9 +82,11 @@ module Display #(
 
     // Assign read address from VGA controller to the output port
     assign flipped_y = FLIP_VERTICAL ? VH'(V_RESOLUTION) - y - 1 : y;
+    assign flipped_x = FLIP_HORIZONTAL ? VW'(H_RESOLUTION) - x - 1 : x;
+
     localparam int SCALE = $clog2(VIDEO_MODE.h_resolution / BUFFER_CONFIG.width);
     assign read_addr = BUFFER_CONFIG.addr_width'(
-        ((32'(flipped_y) >> SCALE) * BUFFER_CONFIG.width) + (32'(x) >> SCALE)
+        ((32'(flipped_y) >> SCALE) * BUFFER_CONFIG.width) + (32'(flipped_x) >> SCALE)
     );
 
     // Use the single read_data input to drive the VGA color outputs
