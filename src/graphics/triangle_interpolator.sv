@@ -9,6 +9,9 @@ function automatic fixed edge_equation(position_t p0, position_t p1, fixed qx, f
     //         = (((y_1 - y_0) * x_q) + ((x_1 - x_0) * y_q)) + ((x_0 * y_1) + (y_0 * x_1))
     //
     // Note that our y axis is flipped upside down, so the sign for y coordinates is inverted.
+    // Also, note that the last term in the equation has been mistakenly written as an addition in the book.
+    // This has been corrected in our implementation.
+    //
     // Written using our fixed point arithmetic functions:
     return add(
         add(
