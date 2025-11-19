@@ -21,7 +21,7 @@ else ifeq ($(TARGET),100t)
 	PART_SHORT = $(PART_A7100T_SHORT)
 else ifeq ($(TARGET),100t_ftg)
 	PART_LONG = $(PART_A7100T_FTG_LONG)
-	PART_SHORt = $(PART_A7100T_SHORT)
+	PART_SHORT = $(PART_A7100T_SHORT)
 endif
 
 VERILOG_SOURCES := $(shell find src -type f -name "*.*v")
@@ -34,6 +34,7 @@ TEST_MODULES ?= $(VERILOG_MODULES)
 
 # Option to disable stub-generation (takes a lot of time)
 RECOMPILE ?= yes
+USE_STUBS ?=
 ifeq ($(RECOMPILE), yes)
     TESTDEPS = build/file_compile_order.txt $(USE_STUBS)
 else
@@ -127,4 +128,4 @@ test: $(TESTDEPS)
 	pytest testtools/testrunner.py -k "$(shell echo $(TEST_MODULES) | sed 's/ / or /g')"
 
 delivery:
-	zip fpga-source.zip -r src test testtools .git-blame-ignore-revs cmds.data .gitignore readme.md requirements.txt tools scripts ip constraints Makefile .github
+	zip fpga-source.zip -r src tests testtools .git-blame-ignore-revs cmds.data .gitignore readme.md requirements.txt tools scripts ip constraints Makefile .github static

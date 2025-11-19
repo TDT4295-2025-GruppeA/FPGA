@@ -1,6 +1,6 @@
 black==25.1.0
 click==8.2.1
-cocotb
+cocotb==2.0.1
 cocotb-test==0.2.6
 find_libpython==0.4.1
 iniconfig==2.1.0
@@ -16,4 +16,4 @@ pluggy==1.6.0
 Pygments==2.19.2
 pytest==8.4.2
 #copra @ git+https://github.com/cocotb/copra.git@455d6a93b3e80b9c004a1481210b29b02832ee29
-copra @ git+https://github.com/sommervold/copra.git@fb16dd15ea78bb2c0a08ce7903b74fa7a853a838
+copra @ git+https://github.com/sommervold/copra.git@d435e8bfc1c2808542ae7a518a21f265a471ce20

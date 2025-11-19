@@ -41,6 +41,12 @@ be installed with
 `python3 -m pip install -r requirements.txt`
 
 To run the testbenches simply run `make test`.
+
+> ![Important]
+> When running tests for the first time, you have to run `make test USE_STUBS=stubs`
+> in order to generate stub files used by the tests. This will take several minutes.
+> Subsequent runs can omit `USE_STUBS`.
+
 There are two options to make tests run quicker, but if running in a clean environment, the full test set should be run.
 
 Setting `RECOMPILE=no` will disable the vivado file compile order generator, which takes a while to run.
@@ -110,7 +116,7 @@ Python typing stubs for tests can be generated with
 
     make stubs
 
-The stubs will also be automatically generated when running `make test`
+The stubs will also be automatically generated when running `make test USE_STUBS=stubs`
 
 
 ## Tools
